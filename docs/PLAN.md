@@ -37,7 +37,7 @@ No incluido:
 
 ## Fase 1 - Autenticacion y organizaciones
 
-Pendiente de autorizacion explicita.
+Estado: completada.
 
 Alcance:
 
@@ -50,9 +50,31 @@ Alcance:
 - RLS.
 - Pruebas de aislamiento multi-tenant.
 
+Entregado:
+
+- Cliente Supabase para Auth con sesion persistente.
+- Pantalla de inicio de sesion y recuperacion de contrasena.
+- Estado de configuracion cuando faltan variables de Supabase.
+- Consola inicial de organizacion para usuarios autenticados.
+- Seleccion de organizacion activa cuando el usuario pertenece a mas de una clinica.
+- Migracion SQL para `organizations`, `profiles` y `organization_members`.
+- Roles `clinic_admin`, `technical_staff` y `authorized_professional`.
+- Politicas RLS para lectura y administracion acotadas por membresia activa.
+- Pruebas TypeScript de permisos y aislamiento multi-tenant.
+- Archivo SQL de casos de prueba multi-tenant para entorno Supabase local.
+
+No incluido:
+
+- Pacientes.
+- Screenings.
+- Imagenes.
+- Auditoria funcional de entidades clinicas.
+- Invitaciones por correo o gestion visual completa de usuarios.
+- Datos demo.
+
 ## Fase 2 - Pacientes
 
-Pendiente.
+Pendiente de autorizacion explicita.
 
 ## Fase 3 - Screening e imagenes
 

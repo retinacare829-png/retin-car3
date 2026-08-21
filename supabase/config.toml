@@ -1,0 +1,16 @@
+project_id = "retinacare-beta"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:5173"
+additional_redirect_urls = ["http://localhost:5173"]
+
+[db]
+port = 54322
+major_version = 15

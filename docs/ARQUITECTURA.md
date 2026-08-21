@@ -4,7 +4,7 @@
 
 La carpeta `RetinaCare` contenia un unico activo: `assets/retinacare.jpeg`. No habia aplicacion previa, `package.json`, configuracion TypeScript, backend, documentacion ni migraciones.
 
-Git no esta inicializado dentro de `RetinaCare`; los comandos detectan un repositorio padre en `C:\Users\Mayno`, lo cual se documenta como riesgo operativo. No se ejecuto `git init` por instruccion explicita.
+Git fue corregido despues de Fase 0. La Fase 1 se ejecuto sobre la rama `main`, con Fase 0 versionada en el commit `8b3d873`.
 
 Logo existente:
 
@@ -20,7 +20,7 @@ Logo existente:
 - UI: componentes propios consistentes con iconos `lucide-react`.
 - Validacion: `zod` para fases posteriores.
 - Testing: Vitest, Testing Library y jsdom.
-- Backend recomendado para fases posteriores: Supabase, PostgreSQL, Auth, RLS y Storage privado.
+- Backend: Supabase, PostgreSQL, Auth, RLS y Storage privado en fases posteriores.
 - PWA: manifiesto inicial; service worker queda para una fase posterior con estrategia de seguridad explicita.
 
 ## Estructura inicial
@@ -34,9 +34,9 @@ Logo existente:
 
 ## Entidades conceptuales futuras
 
-- `organizations`
-- `profiles`
-- `organization_members`
+- `organizations` implementada en Fase 1.
+- `profiles` implementada en Fase 1.
+- `organization_members` implementada en Fase 1.
 - `patients`
 - `screenings`
 - `retinal_images`
@@ -48,6 +48,30 @@ Logo existente:
 - `ai_analysis`
 
 Todas las entidades multi-tenant deberan incluir `organization_id`, UUID, timestamps y politicas RLS que impidan acceso cruzado.
+
+## Fase 1 - Autenticacion y organizaciones
+
+Archivos principales:
+
+- `src/lib/supabase.ts`: cliente Supabase tipado, sesion persistente y refresh automatico.
+- `src/hooks/useAuthSession.ts`: lectura de sesion, login, recuperacion y cierre.
+- `src/hooks/useOrganizationContext.ts`: organizaciones activas del usuario autenticado.
+- `supabase/migrations/202608200001_phase_1_auth_organizations.sql`: esquema y RLS.
+
+Modelo de datos:
+
+- `organizations`: datos basicos de clinica.
+- `profiles`: identidad de usuario vinculada a `auth.users`.
+- `organization_members`: membresia, rol y estado por organizacion.
+
+Reglas RLS base:
+
+- Un usuario autenticado solo lee organizaciones donde tiene membresia activa.
+- Solo un `clinic_admin` activo puede actualizar su organizacion.
+- Solo un `clinic_admin` activo puede crear o actualizar membresias dentro de su organizacion.
+- Un usuario solo puede crear, leer y actualizar su propio perfil.
+
+Limitacion intencional: la administracion visual completa de usuarios queda para iteracion posterior dentro de Fase 1 extendida o una subtarea antes de Fase 2, segun prioridad del producto.
 
 ## Frontera de IA
 

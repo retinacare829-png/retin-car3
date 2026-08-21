@@ -23,3 +23,15 @@ Motivo: prepara el contrato futuro sin simular diagnostico ni generar resultados
 Decision: no ejecutar `git init` en `RetinaCare`.
 
 Motivo: la instruccion del proyecto prohibe inicializar Git si ya existe. La auditoria encontro un repositorio padre en `C:\Users\Mayno`, no uno local; se reporta como riesgo para que el usuario decida.
+
+## 0005 - Supabase Auth y RLS desde Fase 1
+
+Decision: implementar autenticacion con `@supabase/supabase-js` y migracion SQL para organizaciones, perfiles y membresias.
+
+Motivo: el aislamiento multi-clinica es un requisito estructural, no una mejora posterior. La beta debe partir de una frontera clara entre organizaciones aun antes de registrar pacientes.
+
+## 0006 - No crear pacientes ni datos demo en Fase 1
+
+Decision: limitar Fase 1 a identidad, organizaciones, roles y politicas.
+
+Motivo: el prompt maestro ordena detenerse despues de Fase 1. Los pacientes pertenecen a Fase 2 y los datos demo a fases posteriores.

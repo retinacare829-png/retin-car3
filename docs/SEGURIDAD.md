@@ -20,6 +20,25 @@ Variables futuras:
 - `VITE_SUPABASE_ANON_KEY`
 - Variables privadas del backend o CI, nunca expuestas al cliente.
 
+## Autenticacion y organizaciones
+
+Fase 1 incorpora Supabase Auth con persistencia de sesion en el cliente y politicas RLS en base de datos para organizaciones y membresias.
+
+Controles implementados:
+
+- `organizations` solo visible para miembros activos.
+- `organization_members` solo visible dentro de organizaciones donde el usuario es miembro activo.
+- Creacion/actualizacion de membresias limitada a `clinic_admin`.
+- Membresias `suspended` no conceden acceso.
+- Perfiles limitados al usuario autenticado propietario.
+
+Controles pendientes para fases posteriores:
+
+- MFA o politicas avanzadas de contrasena, si el piloto lo requiere.
+- Invitaciones seguras por correo.
+- Auditoria funcional de administracion de usuarios.
+- Pruebas RLS ejecutadas contra una instancia Supabase local/CI.
+
 ## Imagenes medicas
 
 En fases posteriores las imagenes deben almacenarse en bucket privado de Supabase Storage o equivalente. El acceso debe ser mediante URLs temporales/firmadas y validacion de permisos por organizacion.
@@ -41,7 +60,6 @@ Acciones sensibles:
 
 ## Riesgos actuales
 
-- No hay repositorio Git local dentro de `RetinaCare`; Git detecta un repositorio padre.
-- No hay backend ni RLS implementado todavia.
+- Las politicas RLS fueron creadas como migracion, pero no se ejecutaron contra una instancia Supabase dentro de este entorno.
 - No hay almacenamiento privado implementado todavia.
 - La PWA aun no tiene estrategia offline segura.
