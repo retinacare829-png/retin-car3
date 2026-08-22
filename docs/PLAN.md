@@ -74,11 +74,46 @@ No incluido:
 
 ## Fase 2 - Pacientes
 
-Pendiente de autorizacion explicita.
+Estado: completada.
+
+Alcance:
+
+- Listado de pacientes.
+- Busqueda y filtros.
+- Creacion.
+- Edicion.
+- Soft delete mediante archivado.
+- Validaciones.
+- Permisos.
+- Auditoria.
+- Preparacion de historial futuro.
+
+Entregado:
+
+- Tabla `patients` con datos de identidad y campos clinicos minimos solicitados.
+- Soft delete con `deleted_at` y `deleted_by`.
+- Tabla `audit_logs` para operaciones sensibles de pacientes.
+- Tabla `patient_timeline_events` para preparar historial futuro sin screenings.
+- RLS multi-tenant para lectura y escritura de pacientes.
+- CRUD de pacientes desde la consola de organizacion.
+- Busqueda por identificador, expediente, nombres y apellidos.
+- Filtros por sexo, tipo de diabetes y estado archivado.
+- Validaciones compartidas con `zod`.
+- Seeds ficticios en `supabase/seed.sql`.
+- Pruebas unitarias de validacion, filtros, cambios auditables y aislamiento.
+
+No incluido:
+
+- Screenings.
+- Carga de imagenes.
+- Reportes.
+- IA.
+- Historial clinico completo con estudios.
+- Ejecucion real de migraciones en Supabase local/hosted dentro de este entorno.
 
 ## Fase 3 - Screening e imagenes
 
-Pendiente.
+Pendiente de autorizacion explicita.
 
 ## Fase 4 - Revision profesional y seguimiento
 

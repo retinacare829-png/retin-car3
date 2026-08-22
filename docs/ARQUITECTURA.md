@@ -37,14 +37,14 @@ Logo existente:
 - `organizations` implementada en Fase 1.
 - `profiles` implementada en Fase 1.
 - `organization_members` implementada en Fase 1.
-- `patients`
+- `patients` implementada en Fase 2.
 - `screenings`
 - `retinal_images`
 - `image_quality_reviews`
 - `professional_reviews`
 - `referrals`
 - `follow_ups`
-- `audit_logs`
+- `audit_logs` implementada inicialmente en Fase 2 para pacientes.
 - `ai_analysis`
 
 Todas las entidades multi-tenant deberan incluir `organization_id`, UUID, timestamps y politicas RLS que impidan acceso cruzado.
@@ -72,6 +72,33 @@ Reglas RLS base:
 - Un usuario solo puede crear, leer y actualizar su propio perfil.
 
 Limitacion intencional: la administracion visual completa de usuarios queda para iteracion posterior dentro de Fase 1 extendida o una subtarea antes de Fase 2, segun prioridad del producto.
+
+## Fase 2 - Gestion de pacientes
+
+Archivos principales:
+
+- `src/domain/patient.ts`: schema de validacion, tipos, filtros y helper de campos modificados.
+- `src/services/patientService.ts`: CRUD, soft delete, auditoria y eventos de timeline.
+- `src/hooks/usePatients.ts`: estado de UI y permisos para pacientes.
+- `src/components/PatientManagement.tsx`: listado, busqueda, filtros y acciones.
+- `src/components/PatientForm.tsx`: creacion y edicion.
+- `supabase/migrations/202608210001_phase_2_patients_audit.sql`: modelo de pacientes, auditoria y RLS.
+- `supabase/seed.sql`: clinicas y pacientes ficticios para demostracion.
+
+Modelo de datos:
+
+- `patients`: identidad del paciente y datos minimos relacionados con diabetes.
+- `audit_logs`: acciones sensibles con metadatos limitados, sin texto clinico libre.
+- `patient_timeline_events`: base para historial futuro de eventos del paciente.
+
+Reglas RLS base:
+
+- Miembros activos pueden leer pacientes de su organizacion.
+- `clinic_admin` y `technical_staff` pueden crear, editar, archivar y restaurar pacientes.
+- `authorized_professional` puede leer pacientes pero no modificarlos.
+- El archivado es logico; no se elimina fisicamente la fila.
+
+Separacion conceptual: Fase 2 mantiene identidad del paciente separada de screenings, imagenes y resultados futuros.
 
 ## Frontera de IA
 

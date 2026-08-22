@@ -35,3 +35,21 @@ Motivo: el aislamiento multi-clinica es un requisito estructural, no una mejora 
 Decision: limitar Fase 1 a identidad, organizaciones, roles y politicas.
 
 Motivo: el prompt maestro ordena detenerse despues de Fase 1. Los pacientes pertenecen a Fase 2 y los datos demo a fases posteriores.
+
+## 0007 - Soft delete para pacientes
+
+Decision: archivar pacientes con `deleted_at` y `deleted_by` en lugar de eliminarlos fisicamente.
+
+Motivo: la informacion medica futura requiere trazabilidad, auditoria y recuperacion controlada. La eliminacion fisica debe definirse luego con una politica formal de retencion.
+
+## 0008 - Auditoria inicial desde servicio de aplicacion
+
+Decision: registrar cambios de pacientes desde `PatientService` en `audit_logs` y `patient_timeline_events`.
+
+Motivo: permite cerrar Fase 2 sin introducir RPCs complejas. Se documenta como deuda mover operaciones criticas a funciones SQL transaccionales o triggers cuando la beta se conecte a Supabase real.
+
+## 0009 - Seeds ficticios y no reales
+
+Decision: incluir `supabase/seed.sql` con clinicas y pacientes completamente ficticios.
+
+Motivo: la beta requiere datos de demostracion, pero no debe almacenar ni insinuar datos reales de pacientes o centros.

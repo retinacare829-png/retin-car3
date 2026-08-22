@@ -2,6 +2,7 @@ import { Building2, LogOut, ShieldCheck, UsersRound } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { roleLabels } from "../domain/roles";
 import { useOrganizationContext } from "../hooks/useOrganizationContext";
+import { PatientManagement } from "./PatientManagement";
 
 interface ClinicWorkspaceProps {
   user: User;
@@ -75,10 +76,14 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
       <div className="status-band" role="status">
         <div>
           <span className="status-label">Fase actual</span>
-          <strong>Autenticacion y organizaciones configuradas.</strong>
+          <strong>Gestion de pacientes habilitada.</strong>
         </div>
-        <code>FASE_1</code>
+        <code>FASE_2</code>
       </div>
+
+      {activeOrganization ? (
+        <PatientManagement organizationId={activeOrganization.organization.id} role={activeOrganization.role} user={user} />
+      ) : null}
     </section>
   );
 }
