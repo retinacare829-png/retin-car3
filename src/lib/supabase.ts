@@ -2,6 +2,32 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { isSupabaseConfigured, publicEnv } from "./env";
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+type AuditAction =
+  | "patient.created"
+  | "patient.updated"
+  | "patient.archived"
+  | "patient.restored"
+  | "screening.created"
+  | "screening.updated"
+  | "screening.closed"
+  | "screening.deleted"
+  | "retinal_image.uploaded"
+  | "retinal_image.replaced"
+  | "retinal_image.deleted"
+  | "image_quality_review.recorded";
+type PatientTimelineEventType = AuditAction;
+type ScreeningStatus =
+  | "BORRADOR"
+  | "CAPTURA_PENDIENTE"
+  | "IMAGENES_COMPLETAS"
+  | "PENDIENTE_REVISION"
+  | "REVISADO"
+  | "SEGUIMIENTO_REQUERIDO"
+  | "CERRADO";
+type RetinalImageLaterality = "OD" | "OI";
+type RetinalImageStatus = "ACTIVA" | "REEMPLAZADA" | "ELIMINADA";
+type ImageQualityStatus = "PENDIENTE" | "ADECUADA" | "INADECUADA";
+type ImageQualityReason = "DESENFOQUE" | "REFLEJO" | "MALA_ILUMINACION" | "CAMPO_INCOMPLETO" | "MOVIMIENTO" | "OTRO";
 
 export interface Database {
   public: {
@@ -171,12 +197,171 @@ export interface Database {
         };
         Relationships: [];
       };
+      screenings: {
+        Row: {
+          id: string;
+          organization_id: string;
+          patient_id: string;
+          status: ScreeningStatus;
+          general_observations: string | null;
+          assigned_reviewer_id: string | null;
+          created_by: string | null;
+          updated_by: string | null;
+          closed_at: string | null;
+          closed_by: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          patient_id: string;
+          status?: ScreeningStatus;
+          general_observations?: string | null;
+          assigned_reviewer_id?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          patient_id?: string;
+          status?: ScreeningStatus;
+          general_observations?: string | null;
+          assigned_reviewer_id?: string | null;
+          created_by?: string | null;
+          updated_by?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      retinal_images: {
+        Row: {
+          id: string;
+          organization_id: string;
+          patient_id: string;
+          screening_id: string;
+          laterality: RetinalImageLaterality;
+          captured_at: string;
+          uploaded_by: string | null;
+          original_file_name: string;
+          storage_path: string;
+          mime_type: string;
+          size_bytes: number;
+          hash_sha256: string | null;
+          status: RetinalImageStatus;
+          replaced_by_image_id: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          patient_id: string;
+          screening_id: string;
+          laterality: RetinalImageLaterality;
+          captured_at?: string;
+          uploaded_by?: string | null;
+          original_file_name: string;
+          storage_path: string;
+          mime_type: string;
+          size_bytes: number;
+          hash_sha256?: string | null;
+          status?: RetinalImageStatus;
+          replaced_by_image_id?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          patient_id?: string;
+          screening_id?: string;
+          laterality?: RetinalImageLaterality;
+          captured_at?: string;
+          uploaded_by?: string | null;
+          original_file_name?: string;
+          storage_path?: string;
+          mime_type?: string;
+          size_bytes?: number;
+          hash_sha256?: string | null;
+          status?: RetinalImageStatus;
+          replaced_by_image_id?: string | null;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      image_quality_reviews: {
+        Row: {
+          id: string;
+          organization_id: string;
+          patient_id: string;
+          screening_id: string;
+          retinal_image_id: string;
+          reviewer_user_id: string | null;
+          quality_status: ImageQualityStatus;
+          reasons: ImageQualityReason[];
+          other_reason: string | null;
+          suggestion: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          patient_id: string;
+          screening_id: string;
+          retinal_image_id: string;
+          reviewer_user_id?: string | null;
+          quality_status?: ImageQualityStatus;
+          reasons?: ImageQualityReason[];
+          other_reason?: string | null;
+          suggestion?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          patient_id?: string;
+          screening_id?: string;
+          retinal_image_id?: string;
+          reviewer_user_id?: string | null;
+          quality_status?: ImageQualityStatus;
+          reasons?: ImageQualityReason[];
+          other_reason?: string | null;
+          suggestion?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;
           organization_id: string;
           actor_user_id: string | null;
-          action: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
+          action: AuditAction;
           entity_type: string;
           entity_id: string;
           changed_fields: string[];
@@ -187,7 +372,7 @@ export interface Database {
           id?: string;
           organization_id: string;
           actor_user_id?: string | null;
-          action: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
+          action: AuditAction;
           entity_type: string;
           entity_id: string;
           changed_fields?: string[];
@@ -198,7 +383,7 @@ export interface Database {
           id?: string;
           organization_id?: string;
           actor_user_id?: string | null;
-          action?: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
+          action?: AuditAction;
           entity_type?: string;
           entity_id?: string;
           changed_fields?: string[];
@@ -212,7 +397,7 @@ export interface Database {
           id: string;
           organization_id: string;
           patient_id: string;
-          event_type: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
+          event_type: PatientTimelineEventType;
           title: string;
           actor_user_id: string | null;
           metadata: Json;
@@ -222,7 +407,7 @@ export interface Database {
           id?: string;
           organization_id: string;
           patient_id: string;
-          event_type: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
+          event_type: PatientTimelineEventType;
           title: string;
           actor_user_id?: string | null;
           metadata?: Json;
@@ -232,7 +417,7 @@ export interface Database {
           id?: string;
           organization_id?: string;
           patient_id?: string;
-          event_type?: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
+          event_type?: PatientTimelineEventType;
           title?: string;
           actor_user_id?: string | null;
           metadata?: Json;
@@ -248,8 +433,13 @@ export interface Database {
       organization_member_status: "active" | "invited" | "suspended";
       patient_sex: "female" | "male" | "other" | "unknown";
       diabetes_type: "type_1" | "type_2" | "gestational" | "other" | "unknown";
-      audit_action: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
-      patient_timeline_event_type: "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
+      audit_action: AuditAction;
+      patient_timeline_event_type: PatientTimelineEventType;
+      screening_status: ScreeningStatus;
+      retinal_image_laterality: RetinalImageLaterality;
+      retinal_image_status: RetinalImageStatus;
+      image_quality_status: ImageQualityStatus;
+      image_quality_reason: ImageQualityReason;
     };
   };
 }

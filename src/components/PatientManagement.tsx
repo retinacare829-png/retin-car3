@@ -1,5 +1,5 @@
-import { Archive, Edit3, RotateCcw, Search, UserRoundPlus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Archive, Edit3, Images, RotateCcw, Search, UserRoundPlus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import {
   defaultPatientFilters,
@@ -17,6 +17,7 @@ import {
 import type { Role } from "../domain/roles";
 import { usePatients } from "../hooks/usePatients";
 import { PatientForm } from "./PatientForm";
+import { ScreeningManagement } from "./ScreeningManagement";
 
 interface PatientManagementProps {
   organizationId: string;
@@ -27,12 +28,20 @@ interface PatientManagementProps {
 export function PatientManagement({ organizationId, role, user }: PatientManagementProps) {
   const [filters, setFilters] = useState<PatientFilters>(defaultPatientFilters);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const patientsApi = usePatients(organizationId, role, user, filters.includeArchived, filters.query);
 
   const filteredPatients = useMemo(
     () => filterPatients(patientsApi.patients, filters),
     [filters, patientsApi.patients],
   );
+  const selectedPatient = filteredPatients.find((patient) => patient.id === selectedPatientId) ?? null;
+
+  useEffect(() => {
+    if (!selectedPatientId && filteredPatients[0]) {
+      setSelectedPatientId(filteredPatients[0].id);
+    }
+  }, [filteredPatients, selectedPatientId]);
 
   async function handleSubmit(data: PatientFormData) {
     if (editingPatient) {
@@ -159,6 +168,15 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
                 <div className="row-actions">
                   <button
                     className="icon-button"
+                    disabled={Boolean(patient.deletedAt)}
+                    onClick={() => setSelectedPatientId(patient.id)}
+                    title="Ver screenings"
+                    type="button"
+                  >
+                    <Images aria-hidden="true" size={18} />
+                  </button>
+                  <button
+                    className="icon-button"
                     disabled={!patientsApi.canWritePatients || patientsApi.saving || Boolean(patient.deletedAt)}
                     onClick={() => setEditingPatient(patient)}
                     title="Editar paciente"
@@ -193,6 +211,10 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
           </div>
         </div>
       </div>
+
+      {selectedPatient ? (
+        <ScreeningManagement organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
+      ) : null}
     </section>
   );
 }

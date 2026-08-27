@@ -53,3 +53,21 @@ Motivo: permite cerrar Fase 2 sin introducir RPCs complejas. Se documenta como d
 Decision: incluir `supabase/seed.sql` con clinicas y pacientes completamente ficticios.
 
 Motivo: la beta requiere datos de demostracion, pero no debe almacenar ni insinuar datos reales de pacientes o centros.
+
+## 0010 - Screenings sin estados diagnosticos
+
+Decision: modelar los estados de Fase 3 como flujo operativo: `BORRADOR`, `CAPTURA_PENDIENTE`, `IMAGENES_COMPLETAS`, `PENDIENTE_REVISION`, `REVISADO`, `SEGUIMIENTO_REQUERIDO` y `CERRADO`.
+
+Motivo: el modulo debe preparar captura y revision sin emitir diagnostico, clasificacion clinica ni resultado positivo/negativo.
+
+## 0011 - Storage privado con URLs firmadas
+
+Decision: guardar solamente rutas privadas de Supabase Storage en `retinal_images` y generar URLs firmadas desde el servicio cuando el usuario tiene permisos.
+
+Motivo: las imagenes retinales son sensibles y no deben exponerse mediante bucket publico ni rutas compartibles permanentes.
+
+## 0012 - Calidad manual no bloqueante
+
+Decision: registrar calidad en `image_quality_reviews` con motivos no diagnosticos y sugerencia `Repetir captura` cuando el estado es `INADECUADA`, sin impedir guardar el screening.
+
+Motivo: la calidad orienta la operacion de captura, pero no debe bloquear la trazabilidad ni confundirse con una conclusion clinica.

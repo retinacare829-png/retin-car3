@@ -29,7 +29,7 @@ export class BetaRetinalAnalysisService implements RetinalAnalysisService {
 
     return Promise.resolve({
       status: BETA_AI_ANALYSIS_STATUS,
-      message: "Modulo de IA no habilitado en esta version beta.",
+      message: "Modulo de Inteligencia Artificial no disponible en esta version beta.",
       generatedAt: new Date().toISOString(),
     });
   }

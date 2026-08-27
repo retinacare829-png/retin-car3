@@ -100,9 +100,42 @@ Reglas RLS base:
 
 Separacion conceptual: Fase 2 mantiene identidad del paciente separada de screenings, imagenes y resultados futuros.
 
+## Fase 3 - Screenings e imagenes
+
+Archivos principales:
+
+- `src/domain/screening.ts`: estados de flujo, lateralidad OD/OI, calidad manual, validaciones y constantes beta.
+- `src/services/screeningService.ts`: gestion de screenings, imagenes, Storage privado, auditoria y timeline.
+- `src/hooks/useScreenings.ts`: estado de UI y permisos para screenings e imagenes.
+- `src/components/ScreeningManagement.tsx`: modulo de screenings, visor OD/OI, carga/reemplazo y calidad manual.
+- `supabase/migrations/202608270001_phase_3_screenings_images.sql`: modelo relacional, RLS y bucket privado.
+- `supabase/tests/phase_3_screening_image_isolation.sql`: escenarios esperados de aislamiento y permisos.
+
+Modelo de datos:
+
+- `screenings`: estudio de tamizaje asociado a organizacion, paciente, creador y revisor opcional.
+- `retinal_images`: imagenes OD/OI con ruta privada de Storage, metadatos, hash opcional, estado y eliminacion logica.
+- `image_quality_reviews`: evaluacion manual de calidad con estado, motivos no diagnosticos y sugerencia beta.
+
+Reglas RLS base:
+
+- Miembros activos pueden leer screenings, imagenes y revisiones de calidad dentro de su organizacion.
+- `clinic_admin` y `technical_staff` pueden crear screenings y cargar/reemplazar imagenes.
+- `clinic_admin`, `technical_staff` y `authorized_professional` pueden registrar calidad manual.
+- Las imagenes usan bucket privado `retinal-images-private`; el frontend solicita URLs firmadas y no usa rutas publicas.
+
+Timeline y auditoria:
+
+- Eventos nuevos: screening creado/actualizado/cerrado, imagen cargada/reemplazada/eliminada y calidad registrada.
+- Metadata limitada a identificadores tecnicos, conteos, estados y lateralidad. No se replica texto clinico libre en auditoria.
+
+Limite clinico: Fase 3 no registra diagnosticos, porcentajes, clasificaciones clinicas ni resultados positivos/negativos.
+
 ## Frontera de IA
 
 Se creo el contrato `RetinalAnalysisService`. La implementacion beta `BetaRetinalAnalysisService` devuelve exclusivamente `NOT_AVAILABLE`.
+
+Mensaje visible de Fase 3: `Modulo de Inteligencia Artificial no disponible en esta version beta.`
 
 Estados conceptuales preparados para futuro:
 

@@ -19,7 +19,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
           <p className="eyebrow">Sesion activa</p>
           <h1 id="workspace-title">Consola de organizacion</h1>
           <p>
-            Base de Fase 1 para trabajar con clinicas, usuarios y roles antes de registrar pacientes.
+            Gestion multi-clinica de pacientes, screenings e imagenes retinales para la beta.
           </p>
         </div>
         <button className="ghost-button" onClick={() => void onSignOut()} type="button">
@@ -76,9 +76,9 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
       <div className="status-band" role="status">
         <div>
           <span className="status-label">Fase actual</span>
-          <strong>Gestion de pacientes habilitada.</strong>
+          <strong>Screenings e imagenes habilitados.</strong>
         </div>
-        <code>FASE_2</code>
+        <code>FASE_3</code>
       </div>
 
       {activeOrganization ? (

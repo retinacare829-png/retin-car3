@@ -113,7 +113,39 @@ No incluido:
 
 ## Fase 3 - Screening e imagenes
 
-Pendiente de autorizacion explicita.
+Estado: completada.
+
+Alcance:
+
+- Crear screenings vinculados a organizacion, paciente, usuario creador y revisor responsable opcional.
+- Gestionar estados no diagnosticos del flujo beta.
+- Cargar, reemplazar, visualizar y marcar eliminacion logica de imagenes OD/OI.
+- Preparar almacenamiento privado para Supabase Storage.
+- Registrar calidad manual de imagen con motivos y sugerencia de repetir captura cuando sea inadecuada.
+- Mantener IA desacoplada y no disponible en beta.
+- Agregar timeline del paciente para eventos de screenings e imagenes.
+- Registrar auditoria sin texto clinico libre innecesario.
+
+Entregado:
+
+- Dominio `screening` con estados `BORRADOR`, `CAPTURA_PENDIENTE`, `IMAGENES_COMPLETAS`, `PENDIENTE_REVISION`, `REVISADO`, `SEGUIMIENTO_REQUERIDO` y `CERRADO`.
+- Tablas `screenings`, `retinal_images` e `image_quality_reviews`.
+- RLS multi-tenant para screenings, imagenes, calidad y Storage privado.
+- Servicio `ScreeningService` con manejo de Storage privado, URLs firmadas, auditoria y timeline.
+- Hook `useScreenings` y UI integrada en gestion de pacientes.
+- Visor OD/OI con zoom, metadatos basicos, descarga autorizada y estado de calidad.
+- Datos demo ficticios con varios screenings, imagenes placeholder y estados distintos.
+- Pruebas unitarias de dominio para estados, calidad y ausencia de estados diagnosticos.
+
+No incluido:
+
+- Diagnostico clinico.
+- Estados positivo/negativo.
+- Clasificaciones de retinopatia.
+- Redes neuronales o inferencia IA.
+- Reportes PDF.
+- Camaras.
+- Seguimiento clinico de Fase 4.
 
 ## Fase 4 - Revision profesional y seguimiento
 

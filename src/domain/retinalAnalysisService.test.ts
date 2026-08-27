@@ -12,6 +12,6 @@ describe("BetaRetinalAnalysisService", () => {
     });
 
     expect(response.status).toBe(BETA_AI_ANALYSIS_STATUS);
-    expect(response.message).toContain("IA no habilitado");
+    expect(response.message).toBe("Modulo de Inteligencia Artificial no disponible en esta version beta.");
   });
 });
