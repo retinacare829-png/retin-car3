@@ -1,0 +1,73 @@
+# Decisiones Tecnicas
+
+## 0001 - Inicializar Vite React TypeScript
+
+Decision: usar React, TypeScript estricto y Vite para la beta.
+
+Motivo: permite una interfaz profesional demostrable, pruebas rapidas y evolucion incremental hacia Supabase sin acoplarse a un backend prematuro.
+
+## 0002 - Supabase como backend recomendado
+
+Decision: documentar Supabase como backend objetivo para Fase 1.
+
+Motivo: Auth, PostgreSQL, RLS y Storage privado cubren multi-tenant, seguridad base y almacenamiento de imagenes sin construir infraestructura propia desde cero.
+
+## 0003 - IA como frontera desacoplada
+
+Decision: crear `RetinalAnalysisService` y una implementacion beta que solo devuelve `NOT_AVAILABLE`.
+
+Motivo: prepara el contrato futuro sin simular diagnostico ni generar resultados clinicos ficticios.
+
+## 0004 - No inicializar Git local
+
+Decision: no ejecutar `git init` en `RetinaCare`.
+
+Motivo: la instruccion del proyecto prohibe inicializar Git si ya existe. La auditoria encontro un repositorio padre en `C:\Users\Mayno`, no uno local; se reporta como riesgo para que el usuario decida.
+
+## 0005 - Supabase Auth y RLS desde Fase 1
+
+Decision: implementar autenticacion con `@supabase/supabase-js` y migracion SQL para organizaciones, perfiles y membresias.
+
+Motivo: el aislamiento multi-clinica es un requisito estructural, no una mejora posterior. La beta debe partir de una frontera clara entre organizaciones aun antes de registrar pacientes.
+
+## 0006 - No crear pacientes ni datos demo en Fase 1
+
+Decision: limitar Fase 1 a identidad, organizaciones, roles y politicas.
+
+Motivo: el prompt maestro ordena detenerse despues de Fase 1. Los pacientes pertenecen a Fase 2 y los datos demo a fases posteriores.
+
+## 0007 - Soft delete para pacientes
+
+Decision: archivar pacientes con `deleted_at` y `deleted_by` en lugar de eliminarlos fisicamente.
+
+Motivo: la informacion medica futura requiere trazabilidad, auditoria y recuperacion controlada. La eliminacion fisica debe definirse luego con una politica formal de retencion.
+
+## 0008 - Auditoria inicial desde servicio de aplicacion
+
+Decision: registrar cambios de pacientes desde `PatientService` en `audit_logs` y `patient_timeline_events`.
+
+Motivo: permite cerrar Fase 2 sin introducir RPCs complejas. Se documenta como deuda mover operaciones criticas a funciones SQL transaccionales o triggers cuando la beta se conecte a Supabase real.
+
+## 0009 - Seeds ficticios y no reales
+
+Decision: incluir `supabase/seed.sql` con clinicas y pacientes completamente ficticios.
+
+Motivo: la beta requiere datos de demostracion, pero no debe almacenar ni insinuar datos reales de pacientes o centros.
+
+## 0010 - Screenings sin estados diagnosticos
+
+Decision: modelar los estados de Fase 3 como flujo operativo: `BORRADOR`, `CAPTURA_PENDIENTE`, `IMAGENES_COMPLETAS`, `PENDIENTE_REVISION`, `REVISADO`, `SEGUIMIENTO_REQUERIDO` y `CERRADO`.
+
+Motivo: el modulo debe preparar captura y revision sin emitir diagnostico, clasificacion clinica ni resultado positivo/negativo.
+
+## 0011 - Storage privado con URLs firmadas
+
+Decision: guardar solamente rutas privadas de Supabase Storage en `retinal_images` y generar URLs firmadas desde el servicio cuando el usuario tiene permisos.
+
+Motivo: las imagenes retinales son sensibles y no deben exponerse mediante bucket publico ni rutas compartibles permanentes.
+
+## 0012 - Calidad manual no bloqueante
+
+Decision: registrar calidad en `image_quality_reviews` con motivos no diagnosticos y sugerencia `Repetir captura` cuando el estado es `INADECUADA`, sin impedir guardar el screening.
+
+Motivo: la calidad orienta la operacion de captura, pero no debe bloquear la trazabilidad ni confundirse con una conclusion clinica.

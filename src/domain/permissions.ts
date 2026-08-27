@@ -1,0 +1,69 @@
+import type { Role } from "./roles";
+
+export const permissions = [
+  "organization:manage",
+  "users:manage",
+  "dashboard:view",
+  "patients:write",
+  "patients:read",
+  "screenings:read",
+  "screenings:create",
+  "screenings:update",
+  "screenings:review",
+  "images:upload",
+  "images:view",
+  "images:download",
+  "images:delete",
+  "quality:record",
+  "reports:generate",
+  "audit:view",
+] as const;
+
+export type Permission = (typeof permissions)[number];
+
+const rolePermissions: Record<Role, ReadonlySet<Permission>> = {
+  clinic_admin: new Set([
+    "organization:manage",
+    "users:manage",
+    "dashboard:view",
+    "patients:write",
+    "patients:read",
+    "screenings:read",
+    "screenings:create",
+    "screenings:update",
+    "screenings:review",
+    "images:upload",
+    "images:view",
+    "images:download",
+    "images:delete",
+    "quality:record",
+    "reports:generate",
+    "audit:view",
+  ]),
+  technical_staff: new Set([
+    "dashboard:view",
+    "patients:write",
+    "patients:read",
+    "screenings:read",
+    "screenings:create",
+    "screenings:update",
+    "images:upload",
+    "images:view",
+    "images:download",
+    "quality:record",
+  ]),
+  authorized_professional: new Set([
+    "dashboard:view",
+    "patients:read",
+    "screenings:read",
+    "screenings:review",
+    "images:view",
+    "images:download",
+    "quality:record",
+    "reports:generate",
+  ]),
+};
+
+export function can(role: Role, permission: Permission): boolean {
+  return rolePermissions[role].has(permission);
+}
