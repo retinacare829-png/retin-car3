@@ -166,6 +166,26 @@ No incluido:
 - Reportes PDF, dashboard avanzado, recordatorios o integraciones externas.
 - Renovacion visual de Fase 4.5.
 
+## Fase 4.5 - UX + Demo Clinica
+
+Estado: completada.
+
+Entregado:
+
+- Layout clínico responsive con sidebar, encabezado, organización, usuario, rol y cierre de sesión.
+- Navegación activa para Inicio, Pacientes, Screenings, Workflow Clínico, Pendientes y Configuración básica.
+- Inicio operativo con accesos rápidos, sin gráficas ni estadísticas inventadas.
+- Sistema visual unificado para acciones, tarjetas, formularios, estados, errores y carga.
+- Estados vacíos para pacientes, screenings, imágenes, revisiones, seguimientos, referencias, timeline e IA.
+- Confirmaciones antes de archivar fichas/screenings, retirar imágenes y cerrar screenings.
+- Accesibilidad y responsive design priorizados para escritorio y tablet.
+- Carga diferida del workspace autenticado y del módulo clínico pesado.
+- Recorrido actualizado en `docs/DEMO_CLINICA.md`.
+
+No incluido:
+
+- IA, diagnóstico, clasificación automática, PDF, dashboard avanzado, integraciones o nuevas entidades clínicas.
+
 ## Fase 5 - Dashboard, historial y reporte
 
 Pendiente.

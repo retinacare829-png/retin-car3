@@ -35,12 +35,14 @@ import {
 } from "../domain/screening";
 import { useScreenings } from "../hooks/useScreenings";
 import { ClinicalWorkflow } from "./ClinicalWorkflow";
+import { EmptyState, ErrorNotice, getStatusTone, LoadingState, StatusBadge } from "./ui";
 
 interface ScreeningManagementProps {
   organizationId: string;
   patient: Patient;
   role: Role;
   user: User;
+  initialFocus?: "patients" | "screenings" | "workflow";
 }
 
 const defaultScreeningForm = (patientId: string): ScreeningFormInput => ({
@@ -50,7 +52,7 @@ const defaultScreeningForm = (patientId: string): ScreeningFormInput => ({
   assignedReviewerId: "",
 });
 
-export function ScreeningManagement({ organizationId, patient, role, user }: ScreeningManagementProps) {
+export function ScreeningManagement({ organizationId, patient, role, user, initialFocus = "screenings" }: ScreeningManagementProps) {
   const screeningsApi = useScreenings(organizationId, role, user, patient.id);
   const [editingScreening, setEditingScreening] = useState<Screening | null>(null);
   const [activeScreeningId, setActiveScreeningId] = useState<string | null>(null);
@@ -68,6 +70,12 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
       setActiveScreeningId(screeningsApi.screenings[0].id);
     }
   }, [activeScreeningId, screeningsApi.screenings]);
+
+  useEffect(() => {
+    if (initialFocus === "patients" || (initialFocus === "workflow" && !activeScreeningId)) return;
+    const targetId = initialFocus === "workflow" ? "clinical-workflow-title" : "screenings-title";
+    globalThis.requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }, [activeScreeningId, initialFocus]);
 
   useEffect(() => {
     if (!editingScreening) {
@@ -101,18 +109,18 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
   }
 
   return (
-    <section className="screening-module" aria-labelledby="screenings-title">
+    <section className="screening-module" aria-labelledby="screenings-title" data-initial-focus={initialFocus}>
       <div className="module-heading">
         <div>
-          <p className="eyebrow">Fase 3</p>
-          <h2 id="screenings-title">Screenings e imagenes</h2>
+          <p className="eyebrow">Paciente / Screenings</p>
+          <h2 id="screenings-title">Screenings e imágenes</h2>
           <p>
             {patient.lastNames}, {patient.firstNames} - {patient.medicalRecordCode}
           </p>
         </div>
       </div>
 
-      {screeningsApi.error ? <div className="form-error">{screeningsApi.error}</div> : null}
+      {screeningsApi.error ? <ErrorNotice message="No se pudo cargar la información del screening. Intente nuevamente." onRetry={() => void screeningsApi.reload()} /> : null}
 
       <div className="screening-layout">
         <form className="screening-form" onSubmit={(event) => void handleSubmit(event)}>
@@ -170,9 +178,9 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
         </form>
 
         <div className="screening-list-panel">
-          {screeningsApi.loading ? <p className="empty-state">Cargando screenings...</p> : null}
+          {screeningsApi.loading ? <LoadingState label="Cargando screenings" /> : null}
           {!screeningsApi.loading && screeningsApi.screenings.length === 0 ? (
-            <p className="empty-state">No hay screenings registrados.</p>
+            <EmptyState icon={FileImage} title="Sin screenings" description="Cree el primer screening de este paciente para comenzar la captura OD/OI." />
           ) : null}
 
           <div className="screening-list">
@@ -186,7 +194,7 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
                   onClick={() => setActiveScreeningId(screening.id)}
                   type="button"
                 >
-                  <span>{screeningStatusLabels[screening.status]}</span>
+                  <StatusBadge label={screeningStatusLabels[screening.status]} tone={getStatusTone(screening.status)} />
                   <strong>{new Date(screening.createdAt).toLocaleDateString()}</strong>
                 </button>
                 <div className="screening-row-actions">
@@ -205,7 +213,7 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
                   <button
                     className="icon-button danger"
                     disabled={!screeningsApi.canDeleteImages || screeningsApi.saving || screening.status === "CERRADO"}
-                    onClick={() => void screeningsApi.deleteScreening(screening)}
+                    onClick={() => { if (globalThis.confirm("¿Archivar este screening? Las imágenes y el historial permanecerán trazables.")) void screeningsApi.deleteScreening(screening); }}
                     title="Archivar screening"
                     type="button"
                   >
@@ -380,7 +388,7 @@ function ImageCaptureControl({
         className="icon-button danger"
         disabled={!image || !canDelete || saving}
         onClick={() => {
-          if (image) {
+          if (image && globalThis.confirm(`¿Retirar la imagen ${laterality}? Esta acción quedará registrada.`)) {
             void onDelete(image);
           }
         }}
@@ -430,11 +438,11 @@ function ImageViewer({
           ))}
         </div>
         <div className="zoom-controls">
-          <button className="icon-button" onClick={() => setZoom((current) => Math.max(1, current - 0.25))} type="button">
+          <button aria-label="Reducir zoom" className="icon-button" onClick={() => setZoom((current) => Math.max(1, current - 0.25))} type="button">
             <Minus aria-hidden="true" size={18} />
           </button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button className="icon-button" onClick={() => setZoom((current) => Math.min(3, current + 0.25))} type="button">
+          <button aria-label="Aumentar zoom" className="icon-button" onClick={() => setZoom((current) => Math.min(3, current + 0.25))} type="button">
             <Plus aria-hidden="true" size={18} />
           </button>
           <button className="icon-button" onClick={() => setZoom(1)} title="Restablecer zoom" type="button">
@@ -454,8 +462,8 @@ function ImageViewer({
             style={{ transform: `scale(${zoom})` }}
           />
         ) : null}
-        {!imageUrl && !imageUrlError ? <span>Imagen no disponible</span> : null}
-        {imageUrlError ? <span>{imageUrlError}</span> : null}
+        {!imageUrl && !imageUrlError ? <EmptyState icon={FileImage} title={`Sin imagen ${activeLaterality}`} description="Cargue una imagen retinal autorizada para revisar su calidad." /> : null}
+        {imageUrlError ? <span role="alert">No fue posible abrir la imagen. Intente nuevamente.</span> : null}
       </div>
 
       <dl className="image-metadata">
@@ -564,7 +572,7 @@ function PatientTimeline({ events }: { events: ReturnType<typeof useScreenings>[
   return (
     <section className="timeline-panel" aria-labelledby="timeline-title">
       <h3 id="timeline-title">Timeline del paciente</h3>
-      {sortedEvents.length === 0 ? <p className="empty-state">Sin eventos registrados.</p> : null}
+      {sortedEvents.length === 0 ? <EmptyState title="Sin eventos en el timeline" description="Las acciones del paciente y sus screenings aparecerán aquí." /> : null}
       <ol>
         {sortedEvents.map((event) => (
           <li key={event.id}>

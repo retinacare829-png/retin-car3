@@ -89,3 +89,21 @@ Motivo: ocultar un boton no es una frontera de seguridad. El backend debe impedi
 Decision: conservar temporalmente el patron frontend de fases previas, limitando metadata a estados, conteos e identificadores tecnicos.
 
 Motivo: mantiene coherencia en la beta; la atomicidad mediante RPC o triggers queda registrada como deuda antes de un piloto conectado.
+
+## 0016 - Navegacion local sin nueva dependencia
+
+Decision: implementar el shell y sus destinos con estado React en `ClinicWorkspace`, sin agregar una libreria de routing.
+
+Motivo: los módulos actuales viven en un único flujo autenticado y comparten selección de organización, paciente y screening. Esta solución mejora orientación y demo sin cambiar la arquitectura base; un router podrá evaluarse cuando existan URLs profundas requeridas.
+
+## 0017 - Estados visuales semanticos
+
+Decision: representar estados operativos con texto, punto indicador y tonos no diagnósticos; reservar rojo para errores y acciones destructivas.
+
+Motivo: evita depender únicamente del color, reduce interpretaciones clínicas indebidas y mantiene accesibilidad.
+
+## 0018 - Separacion del bundle por fronteras funcionales
+
+Decision: cargar de forma diferida el workspace autenticado y el módulo que contiene pacientes, screenings y workflow.
+
+Motivo: reduce el JavaScript inicial del login sin alterar servicios ni introducir dependencias. Se conserva Vite como herramienta de build.

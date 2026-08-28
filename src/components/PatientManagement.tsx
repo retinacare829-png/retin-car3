@@ -18,14 +18,16 @@ import type { Role } from "../domain/roles";
 import { usePatients } from "../hooks/usePatients";
 import { PatientForm } from "./PatientForm";
 import { ScreeningManagement } from "./ScreeningManagement";
+import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 
 interface PatientManagementProps {
   organizationId: string;
   role: Role;
   user: User;
+  initialFocus?: "patients" | "screenings" | "workflow";
 }
 
-export function PatientManagement({ organizationId, role, user }: PatientManagementProps) {
+export function PatientManagement({ organizationId, role, user, initialFocus = "patients" }: PatientManagementProps) {
   const [filters, setFilters] = useState<PatientFilters>(defaultPatientFilters);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -38,10 +40,10 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
   const selectedPatient = filteredPatients.find((patient) => patient.id === selectedPatientId) ?? null;
 
   useEffect(() => {
-    if (!selectedPatientId && filteredPatients[0]) {
+    if (!selectedPatientId && filteredPatients[0] && initialFocus !== "patients") {
       setSelectedPatientId(filteredPatients[0].id);
     }
-  }, [filteredPatients, selectedPatientId]);
+  }, [filteredPatients, initialFocus, selectedPatientId]);
 
   async function handleSubmit(data: PatientFormData) {
     if (editingPatient) {
@@ -55,11 +57,11 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
 
   return (
     <section className="patient-module" aria-labelledby="patients-title">
-      <div className="module-heading">
+      <div className="module-heading page-heading">
         <div>
-          <p className="eyebrow">Fase 2</p>
-          <h2 id="patients-title">Gestion de pacientes</h2>
-          <p>Identidad del paciente separada de estudios e imagenes futuras.</p>
+          <p className="eyebrow">Pacientes · Ficha clínica</p>
+          <h1 id="patients-title">Gestión de pacientes</h1>
+          <p>Busque una ficha y continúe hacia sus screenings y workflow clínico.</p>
         </div>
         <button
           className="primary-button"
@@ -140,10 +142,10 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
             </label>
           </div>
 
-          {patientsApi.error ? <div className="form-error">{patientsApi.error}</div> : null}
-          {patientsApi.loading ? <p className="empty-state">Cargando pacientes...</p> : null}
+          {patientsApi.error ? <ErrorNotice message="No se pudieron cargar los pacientes. Verifique su conexión e intente nuevamente." onRetry={() => void patientsApi.reload()} /> : null}
+          {patientsApi.loading ? <LoadingState label="Cargando pacientes" /> : null}
           {!patientsApi.loading && filteredPatients.length === 0 ? (
-            <p className="empty-state">No hay pacientes que coincidan con los filtros.</p>
+            <EmptyState icon={Search} title={filters.query ? "Sin coincidencias" : "Aún no hay pacientes"} description={filters.query ? "Pruebe con otro nombre, código o expediente." : "Registre el primer paciente autorizado para comenzar el flujo."} />
           ) : null}
 
           <div className="patient-table" role="table" aria-label="Pacientes registrados">
@@ -163,11 +165,12 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
                 </div>
                 <div>
                   <span>Nacimiento: {patient.dateOfBirth}</span>
-                  <span>{patient.deletedAt ? "Archivado" : "Activo"}</span>
+                  <StatusBadge label={patient.deletedAt ? "Archivado" : "Activo"} tone={patient.deletedAt ? "neutral" : "complete"} />
                 </div>
                 <div className="row-actions">
                   <button
                     className="icon-button"
+                    aria-label={`Ver screenings de ${patient.firstNames} ${patient.lastNames}`}
                     disabled={Boolean(patient.deletedAt)}
                     onClick={() => setSelectedPatientId(patient.id)}
                     title="Ver screenings"
@@ -177,6 +180,7 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
                   </button>
                   <button
                     className="icon-button"
+                    aria-label={`Editar ficha de ${patient.firstNames} ${patient.lastNames}`}
                     disabled={!patientsApi.canWritePatients || patientsApi.saving || Boolean(patient.deletedAt)}
                     onClick={() => setEditingPatient(patient)}
                     title="Editar paciente"
@@ -187,6 +191,7 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
                   {patient.deletedAt ? (
                     <button
                       className="icon-button"
+                      aria-label={`Restaurar ficha de ${patient.firstNames} ${patient.lastNames}`}
                       disabled={!patientsApi.canWritePatients || patientsApi.saving}
                       onClick={() => void patientsApi.restorePatient(patient.id)}
                       title="Restaurar paciente"
@@ -197,8 +202,9 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
                   ) : (
                     <button
                       className="icon-button danger"
+                      aria-label={`Archivar ficha de ${patient.firstNames} ${patient.lastNames}`}
                       disabled={!patientsApi.canWritePatients || patientsApi.saving}
-                      onClick={() => void patientsApi.archivePatient(patient.id)}
+                      onClick={() => { if (globalThis.confirm(`¿Archivar la ficha de ${patient.firstNames} ${patient.lastNames}? Podrá restaurarla después.`)) void patientsApi.archivePatient(patient.id); }}
                       title="Archivar paciente"
                       type="button"
                     >
@@ -213,7 +219,7 @@ export function PatientManagement({ organizationId, role, user }: PatientManagem
       </div>
 
       {selectedPatient ? (
-        <ScreeningManagement organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
+        <ScreeningManagement initialFocus={initialFocus} organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
       ) : null}
     </section>
   );

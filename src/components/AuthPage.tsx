@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { KeyRound, LogIn, Mail, ShieldAlert } from "lucide-react";
+import logoUrl from "../../assets/retinacare.jpeg";
 
 interface AuthPageProps {
   clientConfigured: boolean;
@@ -42,21 +43,21 @@ export function AuthPage({ clientConfigured, onSignIn, onResetPassword }: AuthPa
   return (
     <section className="auth-layout" aria-labelledby="auth-title">
       <div className="auth-copy">
-        <p className="eyebrow">Fase 1</p>
-        <h1 id="auth-title">Acceso seguro por clinica</h1>
+        <img className="auth-logo" src={logoUrl} alt="RetinaCare" />
+        <p className="eyebrow">Plataforma clínica · Version beta</p>
+        <h1 id="auth-title">El flujo retinal, claro de principio a fin</h1>
         <p>
-          La beta prepara autenticacion, roles y aislamiento multi-clinica. Cada organizacion accede
-          solamente a sus propios datos mediante politicas RLS en Supabase.
+          Acceda al espacio seguro de su clínica para gestionar pacientes, imágenes y revisión profesional.
         </p>
         <div className="disclaimer-panel">
           <ShieldAlert aria-hidden="true" size={22} />
-          <p>Prototipo para validacion de flujo de trabajo. No destinado a diagnostico medico.</p>
+          <p>Prototipo para validación de flujo de trabajo. No destinado a diagnóstico médico.</p>
         </div>
       </div>
 
       <form className="auth-panel" onSubmit={(event) => void handleSubmit(event)}>
         <div>
-          <h2>{isResetMode ? "Recuperar contrasena" : "Inicio de sesion"}</h2>
+          <h2>{isResetMode ? "Recuperar contraseña" : "Iniciar sesión"}</h2>
           <p>
             {isResetMode
               ? "Ingrese el correo institucional para solicitar recuperacion."

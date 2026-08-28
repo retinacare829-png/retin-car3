@@ -1,5 +1,14 @@
 # Changelog interno
 
+## v0.6 - UX + Demo Clinica
+
+- Layout clínico coherente con navegación, identidad, contexto de organización, usuario y rol.
+- Inicio operativo con accesos rápidos y recorrido de demo sin métricas inventadas.
+- Estados vacíos, carga, error, badges y confirmaciones sensibles reutilizables.
+- Mejoras responsive y de accesibilidad para escritorio, tablet y móvil básico.
+- Carga diferida del workspace autenticado y del módulo clínico para reducir el bundle inicial.
+- Guion de demostración clínica actualizado; IA permanece explícitamente no disponible.
+
 ## v0.5 - Workflow clinico
 
 - Revision profesional manual con observaciones estructuradas no diagnosticas.

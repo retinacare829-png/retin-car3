@@ -26,3 +26,12 @@
 - El responsable de seguimiento se captura como UUID mientras no exista el selector visual de miembros de organizacion.
 - No existen recordatorios, notificaciones ni integraciones de referencia; son limites deliberados de Fase 4.
 - El usuario Auth de `supabase/seed.sql` y todos los registros asociados son exclusivamente ficticios para demo local.
+
+## Fase 4.5
+
+- La navegación del shell usa estado local y no ofrece URLs profundas ni restauración de una pantalla concreta al recargar. Es suficiente para la demo beta; evaluar routing cuando exista esa necesidad.
+- Pendientes muestra un estado vacío seguro porque los hooks actuales consultan screenings por paciente y no existe aún una consulta agregada por organización. Implementarla aquí habría ampliado el alcance hacia dashboard.
+- La pantalla de inicio no muestra métricas para evitar estadísticas inventadas y consultas agregadas nuevas.
+- Los mensajes de servicios se sustituyeron visualmente en puntos principales, pero algunos errores de validación interna siguen dependiendo de los textos existentes de dominio.
+- La optimización divide el workspace y el módulo clínico mediante lazy loading. Debe vigilarse el tamaño del chunk clínico conforme crezcan sus componentes.
+- La QA se ejecuta contra datos simulados en pruebas de componentes; sigue pendiente una sesión visual completa conectada a una instancia Supabase demo.

@@ -163,3 +163,15 @@ Modelo de datos:
 - `referrals`: solicitud manual, destino y estado, sin comunicacion externa.
 
 El cierre se valida dos veces: la UI presenta cada requisito faltante y la politica de `screenings` exige que `screening_closure_requirements_met` sea verdadera. La politica separa al personal tecnico de los roles profesionales y bloquea modificaciones posteriores al cierre. Las entidades usan una clave foranea compuesta hacia screening para conservar coherencia entre organizacion, paciente y screening.
+
+## Fase 4.5 - Capa de experiencia clínica
+
+La Fase 4.5 no modifica el modelo de datos ni las fronteras de servicios. Agrega una capa de presentación sobre los módulos existentes:
+
+- `ClinicWorkspace` controla navegación y contexto visual de la sesión sin introducir un router adicional.
+- `OperationalHome` ofrece accesos directos basados en acciones; no consulta ni inventa métricas.
+- `ui.tsx` centraliza estados vacíos, carga, errores y badges accesibles.
+- `App` y `ClinicWorkspace` usan `React.lazy` para separar el shell autenticado y el módulo clínico del bundle inicial.
+- Los módulos de pacientes, screenings y workflow conservan sus hooks, servicios, permisos y aislamiento multi-tenant.
+
+La navegación mantiene el contexto paciente → screening → workflow mediante títulos, breadcrumbs y selección explícita de ficha. El sidebar se convierte en panel móvil y el encabezado conserva organización, usuario y rol.

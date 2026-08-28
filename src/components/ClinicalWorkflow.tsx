@@ -25,6 +25,7 @@ import type { Patient } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { betaAiUnavailableMessage, retinalImageLateralityLabels, type ScreeningDetail } from "../domain/screening";
 import { useClinicalWorkflow } from "../hooks/useClinicalWorkflow";
+import { EmptyState, getStatusTone, LoadingState, StatusBadge } from "./ui";
 
 interface ClinicalWorkflowProps {
   organizationId: string;
@@ -47,6 +48,7 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
 
   async function closeScreening() {
     if (!checklist.canClose || closed) return;
+    if (!globalThis.confirm("¿Cerrar este screening? Después del cierre no podrá modificar su workflow clínico.")) return;
     await workflow.closeScreening();
     await onScreeningChanged();
   }
@@ -55,11 +57,11 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
     <section className="clinical-workflow" aria-labelledby="clinical-workflow-title">
       <div className="module-heading compact">
         <div>
-          <p className="eyebrow">Fase 4</p>
-          <h2 id="clinical-workflow-title">Workflow clinico</h2>
+          <p className="eyebrow">Paciente / Screening / Revisión</p>
+          <h2 id="clinical-workflow-title">Workflow clínico</h2>
           <p>{patient.lastNames}, {patient.firstNames} · {patient.medicalRecordCode}</p>
         </div>
-        <span className="status-chip">{professionalReviewStatusLabels[workflow.detail.professionalReview?.reviewStatus ?? "PENDIENTE_REVISION"]}</span>
+        <StatusBadge label={professionalReviewStatusLabels[workflow.detail.professionalReview?.reviewStatus ?? "PENDIENTE_REVISION"]} tone={getStatusTone(workflow.detail.professionalReview?.reviewStatus ?? "PENDIENTE_REVISION")} />
       </div>
 
       <div className="workflow-summary">
@@ -73,7 +75,8 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
 
       <div className="ai-placeholder" role="status"><strong>{betaAiUnavailableMessage}</strong><code>NOT_AVAILABLE</code></div>
       {workflow.error ? <div className="form-error">{workflow.error}</div> : null}
-      {workflow.loading ? <p className="empty-state">Cargando workflow clinico...</p> : null}
+      {workflow.loading ? <LoadingState label="Cargando workflow clínico" /> : null}
+      {!workflow.loading && !workflow.detail.professionalReview ? <EmptyState title="Sin revisión profesional" description="Complete la revisión manual cuando un profesional autorizado haya evaluado el screening." /> : null}
 
       <div className="workflow-grid">
         <ProfessionalReviewForm disabled={workflow.saving || !workflow.canReview || closed} review={workflow.detail.professionalReview} onSave={workflow.saveReview} />
@@ -127,6 +130,7 @@ function FollowUpPanel({ disabled, followUps, onSave }: { disabled: boolean; fol
     <label>Responsable (UUID, opcional)<input disabled={disabled} value={form.assignedTo ?? ""} onChange={(event) => setForm((c) => ({ ...c, assignedTo: event.target.value }))} /></label>
     <label>Notas<textarea disabled={disabled} maxLength={1200} rows={3} value={form.notes ?? ""} onChange={(event) => setForm((c) => ({ ...c, notes: event.target.value }))} /></label>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />{editing ? "Actualizar" : "Registrar"} seguimiento</button>
+    {followUps.length === 0 ? <EmptyState title="Sin seguimientos" description="Registre un seguimiento solo cuando el profesional lo indique." /> : null}
     <ul className="workflow-records">{followUps.map((item) => <li key={item.id}><span><strong>{followUpTypeLabels[item.followUpType]}</strong>{followUpStatusLabels[item.followUpStatus]}{item.dueDate ? ` · ${item.dueDate}` : ""}</span><button className="ghost-button" disabled={disabled} onClick={() => edit(item)} type="button">Editar</button></li>)}</ul>
   </form>;
 }
@@ -144,6 +148,7 @@ function ReferralPanel({ disabled, referrals, onSave }: { disabled: boolean; ref
     <label>Fecha completada<input disabled={disabled || form.referralStatus !== "COMPLETADA"} type="date" value={form.completedDate ?? ""} onChange={(event) => setForm((c) => ({ ...c, completedDate: event.target.value }))} /></label>
     <label>Notas<textarea disabled={disabled} maxLength={1200} rows={3} value={form.notes ?? ""} onChange={(event) => setForm((c) => ({ ...c, notes: event.target.value }))} /></label>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />{editing ? "Actualizar" : "Registrar"} referencia</button>
+    {referrals.length === 0 ? <EmptyState title="Sin referencias" description="Las referencias manuales aparecerán aquí cuando se registren." /> : null}
     <ul className="workflow-records">{referrals.map((item) => <li key={item.id}><span><strong>{item.referralDestination}</strong>{referralStatusLabels[item.referralStatus]} · {item.requestedDate}</span><button className="ghost-button" disabled={disabled} onClick={() => edit(item)} type="button">Editar</button></li>)}</ul>
   </form>;
 }
