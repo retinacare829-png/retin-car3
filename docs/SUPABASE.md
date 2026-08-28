@@ -1,41 +1,95 @@
-# Supabase - Fase 1
+# Supabase — setup local y demo
 
-## Configuracion local
+## Requisitos
 
-1. Crear un proyecto Supabase o levantar Supabase local.
-2. Aplicar la migracion:
+- Node.js y npm compatibles con el proyecto.
+- Docker Desktop activo.
+- Supabase CLI, ejecutable sin instalación global mediante `npx supabase`.
 
-```bash
-supabase db reset
-```
+No se requieren ni deben versionarse credenciales administrativas del backend.
 
-3. Configurar variables en `.env`:
+## Inicio local
 
-```bash
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+1. Instalar dependencias con `npm ci`.
+2. Iniciar servicios con `npx supabase start`.
+3. Aplicar migraciones y seeds ficticios con `npm run supabase:reset`.
+4. Consultar credenciales locales con `npx supabase status`.
+5. Copiar `.env.example` a `.env` y configurar:
+
+```dotenv
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=<anon key local>
 VITE_APP_ENV=local
 ```
 
-No versionar `.env`.
+6. Ejecutar `npm run dev`.
 
-## Migracion incluida
+El reset aplica todas las migraciones y luego `supabase/seed.sql`. No ejecutar el seed local contra producción.
 
-`supabase/migrations/202608200001_phase_1_auth_organizations.sql`
+## Usuarios ficticios locales
 
-Incluye:
+Las cuentas usan dominios `example.test` y la contraseña local compartida definida en `supabase/seed.sql`.
 
-- Enum `organization_role`.
-- Enum `organization_member_status`.
-- Tabla `organizations`.
-- Tabla `profiles`.
-- Tabla `organization_members`.
-- Funciones `is_org_member` y `has_org_role`.
-- RLS para aislamiento por organizacion.
-- Trigger para crear perfil al registrarse un usuario en Supabase Auth.
+| Cuenta | Rol/contexto |
+| --- | --- |
+| `admin.demo@example.test` | Administrador de Clínica A |
+| `tecnico.demo@example.test` | Personal técnico de Clínica A |
+| `profesional.demo@example.test` | Profesional autorizado de Clínica A |
+| `admin.clinica-b@example.test` | Administrador aislado de Clínica B |
+| `suspendido.demo@example.test` | Membresía suspendida |
+| `sin.clinica.demo@example.test` | Usuario autenticado sin organización |
 
-## Pruebas de aislamiento
+Las identidades email se crean junto con `auth.users`; el login con contraseña funciona después del reset local. La recuperación puede verificarse en el capturador de correo que muestra `npx supabase status`.
 
-`supabase/tests/phase_1_multi_tenant_isolation.sql` documenta los casos que deben ejecutarse cuando exista una instancia local/CI con Supabase CLI.
+## Migraciones y aislamiento
 
-Las pruebas TypeScript actuales cubren la matriz de aislamiento de dominio sin conectarse a una base real.
+La migración `202608280002_phase_4_6_supabase_validation.sql` agrega controles sin reescribir migraciones históricas:
+
+- claves foráneas compuestas por organización, paciente y screening;
+- coherencia completa de imágenes y revisiones de calidad;
+- timeline vinculado al paciente del mismo tenant;
+- permisos explícitos sobre funciones auxiliares;
+- políticas de Storage con parseo seguro del UUID de organización;
+- RPC `register_retinal_image` para resolver altas y reemplazos sin violar el índice de lateralidad activa;
+- RPC `close_screening_workflow` para cierre, revisión, auditoría y timeline en una transacción.
+
+El RPC rechaza usuarios anónimos, personal técnico, screenings incompletos, registros cerrados y combinaciones incoherentes.
+
+## Storage privado
+
+- Bucket: `retinal-images-private`.
+- Visibilidad: privada (`public = false`).
+- Tamaño máximo: 15 MiB.
+- MIME permitidos: JPEG, PNG y WebP.
+- Ruta: `<organization_id>/<patient_id>/<screening_id>/<OD|OI>/<timestamp>.<extension>`.
+- Lectura: miembro activo de la organización correspondiente.
+- Subida: `clinic_admin` o `technical_staff` activo.
+- Reemplazo: objeto nuevo y fila anterior marcada `REEMPLAZADA`.
+- Eliminación: lógica; el objeto permanece privado para trazabilidad.
+- URL firmada: 300 segundos por defecto.
+- Acceso público directo: no permitido.
+
+## Validaciones
+
+```bash
+npm run supabase:check
+npm run supabase:qa:sql
+npm run supabase:qa:smoke
+```
+
+- `supabase:check` valida archivos y garantías sin conexión.
+- `supabase:qa:sql` ejecuta pruebas RLS transaccionales en el contenedor y hace rollback.
+- `supabase:qa:smoke` valida Auth, roles y tenants mediante la API real.
+
+Para validar subida, URL firmada y bloqueo público en un entorno desechable, configure `SUPABASE_QA_ALLOW_STORAGE_MUTATIONS=true`. La prueba carga un PNG técnico de 1 px bajo una ruta `qa-*`; resetee el entorno al finalizar.
+
+## Proyecto hospedado
+
+1. Usar un proyecto demo, nunca producción clínica.
+2. Vincularlo mediante `npx supabase link`.
+3. Revisar `npx supabase db diff` antes de `npx supabase db push`.
+4. Crear cuentas QA ficticias y configurar sus correos en `.env`; no reutilizar el password local.
+5. Ejecutar primero el smoke sin mutaciones.
+6. Habilitar mutaciones de Storage solo con autorización y datos desechables.
+
+No se realizó `db push` desde esta fase.

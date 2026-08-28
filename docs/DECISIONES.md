@@ -107,3 +107,27 @@ Motivo: evita depender únicamente del color, reduce interpretaciones clínicas 
 Decision: cargar de forma diferida el workspace autenticado y el módulo que contiene pacientes, screenings y workflow.
 
 Motivo: reduce el JavaScript inicial del login sin alterar servicios ni introducir dependencias. Se conserva Vite como herramienta de build.
+
+## 0019 - Integridad multi-tenant mediante claves compuestas
+
+Decision: relacionar pacientes, screenings, imagenes, calidad y timeline mediante claves foraneas que incluyen `organization_id`.
+
+Motivo: RLS limita visibilidad, pero no sustituye integridad referencial. Las claves compuestas impiden persistir asociaciones cruzadas aun si un UUID externo fuera conocido.
+
+## 0020 - Cierre clinico atomico en PostgreSQL
+
+Decision: reemplazar las mutaciones frontend del cierre por la RPC `close_screening_workflow`.
+
+Motivo: screening, revision, auditoria y timeline deben confirmarse o revertirse juntos. La funcion valida autenticacion, rol, tenant y checklist antes de escribir.
+
+## 0021 - QA conectado separado de validacion estatica
+
+Decision: mantener `supabase:check`, prueba SQL y smoke HTTP como niveles distintos.
+
+Motivo: inspeccionar archivos no demuestra que RLS/Auth/Storage funcionen en una instancia. Se exige evidencia conectada antes de aprobar un entorno demo.
+
+## 0022 - Registro y reemplazo atomico de metadata de imagen
+
+Decision: usar la RPC `register_retinal_image` para desactivar la captura anterior e insertar la nueva en una transaccion.
+
+Motivo: insertar primero una segunda imagen `ACTIVA` violaba el indice parcial de lateralidad. La RPC conserva exactamente una captura activa aun ante errores de base de datos.

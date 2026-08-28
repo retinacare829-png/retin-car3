@@ -14,8 +14,8 @@ import {
   type ScreeningFormData,
 } from "../domain/screening";
 import type { Database, TypedSupabaseClient } from "../lib/supabase";
+import { buildRetinalStoragePath, RETINAL_IMAGE_BUCKET, SIGNED_IMAGE_URL_TTL_SECONDS } from "../domain/supabaseIntegration";
 
-const RETINAL_IMAGE_BUCKET = "retinal-images-private";
 
 type AuditAction = Database["public"]["Enums"]["audit_action"];
 type JsonObject = { [key: string]: string | number | boolean | null };
@@ -215,7 +215,13 @@ export class ScreeningService {
 
   async uploadOrReplaceImage(context: ScreeningMutationContext, input: ImageUploadInput): Promise<RetinalImage> {
     const hashSha256 = await hashFileSha256(input.file);
-    const storagePath = buildStoragePath(context.organizationId, input.patientId, input.screeningId, input.laterality, input.file.name);
+    const storagePath = buildRetinalStoragePath({
+      organizationId: context.organizationId,
+      patientId: input.patientId,
+      screeningId: input.screeningId,
+      laterality: input.laterality,
+      originalFileName: input.file.name,
+    });
     const metadata = retinalImageMetadataSchema.parse({
       screeningId: input.screeningId,
       patientId: input.patientId,
@@ -240,32 +246,32 @@ export class ScreeningService {
     }
 
     const existing = await this.getActiveImage(context.organizationId, input.screeningId, input.laterality);
-    const { data: inserted, error } = await this.client
-      .from("retinal_images")
-      .insert({
-        organization_id: context.organizationId,
-        patient_id: metadata.patientId,
-        screening_id: metadata.screeningId,
-        laterality: metadata.laterality,
-        uploaded_by: context.actorUserId,
-        original_file_name: metadata.originalFileName,
-        storage_path: metadata.storagePath,
-        mime_type: metadata.mimeType,
-        size_bytes: metadata.sizeBytes,
-        hash_sha256: metadata.hashSha256 ?? null,
-        status: "ACTIVA",
-      })
-      .select("*")
-      .single();
+    const { data: insertedId, error } = await this.client.rpc("register_retinal_image", {
+      target_organization_id: context.organizationId,
+      target_patient_id: metadata.patientId,
+      target_screening_id: metadata.screeningId,
+      target_laterality: metadata.laterality,
+      target_original_file_name: metadata.originalFileName,
+      target_storage_path: metadata.storagePath,
+      target_mime_type: metadata.mimeType,
+      target_size_bytes: metadata.sizeBytes,
+      target_hash_sha256: metadata.hashSha256 ?? null,
+    });
 
     if (error) {
       throw error;
     }
 
-    const image = mapRetinalImageRow(inserted);
-    if (existing) {
-      await this.markImageReplaced(context, existing, image.id);
+    const { data: inserted, error: readError } = await this.client
+      .from("retinal_images")
+      .select("*")
+      .eq("id", insertedId)
+      .eq("organization_id", context.organizationId)
+      .single();
+    if (readError) {
+      throw readError;
     }
+    const image = mapRetinalImageRow(inserted);
 
     await this.recordChange(
       context,
@@ -343,7 +349,7 @@ export class ScreeningService {
     return review;
   }
 
-  async createSignedImageUrl(storagePath: string, expiresInSeconds = 300): Promise<string> {
+  async createSignedImageUrl(storagePath: string, expiresInSeconds = SIGNED_IMAGE_URL_TTL_SECONDS): Promise<string> {
     const { data, error } = await this.client.storage
       .from(RETINAL_IMAGE_BUCKET)
       .createSignedUrl(storagePath, expiresInSeconds);
@@ -375,27 +381,6 @@ export class ScreeningService {
     }
 
     return data ? mapRetinalImageRow(data) : null;
-  }
-
-  private async markImageReplaced(
-    context: ScreeningMutationContext,
-    previousImage: RetinalImage,
-    replacementImageId: string,
-  ): Promise<void> {
-    const { error } = await this.client
-      .from("retinal_images")
-      .update({
-        status: "REEMPLAZADA",
-        replaced_by_image_id: replacementImageId,
-        deleted_at: new Date().toISOString(),
-        deleted_by: context.actorUserId,
-      })
-      .eq("id", previousImage.id)
-      .eq("organization_id", context.organizationId);
-
-    if (error) {
-      throw error;
-    }
   }
 
   private async recordChange(
@@ -535,15 +520,4 @@ async function hashFileSha256(file: File): Promise<string | null> {
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
-}
-
-function buildStoragePath(
-  organizationId: string,
-  patientId: string,
-  screeningId: string,
-  laterality: RetinalImageLaterality,
-  originalFileName: string,
-): string {
-  const extension = originalFileName.split(".").pop()?.toLocaleLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
-  return `${organizationId}/${patientId}/${screeningId}/${laterality}/${Date.now()}.${extension}`;
 }

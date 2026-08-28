@@ -34,8 +34,9 @@ import {
   type ScreeningFormInput,
 } from "../domain/screening";
 import { useScreenings } from "../hooks/useScreenings";
+import { getStatusTone } from "../domain/statusTone";
 import { ClinicalWorkflow } from "./ClinicalWorkflow";
-import { EmptyState, ErrorNotice, getStatusTone, LoadingState, StatusBadge } from "./ui";
+import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 
 interface ScreeningManagementProps {
   organizationId: string;

@@ -1,5 +1,15 @@
 # Changelog interno
 
+## v0.6.1 - Validacion Supabase + QA tecnico
+
+- Integridad multi-tenant reforzada con claves compuestas.
+- Cierre clínico transaccional mediante RPC PostgreSQL.
+- Reemplazo de metadata de imagen transaccional, respetando una lateralidad activa.
+- Storage privado endurecido y rutas validadas por organización/paciente/screening/lateralidad.
+- Seeds locales para roles, segunda clínica, membresía suspendida y usuario sin organización.
+- Prueba SQL RLS, smoke HTTP y scripts npm de validación.
+- Documentación para levantar y validar Supabase local/demo.
+
 ## v0.6 - UX + Demo Clinica
 
 - Layout clínico coherente con navegación, identidad, contexto de organización, usuario y rol.

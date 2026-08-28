@@ -133,13 +133,12 @@ export class ClinicalWorkflowService {
   }
 
   async closeScreening(context: ClinicalWorkflowContext): Promise<void> {
-    const closedAt = new Date().toISOString();
-    const { error } = await this.client.from("screenings").update({ status: "CERRADO", closed_at: closedAt, closed_by: context.actorUserId, updated_by: context.actorUserId }).eq("id", context.screeningId).eq("organization_id", context.organizationId);
+    const { error } = await this.client.rpc("close_screening_workflow", {
+      target_organization_id: context.organizationId,
+      target_patient_id: context.patientId,
+      target_screening_id: context.screeningId,
+    });
     if (error) throw error;
-    const { error: reviewError } = await this.client.from("professional_reviews").update({ review_status: "CERRADO", reviewed_at: closedAt, reviewer_user_id: context.actorUserId }).eq("screening_id", context.screeningId).eq("organization_id", context.organizationId);
-    if (reviewError) throw reviewError;
-    await this.audit(context, "screening.closed", "screening", context.screeningId, ["status", "closedAt", "closedBy"], { status: "CERRADO" });
-    await this.timeline(context, "screening.closed", "Screening cerrado", { status: "CERRADO" });
   }
 
   private async audit(context: ClinicalWorkflowContext, action: AuditAction, entityType: string, entityId: string, changedFields: string[], metadata: SafeMetadata) {

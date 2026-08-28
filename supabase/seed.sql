@@ -1,16 +1,52 @@
+-- Cuentas exclusivamente locales/ficticias. Cambiar credenciales en cualquier entorno hospedado.
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 )
-values (
-  '00000000-0000-0000-0000-000000000000',
-  '90000000-0000-4000-8000-000000000001',
-  'authenticated', 'authenticated', 'profesional.demo@example.test',
-  crypt('RetinaCare-Demo-2026', gen_salt('bf')), now(),
-  '{"provider":"email","providers":["email"]}'::jsonb,
-  '{"display_name":"Profesional Demo"}'::jsonb, now(), now()
+values
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'profesional.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Profesional Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'admin.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Administracion Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'tecnico.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Tecnico Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated', 'admin.clinica-b@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Administracion Clinica B"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000005', 'authenticated', 'authenticated', 'suspendido.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Usuario Suspendido Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000006', 'authenticated', 'authenticated', 'sin.clinica.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Usuario Sin Clinica Demo"}'::jsonb, now(), now())
+on conflict (id) do update set
+  email = excluded.email,
+  encrypted_password = excluded.encrypted_password,
+  email_confirmed_at = excluded.email_confirmed_at,
+  raw_app_meta_data = excluded.raw_app_meta_data,
+  raw_user_meta_data = excluded.raw_user_meta_data,
+  updated_at = now();
+
+insert into auth.identities (
+  id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
 )
-on conflict (id) do nothing;
+select
+  ('91000000-0000-4000-8000-' || right(user_id::text, 12))::uuid,
+  user_id,
+  jsonb_build_object('sub', user_id::text, 'email', email),
+  'email', user_id::text, now(), now(), now()
+from (values
+  ('90000000-0000-4000-8000-000000000001'::uuid, 'profesional.demo@example.test'),
+  ('90000000-0000-4000-8000-000000000002'::uuid, 'admin.demo@example.test'),
+  ('90000000-0000-4000-8000-000000000003'::uuid, 'tecnico.demo@example.test'),
+  ('90000000-0000-4000-8000-000000000004'::uuid, 'admin.clinica-b@example.test'),
+  ('90000000-0000-4000-8000-000000000005'::uuid, 'suspendido.demo@example.test'),
+  ('90000000-0000-4000-8000-000000000006'::uuid, 'sin.clinica.demo@example.test')
+) as demo_identities(user_id, email)
+on conflict (provider_id, provider) do update set
+  identity_data = excluded.identity_data,
+  updated_at = now();
+
+insert into public.profiles (id, display_name)
+values
+  ('90000000-0000-4000-8000-000000000001', 'Profesional Demo'),
+  ('90000000-0000-4000-8000-000000000002', 'Administracion Demo'),
+  ('90000000-0000-4000-8000-000000000003', 'Tecnico Demo'),
+  ('90000000-0000-4000-8000-000000000004', 'Administracion Clinica B'),
+  ('90000000-0000-4000-8000-000000000005', 'Usuario Suspendido Demo'),
+  ('90000000-0000-4000-8000-000000000006', 'Usuario Sin Clinica Demo')
+on conflict (id) do update set display_name = excluded.display_name;
 
 insert into public.organizations (id, name, legal_name, country_code, timezone, contact_email)
 values
@@ -19,8 +55,15 @@ values
 on conflict (id) do nothing;
 
 insert into public.organization_members (organization_id, user_id, role, status)
-values ('10000000-0000-4000-8000-000000000001', '90000000-0000-4000-8000-000000000001', 'authorized_professional', 'active')
-on conflict (organization_id, user_id) do nothing;
+values
+  ('10000000-0000-4000-8000-000000000001', '90000000-0000-4000-8000-000000000001', 'authorized_professional', 'active'),
+  ('10000000-0000-4000-8000-000000000001', '90000000-0000-4000-8000-000000000002', 'clinic_admin', 'active'),
+  ('10000000-0000-4000-8000-000000000001', '90000000-0000-4000-8000-000000000003', 'technical_staff', 'active'),
+  ('10000000-0000-4000-8000-000000000002', '90000000-0000-4000-8000-000000000004', 'clinic_admin', 'active'),
+  ('10000000-0000-4000-8000-000000000001', '90000000-0000-4000-8000-000000000005', 'technical_staff', 'suspended')
+on conflict (organization_id, user_id) do update set
+  role = excluded.role,
+  status = excluded.status;
 
 insert into public.patients (
   id,

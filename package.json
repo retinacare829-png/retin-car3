@@ -1,6 +1,6 @@
 {
   "name": "retinacare-beta",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,11 @@
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsc -b",
-    "secret:scan": "node scripts/secret-scan.mjs"
+    "secret:scan": "node scripts/secret-scan.mjs",
+    "supabase:check": "node scripts/validate-supabase-config.mjs",
+    "supabase:reset": "npx supabase db reset",
+    "supabase:qa:sql": "node scripts/run-supabase-sql-qa.mjs",
+    "supabase:qa:smoke": "node --env-file-if-exists=.env scripts/supabase-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

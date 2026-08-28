@@ -500,7 +500,30 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      register_retinal_image: {
+        Args: {
+          target_organization_id: string;
+          target_patient_id: string;
+          target_screening_id: string;
+          target_laterality: RetinalImageLaterality;
+          target_original_file_name: string;
+          target_storage_path: string;
+          target_mime_type: string;
+          target_size_bytes: number;
+          target_hash_sha256?: string | null;
+        };
+        Returns: string;
+      };
+      close_screening_workflow: {
+        Args: {
+          target_organization_id: string;
+          target_patient_id: string;
+          target_screening_id: string;
+        };
+        Returns: undefined;
+      };
+    };
     Enums: {
       organization_role: "clinic_admin" | "technical_staff" | "authorized_professional";
       organization_member_status: "active" | "invited" | "suspended";

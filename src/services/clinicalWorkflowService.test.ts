@@ -49,6 +49,23 @@ describe("ClinicalWorkflowService", () => {
     expect(referral.requestedDate).toBe("2026-08-28");
     expect(inserted.map((entry) => entry.table)).toEqual(["referrals", "audit_logs", "patient_timeline_events"]);
   });
+
+  it("closes the workflow through the atomic Supabase RPC", async () => {
+    let calledWith: Record<string, string> | null = null;
+    const client = {
+      rpc(name: string, args: Record<string, string>) {
+        expect(name).toBe("close_screening_workflow");
+        calledWith = args;
+        return { error: null };
+      },
+    } as unknown as TypedSupabaseClient;
+    await new ClinicalWorkflowService(client).closeScreening(context);
+    expect(calledWith).toEqual({
+      target_organization_id: context.organizationId,
+      target_patient_id: context.patientId,
+      target_screening_id: context.screeningId,
+    });
+  });
 });
 
 const context = {

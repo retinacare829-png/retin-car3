@@ -186,6 +186,26 @@ No incluido:
 
 - IA, diagnóstico, clasificación automática, PDF, dashboard avanzado, integraciones o nuevas entidades clínicas.
 
+## Fase 4.6 - Validacion Supabase + QA tecnico
+
+Estado: implementacion preparada; ejecucion conectada pendiente de infraestructura.
+
+Entregado:
+
+- Migracion aditiva para integridad referencial multi-tenant.
+- Cierre atomico mediante RPC con rol, checklist, auditoria y timeline.
+- Politicas endurecidas para Storage privado y parseo seguro de rutas.
+- Seeds ficticios para administrador, tecnico, profesional, segunda clinica, suspendido y usuario sin organizacion.
+- Prueba SQL transaccional de RLS y aislamiento.
+- Smoke test HTTP para Auth, roles, tenants y Storage opcional.
+- Scripts de preflight, reset y QA con npm.
+- Runbook local/demo y matriz de QA.
+
+No incluido:
+
+- Funcionalidades nuevas, IA, PDF, dashboard avanzado o cambios visuales.
+- Ejecucion real en este host, que no dispone de Docker, Supabase CLI ni credenciales de proyecto.
+
 ## Fase 5 - Dashboard, historial y reporte
 
 Pendiente.

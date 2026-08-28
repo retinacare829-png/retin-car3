@@ -25,7 +25,8 @@ import type { Patient } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { betaAiUnavailableMessage, retinalImageLateralityLabels, type ScreeningDetail } from "../domain/screening";
 import { useClinicalWorkflow } from "../hooks/useClinicalWorkflow";
-import { EmptyState, getStatusTone, LoadingState, StatusBadge } from "./ui";
+import { getStatusTone } from "../domain/statusTone";
+import { EmptyState, LoadingState, StatusBadge } from "./ui";
 
 interface ClinicalWorkflowProps {
   organizationId: string;

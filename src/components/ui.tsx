@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { AlertCircle, Inbox, LoaderCircle } from "lucide-react";
 import type { ReactNode } from "react";
+import type { StatusTone } from "../domain/statusTone";
 
 export function EmptyState({
   title,
@@ -45,14 +46,6 @@ export function ErrorNotice({ message, onRetry }: { message: string; onRetry?: (
   );
 }
 
-export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?: "neutral" | "info" | "progress" | "attention" | "complete" }) {
+export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?: StatusTone }) {
   return <span className={`status-badge status-${tone}`}><span aria-hidden="true" />{label}</span>;
-}
-
-export function getStatusTone(status: string): "neutral" | "info" | "progress" | "attention" | "complete" {
-  if (status.includes("CERRADO") || status.includes("COMPLETAD") || status === "REVISADO") return "complete";
-  if (status.includes("RECAPTURA") || status.includes("SEGUIMIENTO_REQUERIDO") || status === "INADECUADA") return "attention";
-  if (status.includes("REVISION") || status.includes("PROCESO")) return "progress";
-  if (status.includes("PENDIENTE") || status.includes("IMAGENES_COMPLETAS")) return "info";
-  return "neutral";
 }
