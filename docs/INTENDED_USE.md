@@ -15,3 +15,5 @@ Clinicas oftalmologicas, clinicas de diabetes/endocrinologia y aliados medicos d
 ## Limites
 
 Esta redaccion no constituye por si sola validacion clinica, aprobacion regulatoria ni asesoria legal. Cualquier evolucion hacia software medico requiere evaluacion regulatoria, gestion formal de riesgos, validacion clinica y controles de calidad adicionales.
+
+La revision, el seguimiento y la referencia de v0.5 son registros manuales del criterio del profesional autorizado. La aplicacion no interpreta las observaciones ni produce una conclusion automatizada. El modulo de Inteligencia Artificial permanece no disponible en esta beta.

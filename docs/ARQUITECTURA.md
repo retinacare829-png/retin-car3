@@ -129,13 +129,13 @@ Timeline y auditoria:
 - Eventos nuevos: screening creado/actualizado/cerrado, imagen cargada/reemplazada/eliminada y calidad registrada.
 - Metadata limitada a identificadores tecnicos, conteos, estados y lateralidad. No se replica texto clinico libre en auditoria.
 
-Limite clinico: Fase 3 no registra diagnosticos, porcentajes, clasificaciones clinicas ni resultados positivos/negativos.
+Limite clinico: Fase 3 no registra diagnosticos, porcentajes, clasificaciones clinicas ni conclusiones automatizadas.
 
 ## Frontera de IA
 
 Se creo el contrato `RetinalAnalysisService`. La implementacion beta `BetaRetinalAnalysisService` devuelve exclusivamente `NOT_AVAILABLE`.
 
-Mensaje visible de Fase 3: `Modulo de Inteligencia Artificial no disponible en esta version beta.`
+Mensaje visible desde Fase 3: `Módulo de Inteligencia Artificial no disponible en esta versión beta.`
 
 Estados conceptuales preparados para futuro:
 
@@ -144,4 +144,22 @@ Estados conceptuales preparados para futuro:
 - `FAILED`
 - `REVIEW_REQUIRED`
 
-La beta no genera hallazgos, porcentajes de confianza, diagnosticos ni resultados positivos/negativos.
+La beta no genera hallazgos, scores, diagnosticos ni conclusiones automatizadas.
+
+## Fase 4 - Workflow clinico
+
+Archivos principales:
+
+- `src/domain/clinicalWorkflow.ts`: estados, schemas y checklist de cierre pura.
+- `src/services/clinicalWorkflowService.ts`: persistencia, auditoria y timeline.
+- `src/hooks/useClinicalWorkflow.ts`: estado de UI y permisos.
+- `src/components/ClinicalWorkflow.tsx`: revision, seguimiento, referencia y cierre.
+- `supabase/migrations/202608280001_phase_4_clinical_workflow.sql`: tablas, indices, claves, funcion de checklist y RLS.
+
+Modelo de datos:
+
+- `professional_reviews`: una revision activa por screening, criterio manual estructurado y comentarios opcionales.
+- `follow_ups`: decisiones y acciones de seguimiento con responsable y fechas opcionales.
+- `referrals`: solicitud manual, destino y estado, sin comunicacion externa.
+
+El cierre se valida dos veces: la UI presenta cada requisito faltante y la politica de `screenings` exige que `screening_closure_requirements_met` sea verdadera. La politica separa al personal tecnico de los roles profesionales y bloquea modificaciones posteriores al cierre. Las entidades usan una clave foranea compuesta hacia screening para conservar coherencia entre organizacion, paciente y screening.

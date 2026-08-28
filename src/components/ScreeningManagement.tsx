@@ -34,6 +34,7 @@ import {
   type ScreeningFormInput,
 } from "../domain/screening";
 import { useScreenings } from "../hooks/useScreenings";
+import { ClinicalWorkflow } from "./ClinicalWorkflow";
 
 interface ScreeningManagementProps {
   organizationId: string;
@@ -128,7 +129,7 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
               }
               value={form.status}
             >
-              {screeningStatusValues.map((status) => (
+              {screeningStatusValues.filter((status) => status !== "CERRADO").map((status) => (
                 <option key={status} value={status}>
                   {screeningStatusLabels[status]}
                 </option>
@@ -191,7 +192,7 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
                 <div className="screening-row-actions">
                   <button
                     className="icon-button"
-                    disabled={!screeningsApi.canUpdateScreenings || screeningsApi.saving}
+                    disabled={!screeningsApi.canUpdateScreenings || screeningsApi.saving || screening.status === "CERRADO"}
                     onClick={() => {
                       setEditingScreening(screening);
                       setActiveScreeningId(screening.id);
@@ -203,7 +204,7 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
                   </button>
                   <button
                     className="icon-button danger"
-                    disabled={!screeningsApi.canDeleteImages || screeningsApi.saving}
+                    disabled={!screeningsApi.canDeleteImages || screeningsApi.saving || screening.status === "CERRADO"}
                     onClick={() => void screeningsApi.deleteScreening(screening)}
                     title="Archivar screening"
                     type="button"
@@ -218,7 +219,17 @@ export function ScreeningManagement({ organizationId, patient, role, user }: Scr
       </div>
 
       {activeScreening ? (
-        <ScreeningWorkspace activeScreening={activeScreening} screeningsApi={screeningsApi} />
+        <>
+          <ScreeningWorkspace activeScreening={activeScreening} screeningsApi={screeningsApi} />
+          <ClinicalWorkflow
+            onScreeningChanged={screeningsApi.reload}
+            organizationId={organizationId}
+            patient={patient}
+            role={role}
+            screening={activeScreening}
+            user={user}
+          />
+        </>
       ) : null}
 
       <PatientTimeline events={screeningsApi.timeline} />
@@ -285,8 +296,8 @@ function ScreeningWorkspace({ activeScreening, screeningsApi }: ScreeningWorkspa
               onDelete={(targetImage) => screeningsApi.deleteImage(targetImage)}
               onUpload={(file) => screeningsApi.uploadOrReplaceImage(activeScreening, laterality, file)}
               saving={screeningsApi.saving}
-              canDelete={screeningsApi.canDeleteImages}
-              canUpload={screeningsApi.canUploadImages}
+              canDelete={screeningsApi.canDeleteImages && activeScreening.status !== "CERRADO"}
+              canUpload={screeningsApi.canUploadImages && activeScreening.status !== "CERRADO"}
             />
           );
         })}
@@ -308,7 +319,7 @@ function ScreeningWorkspace({ activeScreening, screeningsApi }: ScreeningWorkspa
 
       {selectedImage ? (
         <QualityReviewForm
-          disabled={screeningsApi.saving || !screeningsApi.canRecordQuality}
+          disabled={screeningsApi.saving || !screeningsApi.canRecordQuality || activeScreening.status === "CERRADO"}
           image={selectedImage}
           initialStatus={selectedQuality?.qualityStatus ?? "PENDIENTE"}
           initialReasons={selectedQuality?.reasons ?? []}

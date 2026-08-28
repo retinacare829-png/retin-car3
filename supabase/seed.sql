@@ -1,8 +1,26 @@
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+)
+values (
+  '00000000-0000-0000-0000-000000000000',
+  '90000000-0000-4000-8000-000000000001',
+  'authenticated', 'authenticated', 'profesional.demo@example.test',
+  crypt('RetinaCare-Demo-2026', gen_salt('bf')), now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"display_name":"Profesional Demo"}'::jsonb, now(), now()
+)
+on conflict (id) do nothing;
+
 insert into public.organizations (id, name, legal_name, country_code, timezone, contact_email)
 values
   ('10000000-0000-4000-8000-000000000001', 'Clinica Demo Oftalmologica', 'Clinica Demo Oftalmologica S.A.', 'NI', 'America/Managua', 'demo-oftalmologia@example.test'),
   ('10000000-0000-4000-8000-000000000002', 'Centro Demo Diabetes', 'Centro Demo Diabetes S.A.', 'NI', 'America/Managua', 'demo-diabetes@example.test')
 on conflict (id) do nothing;
+
+insert into public.organization_members (organization_id, user_id, role, status)
+values ('10000000-0000-4000-8000-000000000001', '90000000-0000-4000-8000-000000000001', 'authorized_professional', 'active')
+on conflict (organization_id, user_id) do nothing;
 
 insert into public.patients (
   id,
@@ -103,6 +121,27 @@ values
     '2026-08-20T09:15:00Z',
     '2026-08-20T09:15:00Z',
     null
+  ),
+  (
+    '30000000-0000-4000-8000-000000000004',
+    '10000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000002',
+    'REVISADO', 'Revision manual completada para demo.',
+    '2026-08-21T10:00:00Z', '2026-08-21T11:00:00Z', null
+  ),
+  (
+    '30000000-0000-4000-8000-000000000005',
+    '10000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000002',
+    'SEGUIMIENTO_REQUERIDO', 'Seguimiento ficticio programado.',
+    '2026-08-22T10:00:00Z', '2026-08-22T11:00:00Z', null
+  ),
+  (
+    '30000000-0000-4000-8000-000000000006',
+    '10000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000002',
+    'SEGUIMIENTO_REQUERIDO', 'Referencia ficticia creada.',
+    '2026-08-23T10:00:00Z', '2026-08-23T11:00:00Z', null
   )
 on conflict (id) do nothing;
 
@@ -162,6 +201,16 @@ values
     184320,
     'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
     'ACTIVA'
+  ),
+  (
+    '40000000-0000-4000-8000-000000000004',
+    '10000000-0000-4000-8000-000000000001',
+    '20000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000002',
+    'OI', '2026-07-10T15:42:00Z', 'demo-previo-oi-placeholder.png',
+    '10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001/30000000-0000-4000-8000-000000000002/OI/demo-previo-oi-placeholder.png',
+    'image/png', 181120,
+    'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd', 'ACTIVA'
   )
 on conflict (id) do nothing;
 
@@ -195,7 +244,41 @@ values
     'INADECUADA',
     array['DESENFOQUE', 'REFLEJO']::public.image_quality_reason[],
     'Repetir captura'
+  ),
+  (
+    '50000000-0000-4000-8000-000000000003',
+    '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000002', '40000000-0000-4000-8000-000000000003',
+    'ADECUADA', '{}', null
+  ),
+  (
+    '50000000-0000-4000-8000-000000000004',
+    '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
+    '30000000-0000-4000-8000-000000000002', '40000000-0000-4000-8000-000000000004',
+    'ADECUADA', '{}', null
   )
+on conflict (id) do nothing;
+
+insert into public.professional_reviews (
+  id, organization_id, patient_id, screening_id, reviewer_user_id, review_status,
+  reviewed_at, structured_observations, notes, created_at, updated_at
+)
+values
+  ('60000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001', '90000000-0000-4000-8000-000000000001', 'REQUIERE_RECAPTURA', null, '{"insufficientQuality":true,"repeatedImageRecommended":true,"newCaptureRequired":true,"reviewCompleted":false,"followUpRecommended":false,"referralRecommended":false}', null, '2026-08-18T14:30:00Z', '2026-08-18T14:30:00Z'),
+  ('60000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000002', '90000000-0000-4000-8000-000000000001', 'CERRADO', '2026-07-10T16:10:00Z', '{"insufficientQuality":false,"repeatedImageRecommended":false,"newCaptureRequired":false,"reviewCompleted":true,"followUpRecommended":false,"referralRecommended":false}', null, '2026-07-10T16:00:00Z', '2026-07-10T16:10:00Z'),
+  ('60000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000004', '90000000-0000-4000-8000-000000000001', 'REVISION_COMPLETADA', '2026-08-21T11:00:00Z', '{"insufficientQuality":false,"repeatedImageRecommended":false,"newCaptureRequired":false,"reviewCompleted":true,"followUpRecommended":false,"referralRecommended":false}', null, '2026-08-21T10:30:00Z', '2026-08-21T11:00:00Z'),
+  ('60000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000005', '90000000-0000-4000-8000-000000000001', 'SEGUIMIENTO_REQUERIDO', '2026-08-22T11:00:00Z', '{"insufficientQuality":false,"repeatedImageRecommended":false,"newCaptureRequired":false,"reviewCompleted":true,"followUpRecommended":true,"referralRecommended":false}', null, '2026-08-22T10:30:00Z', '2026-08-22T11:00:00Z'),
+  ('60000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000006', '90000000-0000-4000-8000-000000000001', 'SEGUIMIENTO_REQUERIDO', '2026-08-23T11:00:00Z', '{"insufficientQuality":false,"repeatedImageRecommended":false,"newCaptureRequired":false,"reviewCompleted":true,"followUpRecommended":false,"referralRecommended":true}', null, '2026-08-23T10:30:00Z', '2026-08-23T11:00:00Z')
+on conflict (id) do nothing;
+
+insert into public.follow_ups (id, organization_id, patient_id, screening_id, created_by, follow_up_type, follow_up_status, due_date, notes)
+values
+  ('70000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000002', '90000000-0000-4000-8000-000000000001', 'CONTROL_PROGRAMADO', 'SIN_SEGUIMIENTO', null, null),
+  ('70000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000005', '90000000-0000-4000-8000-000000000001', 'CONTROL_PROGRAMADO', 'CONTROL_PROGRAMADO', '2026-11-22', null)
+on conflict (id) do nothing;
+
+insert into public.referrals (id, organization_id, patient_id, screening_id, created_by, referral_reason, referral_destination, referral_status, requested_date, notes)
+values ('80000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000006', '90000000-0000-4000-8000-000000000001', 'Evaluacion profesional presencial', 'Centro oftalmologico demo', 'SOLICITADA', '2026-08-23', null)
 on conflict (id) do nothing;
 
 insert into public.patient_timeline_events (
@@ -238,4 +321,24 @@ values
     'Screening cerrado',
     '{"status": "CERRADO"}'::jsonb,
     '2026-07-10T16:10:00Z'
+  ),
+  (
+    '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001',
+    'professional_review.updated', 'Recaptura solicitada', '{"review_status":"REQUIERE_RECAPTURA"}'::jsonb,
+    '2026-08-18T14:30:00Z'
+  ),
+  (
+    '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002',
+    'professional_review.updated', 'Revision completada', '{"review_status":"REVISION_COMPLETADA"}'::jsonb,
+    '2026-08-21T11:00:00Z'
+  ),
+  (
+    '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002',
+    'follow_up.created', 'Seguimiento creado', '{"follow_up_status":"CONTROL_PROGRAMADO"}'::jsonb,
+    '2026-08-22T11:05:00Z'
+  ),
+  (
+    '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002',
+    'referral.created', 'Referencia creada', '{"referral_status":"SOLICITADA"}'::jsonb,
+    '2026-08-23T11:05:00Z'
   );

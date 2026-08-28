@@ -17,3 +17,12 @@
 - La auditoria de screenings e imagenes se registra desde el servicio frontend; sigue pendiente mover operaciones criticas a RPCs o triggers transaccionales.
 - Las politicas RLS validan membresia y rol, pero no reemplazan una revision SQL automatizada en CI.
 - La descarga usa URLs firmadas de corta duracion; la expiracion y rotacion fina deberan ajustarse cuando exista entorno Supabase real.
+
+## Fase 4
+
+- La migracion y las pruebas RLS de Fase 4 no se ejecutaron contra una instancia Supabase local u hospedada en este entorno.
+- Las mutaciones y sus filas de auditoria/timeline se realizan desde el servicio frontend en operaciones separadas. Una interrupcion puede producir trazabilidad incompleta; deben migrarse a RPCs o triggers transaccionales antes de uso operativo.
+- La funcion SQL protege las condiciones minimas de cierre, pero la suite SQL sigue siendo manual y debe integrarse a CI.
+- El responsable de seguimiento se captura como UUID mientras no exista el selector visual de miembros de organizacion.
+- No existen recordatorios, notificaciones ni integraciones de referencia; son limites deliberados de Fase 4.
+- El usuario Auth de `supabase/seed.sql` y todos los registros asociados son exclusivamente ficticios para demo local.

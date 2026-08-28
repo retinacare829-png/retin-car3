@@ -58,7 +58,7 @@ Motivo: la beta requiere datos de demostracion, pero no debe almacenar ni insinu
 
 Decision: modelar los estados de Fase 3 como flujo operativo: `BORRADOR`, `CAPTURA_PENDIENTE`, `IMAGENES_COMPLETAS`, `PENDIENTE_REVISION`, `REVISADO`, `SEGUIMIENTO_REQUERIDO` y `CERRADO`.
 
-Motivo: el modulo debe preparar captura y revision sin emitir diagnostico, clasificacion clinica ni resultado positivo/negativo.
+Motivo: el modulo debe preparar captura y revision sin emitir diagnostico, clasificacion clinica ni conclusiones automatizadas.
 
 ## 0011 - Storage privado con URLs firmadas
 
@@ -71,3 +71,21 @@ Motivo: las imagenes retinales son sensibles y no deben exponerse mediante bucke
 Decision: registrar calidad en `image_quality_reviews` con motivos no diagnosticos y sugerencia `Repetir captura` cuando el estado es `INADECUADA`, sin impedir guardar el screening.
 
 Motivo: la calidad orienta la operacion de captura, pero no debe bloquear la trazabilidad ni confundirse con una conclusion clinica.
+
+## 0013 - Revision manual estructurada
+
+Decision: guardar banderas operativas en `structured_observations` y texto opcional separado, sin interpretar su contenido.
+
+Motivo: permite validar el flujo profesional sin convertir la beta en un sistema diagnostico.
+
+## 0014 - Cierre con doble control
+
+Decision: calcular una checklist legible en el dominio y repetir las condiciones minimas en una funcion PostgreSQL usada por RLS.
+
+Motivo: ocultar un boton no es una frontera de seguridad. El backend debe impedir cierres incompletos y cierres realizados por `technical_staff`.
+
+## 0015 - Auditoria de Fase 4 desde el servicio
+
+Decision: conservar temporalmente el patron frontend de fases previas, limitando metadata a estados, conteos e identificadores tecnicos.
+
+Motivo: mantiene coherencia en la beta; la atomicidad mediante RPC o triggers queda registrada como deuda antes de un piloto conectado.

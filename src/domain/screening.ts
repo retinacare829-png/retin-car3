@@ -52,7 +52,7 @@ export const imageQualityReasonLabels: Record<ImageQualityReason, string> = {
 };
 
 export const repeatCaptureSuggestion = "Repetir captura";
-export const betaAiUnavailableMessage = "Modulo de Inteligencia Artificial no disponible en esta version beta.";
+export const betaAiUnavailableMessage = "Módulo de Inteligencia Artificial no disponible en esta versión beta.";
 
 const optionalText = (maxLength: number) =>
   z

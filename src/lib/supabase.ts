@@ -14,7 +14,13 @@ type AuditAction =
   | "retinal_image.uploaded"
   | "retinal_image.replaced"
   | "retinal_image.deleted"
-  | "image_quality_review.recorded";
+  | "image_quality_review.recorded"
+  | "professional_review.created"
+  | "professional_review.updated"
+  | "follow_up.created"
+  | "follow_up.updated"
+  | "referral.created"
+  | "referral.updated";
 type PatientTimelineEventType = AuditAction;
 type ScreeningStatus =
   | "BORRADOR"
@@ -28,6 +34,10 @@ type RetinalImageLaterality = "OD" | "OI";
 type RetinalImageStatus = "ACTIVA" | "REEMPLAZADA" | "ELIMINADA";
 type ImageQualityStatus = "PENDIENTE" | "ADECUADA" | "INADECUADA";
 type ImageQualityReason = "DESENFOQUE" | "REFLEJO" | "MALA_ILUMINACION" | "CAMPO_INCOMPLETO" | "MOVIMIENTO" | "OTRO";
+type ProfessionalReviewStatus = "PENDIENTE_REVISION" | "EN_REVISION" | "REVISION_COMPLETADA" | "REQUIERE_RECAPTURA" | "SEGUIMIENTO_REQUERIDO" | "CERRADO";
+type FollowUpType = "CONTROL_PROGRAMADO" | "REPETIR_ESTUDIO" | "REFERIR_OFTALMOLOGIA";
+type FollowUpStatus = "SIN_SEGUIMIENTO" | "CONTROL_PROGRAMADO" | "REPETIR_ESTUDIO" | "REFERIR_OFTALMOLOGIA" | "SEGUIMIENTO_COMPLETADO" | "CANCELADO";
+type ReferralStatus = "BORRADOR" | "SOLICITADA" | "EN_PROCESO" | "COMPLETADA" | "CANCELADA";
 
 export interface Database {
   public: {
@@ -356,6 +366,69 @@ export interface Database {
         };
         Relationships: [];
       };
+      professional_reviews: {
+        Row: {
+          id: string; organization_id: string; patient_id: string; screening_id: string;
+          reviewer_user_id: string; review_status: ProfessionalReviewStatus; reviewed_at: string | null;
+          structured_observations: Json; notes: string | null; created_at: string; updated_at: string;
+          deleted_at: string | null; deleted_by: string | null;
+        };
+        Insert: {
+          id?: string; organization_id: string; patient_id: string; screening_id: string;
+          reviewer_user_id: string; review_status?: ProfessionalReviewStatus; reviewed_at?: string | null;
+          structured_observations?: Json; notes?: string | null; created_at?: string; updated_at?: string;
+          deleted_at?: string | null; deleted_by?: string | null;
+        };
+        Update: {
+          id?: string; organization_id?: string; patient_id?: string; screening_id?: string;
+          reviewer_user_id?: string; review_status?: ProfessionalReviewStatus; reviewed_at?: string | null;
+          structured_observations?: Json; notes?: string | null; created_at?: string; updated_at?: string;
+          deleted_at?: string | null; deleted_by?: string | null;
+        };
+        Relationships: [];
+      };
+      follow_ups: {
+        Row: {
+          id: string; organization_id: string; patient_id: string; screening_id: string; created_by: string;
+          assigned_to: string | null; follow_up_type: FollowUpType; follow_up_status: FollowUpStatus;
+          due_date: string | null; completed_at: string | null; notes: string | null; created_at: string;
+          updated_at: string; deleted_at: string | null; deleted_by: string | null;
+        };
+        Insert: {
+          id?: string; organization_id: string; patient_id: string; screening_id: string; created_by: string;
+          assigned_to?: string | null; follow_up_type: FollowUpType; follow_up_status?: FollowUpStatus;
+          due_date?: string | null; completed_at?: string | null; notes?: string | null; created_at?: string;
+          updated_at?: string; deleted_at?: string | null; deleted_by?: string | null;
+        };
+        Update: {
+          id?: string; organization_id?: string; patient_id?: string; screening_id?: string; created_by?: string;
+          assigned_to?: string | null; follow_up_type?: FollowUpType; follow_up_status?: FollowUpStatus;
+          due_date?: string | null; completed_at?: string | null; notes?: string | null; created_at?: string;
+          updated_at?: string; deleted_at?: string | null; deleted_by?: string | null;
+        };
+        Relationships: [];
+      };
+      referrals: {
+        Row: {
+          id: string; organization_id: string; patient_id: string; screening_id: string; created_by: string;
+          referral_reason: string; referral_destination: string; referral_status: ReferralStatus;
+          requested_date: string; completed_date: string | null; notes: string | null; created_at: string;
+          updated_at: string; deleted_at: string | null; deleted_by: string | null;
+        };
+        Insert: {
+          id?: string; organization_id: string; patient_id: string; screening_id: string; created_by: string;
+          referral_reason: string; referral_destination: string; referral_status?: ReferralStatus;
+          requested_date?: string; completed_date?: string | null; notes?: string | null; created_at?: string;
+          updated_at?: string; deleted_at?: string | null; deleted_by?: string | null;
+        };
+        Update: {
+          id?: string; organization_id?: string; patient_id?: string; screening_id?: string; created_by?: string;
+          referral_reason?: string; referral_destination?: string; referral_status?: ReferralStatus;
+          requested_date?: string; completed_date?: string | null; notes?: string | null; created_at?: string;
+          updated_at?: string; deleted_at?: string | null; deleted_by?: string | null;
+        };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           id: string;
@@ -440,6 +513,10 @@ export interface Database {
       retinal_image_status: RetinalImageStatus;
       image_quality_status: ImageQualityStatus;
       image_quality_reason: ImageQualityReason;
+      professional_review_status: ProfessionalReviewStatus;
+      follow_up_type: FollowUpType;
+      follow_up_status: FollowUpStatus;
+      referral_status: ReferralStatus;
     };
   };
 }
