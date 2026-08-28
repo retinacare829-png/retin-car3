@@ -191,6 +191,9 @@ export class ScreeningService {
   }
 
   async deleteScreening(context: ScreeningMutationContext, screening: Screening): Promise<void> {
+    if (screening.status === "CERRADO") {
+      throw new Error("Un screening cerrado no puede archivarse.");
+    }
     const { error } = await this.client
       .from("screenings")
       .update({
@@ -435,7 +438,7 @@ export class ScreeningService {
   }
 }
 
-const timelineTitleByAction: Record<AuditAction, string> = {
+const timelineTitleByAction: Partial<Record<AuditAction, string>> = {
   "patient.created": "Paciente registrado",
   "patient.updated": "Ficha actualizada",
   "patient.archived": "Ficha archivada",

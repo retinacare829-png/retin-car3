@@ -42,7 +42,7 @@ describe("screening validation", () => {
   it("rejects clinical diagnosis-like states", () => {
     const parsed = screeningFormSchema.safeParse({
       patientId: screening.patientId,
-      status: "POSITIVO",
+      status: "DIAGNOSTICO_AUTOMATICO",
       generalObservations: "",
       assignedReviewerId: "",
     });
@@ -66,7 +66,7 @@ describe("image quality", () => {
   });
 
   it("keeps the AI unavailable message explicit", () => {
-    expect(betaAiUnavailableMessage).toBe("Modulo de Inteligencia Artificial no disponible en esta version beta.");
+    expect(betaAiUnavailableMessage).toBe("Módulo de Inteligencia Artificial no disponible en esta versión beta.");
   });
 });
 

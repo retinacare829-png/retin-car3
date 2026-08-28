@@ -140,7 +140,7 @@ Entregado:
 No incluido:
 
 - Diagnostico clinico.
-- Estados positivo/negativo.
+- Estados diagnosticos.
 - Clasificaciones de retinopatia.
 - Redes neuronales o inferencia IA.
 - Reportes PDF.
@@ -149,7 +149,22 @@ No incluido:
 
 ## Fase 4 - Revision profesional y seguimiento
 
-Pendiente.
+Estado: completada.
+
+Entregado:
+
+- Revision profesional manual con estados operativos y observaciones estructuradas.
+- Seguimientos y referencias sin integraciones ni notificaciones externas.
+- Checklist de cierre con validacion equivalente en dominio y PostgreSQL.
+- Cierre reservado para `clinic_admin` y `authorized_professional`.
+- Timeline y auditoria de eventos sensibles sin copiar texto clinico libre a metadata.
+- RLS multi-tenant, seeds ficticios y pruebas de dominio, permisos y servicio.
+
+No incluido:
+
+- Diagnostico, inferencia o clasificacion automatizada.
+- Reportes PDF, dashboard avanzado, recordatorios o integraciones externas.
+- Renovacion visual de Fase 4.5.
 
 ## Fase 5 - Dashboard, historial y reporte
 

@@ -836,6 +836,121 @@ textarea {
   font-size: 0.9rem;
 }
 
+.clinical-workflow {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #dbe5e2;
+}
+
+.module-heading.compact {
+  margin-bottom: 0;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #0b514b;
+  background: #dff2ed;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.workflow-summary,
+.workflow-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.workflow-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workflow-summary div {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid #dbe5e2;
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+
+.workflow-summary span,
+.permission-note {
+  color: #53635f;
+  font-size: 0.88rem;
+}
+
+.workflow-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.workflow-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #dbe5e2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.structured-observations {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+}
+
+.workflow-records,
+.closure-checklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workflow-records li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e3ebe9;
+}
+
+.workflow-records span,
+.workflow-records strong {
+  display: block;
+}
+
+.workflow-records span {
+  color: #53635f;
+  font-size: 0.9rem;
+}
+
+.workflow-records strong {
+  color: #172521;
+}
+
+.closure-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.closure-checklist .complete svg {
+  color: #13745f;
+}
+
+.closure-checklist .missing svg {
+  color: #a64337;
+}
+
 .row-actions {
   display: flex;
   gap: 8px;
@@ -872,6 +987,11 @@ textarea {
   .screening-layout,
   .screening-workspace,
   .image-metadata {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-grid,
+  .workflow-summary {
     grid-template-columns: 1fr;
   }
 
@@ -913,6 +1033,10 @@ textarea {
 
   .image-capture-row,
   .quality-reasons {
+    grid-template-columns: 1fr;
+  }
+
+  .structured-observations {
     grid-template-columns: 1fr;
   }
 }

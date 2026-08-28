@@ -19,8 +19,8 @@ Clinicas oftalmologicas, clinicas de diabetes/endocrinologia y aliados medicos q
 ## Limites de la beta
 
 - No diagnostica retinopatia diabetica.
-- No clasifica severidad.
-- No emite resultados positivos o negativos automatizados.
+- No asigna grados clinicos.
+- No emite conclusiones automatizadas.
 - No sustituye al oftalmologo ni al profesional autorizado.
 - No esta aprobada por MINSA ni por otra autoridad sanitaria.
 - No implementa pagos, telemedicina, integraciones propietarias ni aplicacion publica para pacientes.
