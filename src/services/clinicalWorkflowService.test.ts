@@ -30,7 +30,7 @@ describe("ClinicalWorkflowService", () => {
       created_at: "2026-08-28T00:00:00Z", updated_at: "2026-08-28T00:00:00Z", deleted_at: null, deleted_by: null,
     });
     const service = new ClinicalWorkflowService(client);
-    await service.createFollowUp(context, { assignedTo: "", followUpType: "CONTROL_PROGRAMADO", followUpStatus: "CONTROL_PROGRAMADO", dueDate: "2026-09-10", completedAt: null, notes: "Nota privada" });
+    await service.createFollowUp(context, { assignedTo: null, followUpType: "CONTROL_PROGRAMADO", followUpStatus: "CONTROL_PROGRAMADO", dueDate: "2026-09-10", completedAt: null, notes: null });
     expect(inserted.map((entry) => entry.table)).toEqual(["follow_ups", "audit_logs", "patient_timeline_events"]);
     expect(inserted.find((entry) => entry.table === "audit_logs")?.payload.metadata).not.toHaveProperty("notes");
   });

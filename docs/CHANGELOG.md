@@ -1,5 +1,14 @@
 # Changelog interno
 
+## v0.7.2 - Modo demo para defensa Fase 5.6
+
+- Tarjeta de recorrido sugerido en el Dashboard, sin mutaciones ni datos sensibles.
+- Guía completa de defensa, credenciales locales ficticias, mensajes clave, preguntas frecuentes y planes de contingencia.
+- Checklist operativo pre-defensa con comandos y verificaciones del flujo completo.
+- Seguimiento demo relativo al día del seed y validación idempotente de campos opcionales del workflow.
+- QA visual conectado documentado con limitaciones explícitas de Storage y confirmación final.
+- Sin IA, PDF, cambios de RLS, migraciones, arquitectura o paleta.
+
 ## v0.7.1 - Pulido comercial Fase 5.5
 
 - Invalidación selectiva entre pacientes, screenings, workflow y Dashboard, sin recargar la aplicación.

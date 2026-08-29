@@ -59,9 +59,9 @@ export const referralStatusLabels: Record<ReferralStatus, string> = {
 };
 
 const optionalText = (maxLength: number) =>
-  z.string().trim().max(maxLength).optional().transform((value) => value || null);
-const optionalUuid = z.string().trim().optional().transform((value) => value || null).pipe(z.string().uuid().nullable());
-const optionalDate = z.string().trim().optional().transform((value) => value || null).pipe(z.string().date().nullable());
+  z.string().trim().max(maxLength).nullish().transform((value) => value || null);
+const optionalUuid = z.string().trim().nullish().transform((value) => value || null).pipe(z.string().uuid().nullable());
+const optionalDate = z.string().trim().nullish().transform((value) => value || null).pipe(z.string().date().nullable());
 
 export const structuredObservationsSchema = z.object({
   insufficientQuality: z.boolean().default(false),

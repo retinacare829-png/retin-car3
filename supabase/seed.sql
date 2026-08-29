@@ -322,8 +322,10 @@ on conflict (id) do nothing;
 insert into public.follow_ups (id, organization_id, patient_id, screening_id, created_by, follow_up_type, follow_up_status, due_date, notes)
 values
   ('70000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000002', '90000000-0000-4000-8000-000000000001', 'CONTROL_PROGRAMADO', 'SIN_SEGUIMIENTO', null, null),
-  ('70000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000005', '90000000-0000-4000-8000-000000000001', 'CONTROL_PROGRAMADO', 'CONTROL_PROGRAMADO', '2026-11-22', null)
-on conflict (id) do nothing;
+  ('70000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000005', '90000000-0000-4000-8000-000000000001', 'CONTROL_PROGRAMADO', 'CONTROL_PROGRAMADO', current_date, 'Seguimiento ficticio visible en la agenda del día de la demostración.')
+on conflict (id) do update set
+  due_date = excluded.due_date,
+  notes = excluded.notes;
 
 insert into public.referrals (id, organization_id, patient_id, screening_id, created_by, referral_reason, referral_destination, referral_status, requested_date, notes)
 values ('80000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000006', '90000000-0000-4000-8000-000000000001', 'Evaluacion profesional presencial', 'Centro oftalmologico demo', 'SOLICITADA', '2026-08-23', null)

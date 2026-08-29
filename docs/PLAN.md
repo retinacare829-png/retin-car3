@@ -239,6 +239,27 @@ No incluido:
 - IA, PDF, funcionalidades clínicas nuevas o cambios de seguridad y workflow.
 - Fase 6, que permanece pendiente.
 
+## Fase 5.6 - Modo demo y defensa
+
+Estado: implementada; requiere ensayo final de infraestructura.
+
+Entregado:
+
+- Recorrido sugerido integrado al Dashboard.
+- Datos ficticios validados para clínicas, roles, pacientes, estados, agenda y Timeline.
+- Guía de defensa y checklist pre-defensa.
+- Corrección de validación idempotente para completar workflow en vivo.
+- QA visual conectado hasta checklist de cierre habilitado.
+
+Pendiente operativo:
+
+- Cargar y comprobar los dos archivos sintéticos OD/OI en Storage.
+- Repetir manualmente la confirmación de cierre tras reaplicar el seed.
+
+No incluido:
+
+- Fase 6, IA, PDF, nuevas entidades o cambios de seguridad, arquitectura y paleta.
+
 ## Fase 6 - Beta para presentacion clinica
 
 Pendiente.

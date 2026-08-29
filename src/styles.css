@@ -1130,6 +1130,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .toast button { display: grid; place-items: center; padding: 4px; border: 0; background: transparent; color: var(--rc-muted); cursor: pointer; }
 .table-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; color: var(--rc-muted); font-size: .86rem; }
 .table-pagination > div { display: flex; align-items: center; gap: 8px; }
+.demo-guide { display: grid; gap: 18px; padding: 22px; border: 1px solid var(--rc-border); border-radius: 14px; background: linear-gradient(135deg, #fff, #f3f9f8); }
+.demo-guide > div:first-child { display: flex; align-items: center; gap: 12px; }.demo-guide h2, .demo-guide p { margin: 0; }.demo-guide ol { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding: 0; margin: 0; list-style: none; }
+.demo-guide li { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 9px; border: 1px solid var(--rc-border); border-radius: 10px; background: #fff; font-size: .84rem; font-weight: 600; }.demo-guide li span { display: grid; flex: 0 0 25px; place-items: center; aspect-ratio: 1; border-radius: 50%; background: var(--rc-primary); color: #fff; }.demo-guide > div:last-child { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 820px) { .demo-guide ol { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .skeleton-stack span { animation: none; } }
 .loading-spinner { color: var(--rc-primary); animation: spin .9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
