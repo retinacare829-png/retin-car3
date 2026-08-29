@@ -2,7 +2,9 @@
 
 ## Estado de esta ejecución
 
-La auditoría estática, TypeScript y pruebas simuladas se ejecutan en el repositorio. En el host actual no están disponibles Docker, Supabase CLI ni un `.env` con URL/anon key; las pruebas conectadas no pueden marcarse como ejecutadas hasta disponer de una instancia local o demo.
+Validación conectada completada el 2026-08-28 contra Supabase local. El reset aplicó todas las migraciones y seeds; la prueba SQL terminó con `QA Supabase Fase 4.6: OK` y el smoke HTTP completó 22 verificaciones.
+
+Se comprobaron Auth, los tres roles, usuarios suspendido/sin organización, aislamiento entre clínicas, Storage privado, subida, URL firmada, expiración, bloqueo público y límite de 15 MiB. En la UI se verificaron login, persistencia tras recarga, cambio de organización con una membresía temporal de QA y logout; la membresía temporal fue retirada al terminar.
 
 No interpretar validación estática como evidencia de RLS real. La prueba SQL válida termina con `QA Supabase Fase 4.6: OK`.
 
@@ -33,7 +35,7 @@ Después configure `.env` y ejecute `npm run supabase:qa:smoke`. Para Storage HT
 | Screenings | Crear/editar y tenant correcto | Aplicación y SQL |
 | Imágenes | OD/OI, reemplazo y calidad | Aplicación + Storage |
 | Storage | Bucket/ruta privada | Migración y SQL |
-| Storage | URL firmada 300 s y URL pública bloqueada | Smoke con mutaciones |
+| Storage | URL firmada, expiración, límite 15 MiB y URL pública bloqueada | Smoke con mutaciones |
 | Workflow | Revisión, seguimiento y referencia | Aplicación y SQL |
 | Cierre | Checklist y cierre atómico | SQL/RPC |
 | Cierre | Técnico bloqueado/profesional permitido | SQL/RPC |

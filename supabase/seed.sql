@@ -1,19 +1,24 @@
 -- Cuentas exclusivamente locales/ficticias. Cambiar credenciales en cualquier entorno hospedado.
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 )
 values
-  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'profesional.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Profesional Demo"}'::jsonb, now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'admin.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Administracion Demo"}'::jsonb, now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'tecnico.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Tecnico Demo"}'::jsonb, now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated', 'admin.clinica-b@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Administracion Clinica B"}'::jsonb, now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000005', 'authenticated', 'authenticated', 'suspendido.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Usuario Suspendido Demo"}'::jsonb, now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000006', 'authenticated', 'authenticated', 'sin.clinica.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Usuario Sin Clinica Demo"}'::jsonb, now(), now())
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'profesional.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '', '', '', '', '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Profesional Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'admin.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '', '', '', '', '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Administracion Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'tecnico.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '', '', '', '', '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Tecnico Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated', 'admin.clinica-b@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '', '', '', '', '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Administracion Clinica B"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000005', 'authenticated', 'authenticated', 'suspendido.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '', '', '', '', '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Usuario Suspendido Demo"}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '90000000-0000-4000-8000-000000000006', 'authenticated', 'authenticated', 'sin.clinica.demo@example.test', crypt('RetinaCare-Demo-2026!', gen_salt('bf')), now(), '', '', '', '', '{"provider":"email","providers":["email"]}'::jsonb, '{"display_name":"Usuario Sin Clinica Demo"}'::jsonb, now(), now())
 on conflict (id) do update set
   email = excluded.email,
   encrypted_password = excluded.encrypted_password,
   email_confirmed_at = excluded.email_confirmed_at,
+  confirmation_token = excluded.confirmation_token,
+  recovery_token = excluded.recovery_token,
+  email_change_token_new = excluded.email_change_token_new,
+  email_change = excluded.email_change,
   raw_app_meta_data = excluded.raw_app_meta_data,
   raw_user_meta_data = excluded.raw_user_meta_data,
   updated_at = now();

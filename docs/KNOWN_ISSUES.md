@@ -38,10 +38,11 @@
 
 ## Fase 4.6
 
-- Este host no dispone de Docker, Supabase CLI ni variables `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. Las pruebas SQL y HTTP quedan preparadas, pero no ejecutadas aquí.
+- La validación conectada local fue completada el 2026-08-28; migraciones, seeds, SQL RLS, smoke HTTP y recorrido visual pasaron.
 - Las operaciones distintas del cierre aún registran mutación, auditoría y timeline desde llamadas separadas. El cierre ya es atómico; migrar el resto a RPC/triggers queda antes de un piloto operativo.
 - La eliminación de imágenes es lógica y conserva el objeto privado. Falta una política formal de retención y purga antes de usar datos reales.
 - El smoke de Storage deja un objeto `qa-*`; debe ejecutarse en un entorno desechable y seguido de `supabase db reset`.
-- La persistencia de sesión requiere comprobación manual con recarga; el cliente usa `persistSession` y `autoRefreshToken`, pero este host no tiene credenciales para verificarla.
+- La persistencia de sesión fue comprobada con recarga en la aplicación local.
+- El transformador de imágenes y el pooler aparecen detenidos en `supabase status`; no afectaron Auth, REST, Storage, Studio ni la matriz de Fase 4.6.
 - Las cuentas y contraseña del seed son locales y ficticias. Nunca deben replicarse en un proyecto hospedado.
 - Storage se escribe antes de registrar metadata. Si la RPC de imagen falla después de una subida exitosa, puede quedar un objeto privado huérfano; definir limpieza administrativa antes de un piloto.

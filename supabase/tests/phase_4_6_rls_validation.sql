@@ -206,6 +206,9 @@ select pg_temp.assert_true(
   (select status = 'CERRADO' and closed_by = '90000000-0000-4000-8000-000000000001' from public.screenings where id = '30000000-0000-4000-8000-000000000002'),
   'authorized_professional debe cerrar un screening completo'
 );
+-- La auditoria solo es visible para clinic_admin; cambiar de actor valida tanto
+-- la escritura atomica anterior como la politica de lectura intencional.
+select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000002', true);
 select pg_temp.assert_true(
   exists(select 1 from public.audit_logs where entity_id = '30000000-0000-4000-8000-000000000002' and action = 'screening.closed'),
   'el cierre debe registrar auditoria'

@@ -105,6 +105,20 @@ if (process.env.SUPABASE_QA_ALLOW_STORAGE_MUTATIONS === "true") {
   assert(!publicResponse.ok, "acceso publico directo bloqueado");
   const { error: otherTenantSignedError } = await adminB.storage.from(bucket).createSignedUrl(path, 60);
   assert(Boolean(otherTenantSignedError), "URL firmada bloqueada para otro tenant");
+
+  const expiringPath = `${organizationA}/20000000-0000-4000-8000-000000000002/30000000-0000-4000-8000-000000000003/OI/qa-expiring-${suffix}.png`;
+  const { error: expiringUploadError } = await techA.storage.from(bucket).upload(expiringPath, png, { contentType: "image/png", upsert: false });
+  if (expiringUploadError) throw expiringUploadError;
+  const { data: expiring, error: expiringError } = await professionalA.storage.from(bucket).createSignedUrl(expiringPath, 1);
+  if (expiringError) throw expiringError;
+  await new Promise((resolve) => setTimeout(resolve, 2100));
+  const expiredResponse = await fetch(expiring.signedUrl);
+  assert(!expiredResponse.ok, "URL firmada expira");
+
+  const oversizedPath = `${organizationA}/20000000-0000-4000-8000-000000000002/30000000-0000-4000-8000-000000000003/OD/qa-oversized-${suffix}.png`;
+  const oversized = Buffer.alloc(15 * 1024 * 1024 + 1);
+  const { error: oversizedError } = await techA.storage.from(bucket).upload(oversizedPath, oversized, { contentType: "image/png", upsert: false });
+  assert(Boolean(oversizedError), "limite Storage de 15 MiB bloquea archivos mayores");
 } else {
   console.log("SKIP Storage HTTP: establezca SUPABASE_QA_ALLOW_STORAGE_MUTATIONS=true en un entorno desechable.");
 }

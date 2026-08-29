@@ -131,3 +131,9 @@ Motivo: inspeccionar archivos no demuestra que RLS/Auth/Storage funcionen en una
 Decision: usar la RPC `register_retinal_image` para desactivar la captura anterior e insertar la nueva en una transaccion.
 
 Motivo: insertar primero una segunda imagen `ACTIVA` violaba el indice parcial de lateralidad. La RPC conserva exactamente una captura activa aun ante errores de base de datos.
+
+## 0023 - Seeds Auth compatibles con GoTrue local
+
+Decision: inicializar como cadenas vacías los campos de token de las cuentas ficticias insertadas directamente en `auth.users`.
+
+Motivo: GoTrue local espera cadenas al autenticar o recuperar contraseña; valores `NULL` provocaban un error de lectura del esquema aunque las migraciones y el seed finalizaran correctamente.

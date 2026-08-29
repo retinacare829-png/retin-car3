@@ -188,7 +188,7 @@ No incluido:
 
 ## Fase 4.6 - Validacion Supabase + QA tecnico
 
-Estado: implementacion preparada; ejecucion conectada pendiente de infraestructura.
+Estado: completada y validada contra Supabase local el 2026-08-28.
 
 Entregado:
 
@@ -204,7 +204,7 @@ Entregado:
 No incluido:
 
 - Funcionalidades nuevas, IA, PDF, dashboard avanzado o cambios visuales.
-- Ejecucion real en este host, que no dispone de Docker, Supabase CLI ni credenciales de proyecto.
+- Despliegue a proyecto hospedado; esta validación fue exclusivamente local.
 
 ## Fase 5 - Dashboard, historial y reporte
 

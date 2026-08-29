@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const root = process.cwd();
-const ignoredDirectories = new Set([".git", "node_modules", "dist", "coverage"]);
+const ignoredDirectories = new Set([".git", "node_modules", "dist", "coverage", ".temp"]);
 const ignoredFiles = new Set(["package-lock.json"]);
 const patterns = [
   /service[_-]?role[_-]?key/i,

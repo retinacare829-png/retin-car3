@@ -1,5 +1,13 @@
 # Changelog interno
 
+## v0.6.1 - Validación conectada Fase 4.6
+
+- Validación local completa de migraciones, seeds, Auth, RLS, multi-tenant, Storage, workflow, timeline y auditoría.
+- Seed Auth compatible con GoTrue local al evitar tokens nulos.
+- QA SQL ajustada para comprobar auditoría con su rol lector autorizado.
+- Smoke ampliado con expiración de URL firmada y rechazo de archivos mayores de 15 MiB.
+- Secret scan excluye artefactos locales generados bajo `supabase/.temp`.
+
 ## v0.6.1 - Validacion Supabase + QA tecnico
 
 - Integridad multi-tenant reforzada con claves compuestas.

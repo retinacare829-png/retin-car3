@@ -39,7 +39,7 @@ Las cuentas usan dominios `example.test` y la contraseña local compartida defin
 | `suspendido.demo@example.test` | Membresía suspendida |
 | `sin.clinica.demo@example.test` | Usuario autenticado sin organización |
 
-Las identidades email se crean junto con `auth.users`; el login con contraseña funciona después del reset local. La recuperación puede verificarse en el capturador de correo que muestra `npx supabase status`.
+Las identidades email se crean junto con `auth.users`; sus campos de token se inicializan con cadenas vacías para compatibilidad con GoTrue local. El login con contraseña funciona después del reset local. La recuperación puede verificarse en el capturador de correo que muestra `npx supabase status`.
 
 ## Migraciones y aislamiento
 
@@ -79,7 +79,7 @@ npm run supabase:qa:smoke
 
 - `supabase:check` valida archivos y garantías sin conexión.
 - `supabase:qa:sql` ejecuta pruebas RLS transaccionales en el contenedor y hace rollback.
-- `supabase:qa:smoke` valida Auth, roles y tenants mediante la API real.
+- `supabase:qa:smoke` valida Auth, roles, tenants, privacidad, expiración de URL firmada y límite de 15 MiB mediante la API real.
 
 Para validar subida, URL firmada y bloqueo público en un entorno desechable, configure `SUPABASE_QA_ALLOW_STORAGE_MUTATIONS=true`. La prueba carga un PNG técnico de 1 px bajo una ruta `qa-*`; resetee el entorno al finalizar.
 
