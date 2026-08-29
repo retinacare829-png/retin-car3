@@ -58,6 +58,7 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
   const [editingScreening, setEditingScreening] = useState<Screening | null>(null);
   const [activeScreeningId, setActiveScreeningId] = useState<string | null>(null);
   const [form, setForm] = useState<ScreeningFormInput>(defaultScreeningForm(patient.id));
+  const [formError, setFormError] = useState<string | null>(null);
   const activeScreening = screeningsApi.screenings.find((screening) => screening.id === activeScreeningId) ?? null;
 
   useEffect(() => {
@@ -94,8 +95,11 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (screeningsApi.saving) return;
+    setFormError(null);
     const parsed = screeningFormSchema.safeParse(form);
     if (!parsed.success) {
+      setFormError(parsed.error.issues[0]?.message ?? "Revise los datos del screening.");
       return;
     }
 
@@ -176,6 +180,7 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
               Limpiar
             </button>
           </div>
+          {formError ? <div className="form-error" role="alert">{formError}</div> : null}
         </form>
 
         <div className="screening-list-panel">

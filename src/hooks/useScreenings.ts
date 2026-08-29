@@ -13,6 +13,7 @@ import type {
 import type { Role } from "../domain/roles";
 import { supabase } from "../lib/supabase";
 import { ScreeningService } from "../services/screeningService";
+import { friendlyError, invalidateData, notify, subscribeToDataInvalidation } from "../lib/appEvents";
 
 export interface UseScreeningsResult {
   screenings: ScreeningDetail[];
@@ -89,6 +90,7 @@ export function useScreenings(
   useEffect(() => {
     void reload();
   }, [reload]);
+  useEffect(() => subscribeToDataInvalidation("screenings", () => void reload()), [reload]);
 
   async function mutate(operation: () => Promise<void>) {
     if (!service || !organizationId || !user) {
@@ -101,7 +103,7 @@ export function useScreenings(
       await operation();
       await reload();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo guardar el cambio.");
+      const message = friendlyError(caught, "No se pudo guardar el cambio."); setError(message); notify(message, "error");
       throw caught;
     } finally {
       setSaving(false);
@@ -128,6 +130,7 @@ export function useScreenings(
           throw new Error("Su rol no permite crear screenings.");
         }
         await service?.createScreening({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, data);
+        invalidateData("dashboard"); notify("Screening creado correctamente.");
       }),
     updateScreening: async (screening, data) =>
       mutate(async () => {
@@ -139,6 +142,7 @@ export function useScreenings(
           screening,
           data,
         );
+        invalidateData("dashboard"); notify("Screening actualizado.");
       }),
     deleteScreening: async (screening) =>
       mutate(async () => {
@@ -146,6 +150,7 @@ export function useScreenings(
           throw new Error("Su rol no permite archivar screenings.");
         }
         await service?.deleteScreening({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, screening);
+        invalidateData("dashboard"); notify("Screening archivado correctamente.");
       }),
     uploadOrReplaceImage: async (screening, laterality, file) =>
       mutate(async () => {
@@ -156,6 +161,7 @@ export function useScreenings(
           { organizationId: organizationId ?? "", actorUserId: user?.id ?? "" },
           { screeningId: screening.id, patientId: screening.patientId, laterality, file },
         );
+        invalidateData("dashboard"); notify("Imagen subida correctamente.");
       }),
     deleteImage: async (image) =>
       mutate(async () => {
@@ -163,6 +169,7 @@ export function useScreenings(
           throw new Error("Su rol no permite eliminar imagenes.");
         }
         await service?.deleteImage({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, image);
+        invalidateData("dashboard"); notify("Imagen eliminada correctamente.");
       }),
     recordQualityReview: async (image, input) =>
       mutate(async () => {
@@ -174,6 +181,7 @@ export function useScreenings(
           image,
           input,
         );
+        invalidateData("dashboard"); notify("Calidad de imagen registrada.");
       }),
     createSignedImageUrl: async (image) => {
       if (!service || !canDownloadImages) {

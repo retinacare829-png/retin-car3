@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { emptyDashboardData, type DashboardData } from "../domain/dashboard";
 import { supabase } from "../lib/supabase";
 import { DashboardService } from "../services/dashboardService";
+import { friendlyError, subscribeToDataInvalidation } from "../lib/appEvents";
 
 export function useDashboard(organizationId: string) {
   const service = useMemo(() => supabase ? new DashboardService(supabase) : null, []);
@@ -11,8 +12,10 @@ export function useDashboard(organizationId: string) {
   useEffect(() => {
     let mounted = true; setLoading(true); setError(null);
     if (!service) { setLoading(false); setError("Supabase no está configurado."); return; }
-    service.getDashboard(organizationId).then((result) => { if (mounted) setData(result); }).catch((caught: unknown) => { if (mounted) setError(caught instanceof Error ? caught.message : "No fue posible cargar el dashboard."); }).finally(() => { if (mounted) setLoading(false); });
-    return () => { mounted = false; };
+    const load = (showLoading = true) => { if (showLoading) setLoading(true); service.getDashboard(organizationId).then((result) => { if (mounted) setData(result); }).catch((caught: unknown) => { if (mounted) setError(friendlyError(caught, "No fue posible cargar el dashboard.")); }).finally(() => { if (mounted) setLoading(false); }); };
+    load();
+    const unsubscribe = subscribeToDataInvalidation("dashboard", () => load(false));
+    return () => { mounted = false; unsubscribe(); };
   }, [organizationId, service]);
   return { data, loading, error };
 }

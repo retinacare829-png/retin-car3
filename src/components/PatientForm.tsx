@@ -56,6 +56,7 @@ export function PatientForm({ patient, disabled, onCancel, onSubmit }: PatientFo
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (disabled) return;
     setError(null);
 
     const parsed = patientFormSchema.safeParse(form);

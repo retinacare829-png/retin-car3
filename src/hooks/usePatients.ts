@@ -5,6 +5,7 @@ import type { Patient, PatientFormData } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { supabase } from "../lib/supabase";
 import { PatientService } from "../services/patientService";
+import { friendlyError, invalidateData, notify, subscribeToDataInvalidation } from "../lib/appEvents";
 
 export interface UsePatientsResult {
   patients: Patient[];
@@ -56,6 +57,8 @@ export function usePatients(
     void reload();
   }, [reload]);
 
+  useEffect(() => subscribeToDataInvalidation("patients", () => void reload()), [reload]);
+
   async function mutate(operation: () => Promise<void>) {
     if (!service || !organizationId || !user) {
       throw new Error("No hay contexto de organizacion activo.");
@@ -71,7 +74,8 @@ export function usePatients(
       await operation();
       await reload();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo guardar el cambio.");
+      const message = friendlyError(caught, "No se pudo guardar el cambio.");
+      setError(message); notify(message, "error");
       throw caught;
     } finally {
       setSaving(false);
@@ -88,18 +92,22 @@ export function usePatients(
     createPatient: async (data) =>
       mutate(async () => {
         await service?.createPatient({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, data);
+        invalidateData("dashboard"); notify("Paciente creado correctamente.");
       }),
     updatePatient: async (patient, data) =>
       mutate(async () => {
         await service?.updatePatient({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, patient, data);
+        invalidateData("dashboard"); notify("Paciente actualizado correctamente.");
       }),
     archivePatient: async (patientId) =>
       mutate(async () => {
         await service?.archivePatient({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, patientId);
+        invalidateData("dashboard"); notify("Paciente archivado correctamente.");
       }),
     restorePatient: async (patientId) =>
       mutate(async () => {
         await service?.restorePatient({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, patientId);
+        invalidateData("dashboard"); notify("Paciente restaurado correctamente.");
       }),
   };
 }

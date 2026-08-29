@@ -43,7 +43,7 @@ export class DashboardService {
     screenings.forEach((item) => distribution.set(item.status, (distribution.get(item.status) ?? 0) + 1));
     const statusDistribution: DashboardStatus[] = [...distribution].map(([status, total]) => ({ status, label: statusLabels[status] ?? status, total })).sort((a, b) => b.total - a.total);
     const agenda = [
-      ...activeFollowUps.filter((item) => Boolean(item.due_date && item.due_date >= todayKey)).map((item) => ({ id: `follow-${item.id}`, title: followUpLabels[item.follow_up_type] ?? "Seguimiento", detail: "Próximo seguimiento", occurredAt: `${item.due_date}T12:00:00`, priority: item.due_date === todayKey ? "high" as const : "normal" as const })),
+      ...activeFollowUps.filter((item) => item.due_date === todayKey).map((item) => ({ id: `follow-${item.id}`, title: followUpLabels[item.follow_up_type] ?? "Seguimiento", detail: "Programado para hoy", occurredAt: `${item.due_date}T12:00:00`, priority: "high" as const })),
       ...pendingReviews.map((item) => ({ id: `review-${item.id}`, title: "Revisión pendiente", detail: "Requiere atención profesional", occurredAt: item.created_at, priority: item.review_status === "REQUIERE_RECAPTURA" ? "high" as const : "normal" as const })),
     ].sort((a, b) => a.occurredAt.localeCompare(b.occurredAt)).slice(0, 8);
 

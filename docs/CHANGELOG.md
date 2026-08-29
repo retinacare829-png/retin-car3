@@ -1,5 +1,14 @@
 # Changelog interno
 
+## v0.7.1 - Pulido comercial Fase 5.5
+
+- Invalidación selectiva entre pacientes, screenings, workflow y Dashboard, sin recargar la aplicación.
+- Mensajes unificados de éxito y error con tratamiento amigable de red, timeout y permisos.
+- Carga mediante placeholders, estados vacíos con contexto y validación visible en formularios.
+- Ordenamiento y paginación de pacientes, con controles accesibles por teclado.
+- Agenda restringida a seguimientos del día y datos operativos reales desde Supabase.
+- Sin cambios en RLS, roles, Storage, auditoría, workflow, IA o PDF.
+
 ## v0.7 - Dashboard ejecutivo y operativo
 
 - Dashboard por organización con resumen del día, cinco KPIs y agenda cronológica calculados desde Supabase.

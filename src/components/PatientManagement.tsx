@@ -1,4 +1,4 @@
-import { Archive, Edit3, Images, RotateCcw, Search, UserRoundPlus } from "lucide-react";
+import { Archive, ChevronLeft, ChevronRight, Edit3, Images, RotateCcw, Search, UserRoundPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -31,12 +31,19 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   const [filters, setFilters] = useState<PatientFilters>(defaultPatientFilters);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"name" | "recent">("name");
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
   const patientsApi = usePatients(organizationId, role, user, filters.includeArchived, filters.query);
 
   const filteredPatients = useMemo(
-    () => filterPatients(patientsApi.patients, filters),
-    [filters, patientsApi.patients],
+    () => filterPatients(patientsApi.patients, filters).sort((a, b) => sortOrder === "name"
+      ? `${a.lastNames} ${a.firstNames}`.localeCompare(`${b.lastNames} ${b.firstNames}`, "es")
+      : b.createdAt.localeCompare(a.createdAt)),
+    [filters, patientsApi.patients, sortOrder],
   );
+  const totalPages = Math.max(1, Math.ceil(filteredPatients.length / pageSize));
+  const visiblePatients = filteredPatients.slice((page - 1) * pageSize, page * pageSize);
   const selectedPatient = filteredPatients.find((patient) => patient.id === selectedPatientId) ?? null;
 
   useEffect(() => {
@@ -44,6 +51,9 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
       setSelectedPatientId(filteredPatients[0].id);
     }
   }, [filteredPatients, initialFocus, selectedPatientId]);
+
+  useEffect(() => { setPage(1); }, [filters, sortOrder]);
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
   async function handleSubmit(data: PatientFormData) {
     if (editingPatient) {
@@ -130,6 +140,14 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
               </select>
             </label>
 
+            <label>
+              Ordenar
+              <select onChange={(event) => setSortOrder(event.target.value as "name" | "recent")} value={sortOrder}>
+                <option value="name">Nombre A–Z</option>
+                <option value="recent">Más recientes</option>
+              </select>
+            </label>
+
             <label className="checkbox-field">
               <input
                 checked={filters.includeArchived}
@@ -149,7 +167,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
           ) : null}
 
           <div className="patient-table" role="table" aria-label="Pacientes registrados">
-            {filteredPatients.map((patient) => (
+            {visiblePatients.map((patient) => (
               <article className={patient.deletedAt ? "patient-row archived" : "patient-row"} key={patient.id}>
                 <div>
                   <strong>
@@ -215,6 +233,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
               </article>
             ))}
           </div>
+          {filteredPatients.length > pageSize ? <nav className="table-pagination" aria-label="Paginación de pacientes"><span>{(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredPatients.length)} de {filteredPatients.length}</span><div><button className="icon-button" aria-label="Página anterior" disabled={page === 1} onClick={() => setPage((current) => current - 1)} type="button"><ChevronLeft size={18} /></button><span>Página {page} de {totalPages}</span><button className="icon-button" aria-label="Página siguiente" disabled={page === totalPages} onClick={() => setPage((current) => current + 1)} type="button"><ChevronRight size={18} /></button></div></nav> : null}
         </div>
       </div>
 

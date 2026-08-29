@@ -5,6 +5,7 @@ import type { FollowUp, FollowUpData, ProfessionalReviewData, Referral, Referral
 import type { Role } from "../domain/roles";
 import { supabase } from "../lib/supabase";
 import { ClinicalWorkflowService } from "../services/clinicalWorkflowService";
+import { friendlyError, invalidateData, notify } from "../lib/appEvents";
 
 const emptyDetail: ClinicalWorkflowDetail = { professionalReview: null, followUps: [], referrals: [] };
 
@@ -35,7 +36,7 @@ export function useClinicalWorkflow(organizationId: string, patientId: string, s
     if (!service) throw new Error("Supabase no esta configurado.");
     setSaving(true); setError(null);
     try { await operation(); await reload(); }
-    catch (caught) { setError(caught instanceof Error ? caught.message : "No se pudo guardar el cambio clinico."); throw caught; }
+    catch (caught) { const message = friendlyError(caught, "No se pudo guardar el cambio clínico."); setError(message); notify(message, "error"); throw caught; }
     finally { setSaving(false); }
   }
 
@@ -44,18 +45,22 @@ export function useClinicalWorkflow(organizationId: string, patientId: string, s
     saveReview: (data: ProfessionalReviewData) => mutate(async () => {
       if (!canReview) throw new Error("Su rol no permite emitir una revision profesional.");
       await service?.saveProfessionalReview(context, data);
+      invalidateData("dashboard", "screenings"); notify("Revisión profesional actualizada.");
     }),
     saveFollowUp: (data: FollowUpData, current?: FollowUp) => mutate(async () => {
       if (!canWriteFollowUps) throw new Error("Su rol no permite registrar seguimientos.");
       if (current) await service?.updateFollowUp(context, current, data); else await service?.createFollowUp(context, data);
+      invalidateData("dashboard", "screenings"); notify(current ? "Seguimiento actualizado." : "Seguimiento registrado.");
     }),
     saveReferral: (data: ReferralData, current?: Referral) => mutate(async () => {
       if (!canWriteReferrals) throw new Error("Su rol no permite registrar referencias.");
       if (current) await service?.updateReferral(context, current, data); else await service?.createReferral(context, data);
+      invalidateData("dashboard", "screenings"); notify(current ? "Referencia actualizada." : "Referencia registrada.");
     }),
     closeScreening: () => mutate(async () => {
       if (!canClose) throw new Error("Su rol no permite cerrar screenings.");
       await service?.closeScreening(context);
+      invalidateData("dashboard", "screenings"); notify("Screening cerrado correctamente.");
     }),
   };
 }

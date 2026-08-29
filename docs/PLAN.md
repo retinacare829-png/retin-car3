@@ -222,6 +222,23 @@ No incluido:
 
 - IA, diagnóstico, reportes PDF, nuevas entidades o cambios en lógica clínica.
 
+## Fase 5.5 - Pulido para demostración
+
+Estado: completada.
+
+Entregado:
+
+- Dashboard y módulos clínicos sincronizados mediante invalidación selectiva.
+- KPIs, actividad, agenda y Timeline derivados exclusivamente de Supabase.
+- Estados vacíos, placeholders de carga, notificaciones y errores consistentes.
+- Prevención de doble envío, validaciones visibles, ordenamiento y paginación.
+- Revisión de foco, controles accesibles y paleta RetinaCare existente.
+
+No incluido:
+
+- IA, PDF, funcionalidades clínicas nuevas o cambios de seguridad y workflow.
+- Fase 6, que permanece pendiente.
+
 ## Fase 6 - Beta para presentacion clinica
 
 Pendiente.

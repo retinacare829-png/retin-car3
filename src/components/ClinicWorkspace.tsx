@@ -5,7 +5,7 @@ import { roleLabels } from "../domain/roles";
 import { useOrganizationContext } from "../hooks/useOrganizationContext";
 import logoUrl from "../../assets/retinacare.jpeg";
 import { OperationalHome, type WorkspaceDestination } from "./OperationalHome";
-import { EmptyState, ErrorNotice, LoadingState } from "./ui";
+import { EmptyState, ErrorNotice, LoadingState, ToastViewport } from "./ui";
 import { can } from "../domain/permissions";
 
 const PatientManagement = lazy(() => import("./PatientManagement").then((module) => ({ default: module.PatientManagement })));
@@ -41,6 +41,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
 
   return (
     <div className="clinical-app-shell">
+      <ToastViewport />
       <a className="skip-link" href="#main-content">Saltar al contenido principal</a>
       <aside className={mobileOpen ? "app-sidebar open" : "app-sidebar"} aria-label="Barra lateral de RetinaCare">
         <div className="sidebar-brand"><img src={logoUrl} alt="RetinaCare" /><button className="mobile-close" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button"><X size={20} /></button></div>

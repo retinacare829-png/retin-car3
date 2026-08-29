@@ -1,7 +1,8 @@
 import type { LucideIcon } from "lucide-react";
-import { AlertCircle, Inbox, LoaderCircle } from "lucide-react";
-import type { ReactNode } from "react";
+import { AlertCircle, CheckCircle2, Inbox, Info, X } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { StatusTone } from "../domain/statusTone";
+import { subscribeToToasts, type ToastDetail } from "../lib/appEvents";
 
 export function EmptyState({
   title,
@@ -29,11 +30,23 @@ export function EmptyState({
 export function LoadingState({ label = "Cargando informacion" }: { label?: string }) {
   return (
     <div className="loading-state" role="status" aria-live="polite">
-      <LoaderCircle className="loading-spinner" aria-hidden="true" size={20} />
+      <div className="skeleton-stack" aria-hidden="true"><span /><span /><span /></div>
       <span>{label}...</span>
       <span className="sr-only">Espere mientras finaliza la carga.</span>
     </div>
   );
+}
+
+export function ToastViewport() {
+  const [toasts, setToasts] = useState<ToastDetail[]>([]);
+  useEffect(() => subscribeToToasts((toast) => {
+    setToasts((current) => [...current, toast].slice(-3));
+    globalThis.setTimeout(() => setToasts((current) => current.filter((item) => item.id !== toast.id)), 4500);
+  }), []);
+  return <div className="toast-viewport" aria-live="polite" aria-atomic="true">{toasts.map((toast) => {
+    const Icon = toast.tone === "success" ? CheckCircle2 : toast.tone === "error" ? AlertCircle : Info;
+    return <div className={`toast toast-${toast.tone}`} key={toast.id} role={toast.tone === "error" ? "alert" : "status"}><Icon aria-hidden="true" size={19} /><span>{toast.message}</span><button aria-label="Cerrar mensaje" onClick={() => setToasts((current) => current.filter((item) => item.id !== toast.id))} type="button"><X size={16} /></button></div>;
+  })}</div>;
 }
 
 export function ErrorNotice({ message, onRetry }: { message: string; onRetry?: () => void }) {
