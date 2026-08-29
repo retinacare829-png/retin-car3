@@ -93,7 +93,7 @@ Qué decir: “El cierre exige paciente, screening, OD/OI, calidad, revisión y 
 
 ### 11. Mostrar Timeline y auditoría
 
-Acción: revisar el Timeline visible. Si se solicita evidencia técnica, abrir Supabase Studio → Table Editor y consultar `audit_events` sin mostrar tokens ni texto clínico sensible.
+Acción: revisar el Timeline visible. Si se solicita evidencia técnica, abrir Supabase Studio → Table Editor y consultar `audit_logs` sin mostrar tokens ni texto clínico sensible.
 
 Qué decir: “El Timeline explica el caso al usuario; la auditoría registra eventos sensibles para trazabilidad. Son propósitos complementarios.”
 
@@ -152,20 +152,51 @@ El recorrido local no necesita internet después de instalar dependencias: usar 
 ### Si una imagen no carga
 
 1. Cambiar de OD a OI y reintentar una vez.
-2. Mostrar metadatos, lateralidad, calidad y el estado vacío/error amigable.
-3. Explicar el bucket privado y la URL firmada sin exponerla.
-4. Continuar con un screening que ya tenga calidad registrada o registrar una imagen sintética no identificable preparada antes de la defensa.
+2. Ejecutar `npm run demo:storage` y recargar el screening.
+3. Mostrar metadatos, lateralidad, calidad y el estado vacío/error amigable.
+4. Explicar el bucket privado y la URL firmada sin exponerla.
 5. Nunca usar una imagen real como reemplazo improvisado.
 
-## QA rápido de Fase 5.6
+## Regenerar y cargar imágenes demo
 
-Fecha: 2026-08-28.
+Los archivos `assets/demo/demo-od-synthetic.jpg` y `assets/demo/demo-oi-synthetic.jpg` son ilustraciones generadas, claramente marcadas como **DEMO SINTÉTICA — NO DIAGNÓSTICA**. No proceden de pacientes, no representan hallazgos y no deben interpretarse clínicamente.
 
-- Validación estática del seed: aprobada para dos clínicas, roles administrador/técnico/profesional, tres pacientes ficticios, seis screenings en distintos estados, actividad reciente y un caso preparado para completar.
-- Seguimiento de agenda: ajustado a `current_date` para que aparezca el día en que se aplica el seed.
-- Recorrido visual conectado: login, Dashboard, Modo Demo, búsqueda de Mariana, screenings, metadatos OD/OI, calidad, límite de IA, Timeline, revisión profesional y seguimiento verificados en la UI local. El checklist de cierre quedó habilitado después de completar los requisitos.
-- Cierre final: el diálogo de confirmación fue alcanzado, pero su aceptación no pudo verificarse por un timeout de la herramienta de automatización. Debe repetirse manualmente en el ensayo pre-defensa.
-- Storage demo: los metadatos OD/OI existen, pero los archivos placeholder no están físicamente disponibles en el Storage local actual. Preparar antes de la defensa dos imágenes sintéticas no identificables o usar el plan B documentado.
-- Entorno: la app y Supabase local respondieron en la prueba, aunque el ejecutable `docker` no está disponible en el `PATH` de esta terminal.
-- Última validación conectada documentada: Fase 4.6, 2026-08-28, con 22 verificaciones HTTP y QA SQL aprobado; ver `docs/QA_SUPABASE.md`.
-- Suite automatizada Fase 5.6: 32 pruebas aprobadas; typecheck y lint aprobados durante el QA iterativo. Las validaciones finales completas se registran en el estado de la fase.
+Después de `npm run supabase:reset`, cargarlos en el bucket privado con:
+
+```powershell
+npm run demo:storage
+```
+
+El script:
+
+- rechaza cualquier URL que no sea `localhost`, `127.0.0.1` o `::1`;
+- obtiene URL y anon key desde `.env`, sin claves incluidas en código;
+- inicia sesión con la cuenta demo local;
+- usa las rutas de organización/paciente/screening del seed;
+- reutiliza el objeto cuando ya existe y solo inserta cuando falta, por lo que puede repetirse sin requerir permisos de actualización;
+- crea una URL firmada temporal por imagen y verifica una respuesta JPEG correcta;
+- mantiene privado `retinal-images-private`.
+
+Resultado esperado:
+
+```text
+OK OD: archivo sintético privado y URL firmada válida.
+OK OI: archivo sintético privado y URL firmada válida.
+Storage demo local preparado de forma idempotente.
+```
+
+## QA final de Fase 5.6.1
+
+Fecha: 2026-08-29.
+
+- Base local restaurada desde migraciones y seed sin errores.
+- OD/OI sintéticos cargados físicamente en Storage privado y validados mediante URLs firmadas.
+- Cargador ejecutado dos veces consecutivas con éxito para comprobar idempotencia bajo RLS.
+- Visor verificado en ambas lateralidades, sin estado de error y con leyendas sintéticas visibles.
+- Login, Dashboard, paciente Mariana, screening preparado, calidad OI, `NOT_AVAILABLE`, revisión profesional y seguimiento completados en la UI.
+- Checklist completo, diálogo aceptado y screening cerrado correctamente.
+- Dashboard confirmado después del cierre: pendientes `4 → 3`, revisados `2 → 3`, revisiones pendientes `1 → 0` y “Screening cerrado” como actividad más reciente.
+- Timeline confirmado con Calidad registrada, Revisión completada, Seguimiento creado y Screening cerrado.
+- `audit_logs` confirmado con `image_quality_review.recorded`, `professional_review.updated`, `follow_up.created` y `screening.closed`.
+- Bucket permaneció privado; no se modificaron RLS, migraciones ni arquitectura.
+- Al finalizar el QA se reaplicaron seed y carga de Storage para dejar el caso preparado, abierto y listo para la defensa.

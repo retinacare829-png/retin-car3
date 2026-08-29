@@ -1,5 +1,14 @@
 # Changelog interno
 
+## v0.7.3 - Cierre demo defensa Fase 5.6.1
+
+- Dos imágenes OD/OI generadas, sintéticas y marcadas explícitamente como no diagnósticas.
+- Script `demo:storage` local-only, idempotente y sin claves embebidas para poblar Storage privado.
+- Validación de ambas URLs firmadas y del contenido JPEG servido por el bucket privado.
+- Recorrido conectado completo desde login hasta cierre, Dashboard reactivo, Timeline y auditoría.
+- Documentación de regeneración, verificación y contingencia actualizada.
+- Sin cambios en RLS, migraciones, arquitectura, diseño, IA o PDF.
+
 ## v0.7.2 - Modo demo para defensa Fase 5.6
 
 - Tarjeta de recorrido sugerido en el Dashboard, sin mutaciones ni datos sensibles.

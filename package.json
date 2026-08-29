@@ -14,7 +14,8 @@
     "supabase:check": "node scripts/validate-supabase-config.mjs",
     "supabase:reset": "npx supabase db reset",
     "supabase:qa:sql": "node scripts/run-supabase-sql-qa.mjs",
-    "supabase:qa:smoke": "node --env-file-if-exists=.env scripts/supabase-smoke.mjs"
+    "supabase:qa:smoke": "node --env-file-if-exists=.env scripts/supabase-smoke.mjs",
+    "demo:storage": "node --env-file-if-exists=.env scripts/seed-demo-storage.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

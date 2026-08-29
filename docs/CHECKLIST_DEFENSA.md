@@ -6,6 +6,7 @@
 - [ ] Confirmar que `.env` existe localmente, no está versionado y contiene `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` del entorno demo.
 - [ ] Confirmar espacio disponible, cargador, adaptador de video y navegador actualizado.
 - [ ] Aplicar el seed desde cero en el entorno local desechable.
+- [ ] Ejecutar `npm run demo:storage` después del reset y comprobar los dos mensajes `OK`.
 - [ ] Abrir Supabase Studio y verificar organizaciones, pacientes, screenings, Timeline y auditoría.
 - [ ] Verificar que ninguna pestaña o terminal muestre secretos.
 
@@ -19,6 +20,7 @@ npx supabase status
 npm run dev
 npm test
 npm run build
+npm run demo:storage
 ```
 
 Validación adicional recomendada:
@@ -40,11 +42,11 @@ npm audit
 - [ ] Confirmar que el Dashboard carga KPIs, actividad y agenda.
 - [ ] Buscar `Mariana` / `DEMO-OFT-001`.
 - [ ] Confirmar que el screening preparado muestra OD/OI y calidad.
-- [ ] Confirmar que los archivos sintéticos OD/OI existen físicamente en Storage y abren con URL firmada.
+- [ ] Confirmar que los archivos sintéticos marcados como no diagnósticos existen físicamente en Storage y abren con URL firmada.
 - [ ] Confirmar el bloque de IA `NOT_AVAILABLE`.
 - [ ] Verificar el flujo paciente → screening → workflow → Dashboard.
 - [ ] Confirmar que Timeline y auditoría contienen eventos.
-- [ ] Completar y cerrar una copia del caso en un ensayo; reaplicar el seed antes de la defensa para restaurar el escenario.
+- [ ] Completar y cerrar el caso en un ensayo; después ejecutar `npm run supabase:reset` y `npm run demo:storage` para restaurar el escenario.
 - [ ] Dejar abierta una terminal con `docker ps` y otra con Vite, sin secretos visibles.
 
 ## Justo antes de presentar
@@ -58,4 +60,4 @@ npm audit
 
 ## Criterio de salida
 
-No iniciar la defensa práctica si falla el login, el Dashboard no carga o no existe un caso ficticio que se pueda completar. En ese caso, usar el plan B documentado y declarar con transparencia el estado del entorno.
+No iniciar la defensa práctica si falla el login, el Dashboard no carga o `npm run demo:storage` no valida OD/OI. En ese caso, usar el plan B documentado y declarar con transparencia el estado del entorno.

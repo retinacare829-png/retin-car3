@@ -46,3 +46,11 @@
 - El transformador de imágenes y el pooler aparecen detenidos en `supabase status`; no afectaron Auth, REST, Storage, Studio ni la matriz de Fase 4.6.
 - Las cuentas y contraseña del seed son locales y ficticias. Nunca deben replicarse en un proyecto hospedado.
 - Storage se escribe antes de registrar metadata. Si la RPC de imagen falla después de una subida exitosa, puede quedar un objeto privado huérfano; definir limpieza administrativa antes de un piloto.
+
+## Fase 5.6.1
+
+- Resuelto: los placeholders OD/OI del screening demo ahora tienen archivos sintéticos locales y un cargador idempotente para Storage privado.
+- Resuelto: el recorrido manual conectado llegó hasta cierre, actualización del Dashboard, Timeline y auditoría el 2026-08-29.
+- Las imágenes son ilustraciones generadas y no representan anatomía, hallazgos ni diagnóstico. Deben mantenerse exclusivamente para demo local.
+- Después de cada `supabase db reset` es obligatorio ejecutar `npm run demo:storage`, porque el seed SQL no escribe binarios en el backend de Storage.
+- Los riesgos operativos no relacionados con la defensa permanecen descritos en Fase 4.6; no se ampliaron funcionalidades ni alcance clínico.
