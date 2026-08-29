@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthPage } from "./AuthPage";
 import { ClinicWorkspace } from "./ClinicWorkspace";
 import { OperationalHome } from "./OperationalHome";
+import { ExecutiveDashboard } from "./ExecutiveDashboard";
 import { EmptyState, LoadingState, StatusBadge } from "./ui";
 
 const selectOrganization = vi.fn();
@@ -15,6 +16,20 @@ vi.mock("../hooks/useOrganizationContext", () => ({
     loading: false,
     organizations: [{ organization: { id: "org-demo", name: "Clínica RetinaCare Demo" }, role: "clinic_admin" }],
     selectOrganization,
+  }),
+}));
+
+vi.mock("../hooks/useDashboard", () => ({
+  useDashboard: () => ({
+    loading: false, error: null,
+    data: {
+      totals: { patients: 12, screenings: 8, pending: 3, reviewed: 5, followUps: 2 },
+      today: { pendingScreenings: 3, scheduledFollowUps: 1, pendingReviews: 2, newPatients: 1 },
+      screeningsByMonth: [{ key: "2026-08", label: "ago", total: 8 }],
+      statusDistribution: [{ status: "REVISADO", label: "Revisado", total: 5 }],
+      recentActivity: [{ id: "event-1", title: "Screening creado", occurredAt: "2026-08-28T14:00:00Z" }],
+      agenda: [{ id: "follow-1", title: "Control programado", detail: "Próximo seguimiento", occurredAt: "2026-08-28T16:00:00Z", priority: "high" }],
+    },
   }),
 }));
 
@@ -36,9 +51,9 @@ describe("UX de la demo clínica", () => {
     expect(screen.getAllByRole("img", { name: "RetinaCare" })[0]).toBeInTheDocument();
     expect(screen.getByText("Clínica RetinaCare Demo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
-    fireEvent.click(screen.getByRole("button", { name: "Pendientes" }));
-    expect(screen.getByRole("heading", { name: "Pendientes" })).toBeInTheDocument();
-    expect(screen.getByText("Sin pendientes para mostrar")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
+    expect(screen.getByRole("heading", { name: "Reportes" })).toBeInTheDocument();
+    expect(screen.getByText("Reportes no disponibles")).toBeInTheDocument();
   });
 
   it("ofrece accesos rápidos y conserva el aviso de IA", () => {
@@ -54,5 +69,15 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByText("Sin revisiones")).toBeInTheDocument();
     expect(screen.getByText("Cargando revisión...")).toBeInTheDocument();
     expect(screen.getByText("En revisión")).toBeInTheDocument();
+  });
+
+  it("presenta métricas reales y bloques operativos del dashboard", () => {
+    render(<ExecutiveDashboard organizationId="org-demo" organizationName="Clínica Demo" onNavigate={vi.fn()} />);
+    expect(screen.getByText("Resumen del día")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Total Pacientes" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Screenings por mes" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Actividad reciente" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Agenda de Hoy" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Nuevo Paciente" })).toBeInTheDocument();
   });
 });

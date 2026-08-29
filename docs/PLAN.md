@@ -206,9 +206,21 @@ No incluido:
 - Funcionalidades nuevas, IA, PDF, dashboard avanzado o cambios visuales.
 - Despliegue a proyecto hospedado; esta validación fue exclusivamente local.
 
-## Fase 5 - Dashboard, historial y reporte
+## Fase 5 - Dashboard ejecutivo y operativo
 
-Pendiente.
+Estado: completada.
+
+Entregado:
+
+- Resumen diario y KPIs reales consultados por organización bajo RLS.
+- Gráficas de screenings por mes y estados sin dependencia pesada adicional.
+- Actividad reciente basada en Timeline y agenda de seguimientos/revisiones.
+- Header ejecutivo, navegación por rol y acciones rápidas sin duplicar módulos.
+- Diseño RetinaCare responsive, accesible y compatible con reducción de movimiento.
+
+No incluido:
+
+- IA, diagnóstico, reportes PDF, nuevas entidades o cambios en lógica clínica.
 
 ## Fase 6 - Beta para presentacion clinica
 

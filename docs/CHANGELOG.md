@@ -1,5 +1,14 @@
 # Changelog interno
 
+## v0.7 - Dashboard ejecutivo y operativo
+
+- Dashboard por organización con resumen del día, cinco KPIs y agenda cronológica calculados desde Supabase.
+- Gráficas ligeras para screenings mensuales y distribución por estado, con equivalentes textuales accesibles.
+- Actividad reciente reutilizando `patient_timeline_events`, sin duplicar eventos ni datos clínicos.
+- Header ampliado con logo, clínica, usuario, fecha, búsqueda, notificaciones y menú de sesión.
+- Navegación y acciones rápidas ajustadas por permisos, con responsive móvil y animaciones reducidas cuando el sistema lo solicita.
+- Sin IA, diagnóstico, PDF, nuevas entidades ni cambios en RLS o workflow clínico.
+
 ## v0.6.1 - Validación conectada Fase 4.6
 
 - Validación local completa de migraciones, seeds, Auth, RLS, multi-tenant, Storage, workflow, timeline y auditoría.

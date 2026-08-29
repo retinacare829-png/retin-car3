@@ -175,3 +175,9 @@ La Fase 4.5 no modifica el modelo de datos ni las fronteras de servicios. Agrega
 - Los módulos de pacientes, screenings y workflow conservan sus hooks, servicios, permisos y aislamiento multi-tenant.
 
 La navegación mantiene el contexto paciente → screening → workflow mediante títulos, breadcrumbs y selección explícita de ficha. El sidebar se convierte en panel móvil y el encabezado conserva organización, usuario y rol.
+
+## Fase 5 - Dashboard de lectura
+
+El dashboard conserva la arquitectura por dominio, servicio, hook y componente. `DashboardService` realiza consultas de solo lectura a pacientes, screenings, revisiones, seguimientos y Timeline, siempre filtradas por `organization_id`; RLS continúa como frontera efectiva. `useDashboard` controla carga/error y `ExecutiveDashboard` transforma el resultado en resumen, KPIs, gráficas SVG/CSS accesibles, actividad y agenda.
+
+La vista se carga de forma diferida desde `ClinicWorkspace`. No se agregó librería de gráficas: las visualizaciones pequeñas usan elementos nativos, conservan descripción textual para tecnologías asistivas y evitan aumentar significativamente el bundle. No se modificó el esquema, las políticas, el workflow ni la persistencia clínica.

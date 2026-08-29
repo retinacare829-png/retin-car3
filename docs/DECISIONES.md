@@ -137,3 +137,15 @@ Motivo: insertar primero una segunda imagen `ACTIVA` violaba el indice parcial d
 Decision: inicializar como cadenas vacías los campos de token de las cuentas ficticias insertadas directamente en `auth.users`.
 
 Motivo: GoTrue local espera cadenas al autenticar o recuperar contraseña; valores `NULL` provocaban un error de lectura del esquema aunque las migraciones y el seed finalizaran correctamente.
+
+## 0024 - Dashboard agregado sobre consultas RLS existentes
+
+Decision: calcular los indicadores en un servicio frontend de solo lectura usando entidades existentes y filtro explícito por organización, sin vistas, RPC o tablas nuevas.
+
+Motivo: el volumen beta permite agregación acotada sin cambiar arquitectura ni seguridad. RLS sigue limitando cada consulta y el diseño puede migrar a agregaciones SQL si el volumen de producción lo exige.
+
+## 0025 - Gráficas nativas y accesibles
+
+Decision: representar las dos visualizaciones requeridas con CSS/SVG nativo y descripciones accesibles, sin incorporar una dependencia adicional.
+
+Motivo: el alcance requiere solo dos gráficas compactas; una librería general aumentaría el bundle y la superficie de mantenimiento sin aportar valor proporcional.
