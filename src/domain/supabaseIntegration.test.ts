@@ -4,7 +4,9 @@ import {
   isRetinalStoragePathScoped,
   RETINAL_IMAGE_BUCKET,
   RETINAL_IMAGE_MAX_BYTES,
+  RETINAL_IMAGE_ALLOWED_MIME_TYPES,
   SIGNED_IMAGE_URL_TTL_SECONDS,
+  validateRetinalImageFile,
 } from "./supabaseIntegration";
 
 const context = {
@@ -30,5 +32,12 @@ describe("Supabase private retinal storage configuration", () => {
   it("rejects a path from another organization", () => {
     const path = buildRetinalStoragePath({ ...context, organizationId: "10000000-0000-4000-8000-000000000002", originalFileName: "qa.png", timestamp: 1 });
     expect(isRetinalStoragePathScoped(path, context)).toBe(false);
+  });
+
+  it("validates the upload contract before contacting Storage", () => {
+    expect(RETINAL_IMAGE_ALLOWED_MIME_TYPES).toEqual(["image/jpeg", "image/png", "image/webp"]);
+    expect(validateRetinalImageFile(new File([new Uint8Array([1])], "qa.gif", { type: "image/gif" }))).toContain("JPG");
+    expect(validateRetinalImageFile(new File([], "empty.png", { type: "image/png" }))).toContain("vacío");
+    expect(validateRetinalImageFile(new File([new Uint8Array(15 * 1024 * 1024 + 1)], "large.png", { type: "image/png" }))).toContain("15 MB");
   });
 });

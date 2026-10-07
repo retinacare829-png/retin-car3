@@ -3,6 +3,23 @@ import type { RetinalImageLaterality } from "./screening";
 export const RETINAL_IMAGE_BUCKET = "retinal-images-private";
 export const SIGNED_IMAGE_URL_TTL_SECONDS = 300;
 export const RETINAL_IMAGE_MAX_BYTES = 15 * 1024 * 1024;
+export const RETINAL_IMAGE_ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
+export function validateRetinalImageFile(file: File): string | null {
+  if (!RETINAL_IMAGE_ALLOWED_MIME_TYPES.includes(file.type as (typeof RETINAL_IMAGE_ALLOWED_MIME_TYPES)[number])) {
+    return "Seleccione una imagen JPG, PNG o WEBP.";
+  }
+
+  if (file.size <= 0) {
+    return "El archivo seleccionado está vacío.";
+  }
+
+  if (file.size > RETINAL_IMAGE_MAX_BYTES) {
+    return "La imagen supera el límite de 15 MB.";
+  }
+
+  return null;
+}
 
 export interface RetinalStoragePathInput {
   organizationId: string;

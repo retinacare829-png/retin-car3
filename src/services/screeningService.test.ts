@@ -3,6 +3,20 @@ import type { TypedSupabaseClient } from "../lib/supabase";
 import { ScreeningService } from "./screeningService";
 
 describe("ScreeningService Supabase integration", () => {
+  it("rechaza un archivo demasiado grande sin contactar Storage", async () => {
+    const upload = vi.fn();
+    const storageFrom = vi.fn(() => ({ upload }));
+    const client = { storage: { from: storageFrom } } as unknown as TypedSupabaseClient;
+    const service = new ScreeningService(client);
+
+    await expect(service.uploadOrReplaceImage(
+      { organizationId, actorUserId },
+      { patientId, screeningId, laterality: "OD", file: new File([new Uint8Array(15 * 1024 * 1024 + 1)], "grande.png", { type: "image/png" }) },
+    )).rejects.toThrow("15 MB");
+    expect(storageFrom).not.toHaveBeenCalled();
+    expect(upload).not.toHaveBeenCalled();
+  });
+
   it("registers image metadata through the atomic replacement RPC", async () => {
     vi.stubGlobal("crypto", undefined);
     let rpcArgs: Record<string, unknown> | null = null;

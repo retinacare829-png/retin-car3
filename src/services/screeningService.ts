@@ -14,7 +14,12 @@ import {
   type ScreeningFormData,
 } from "../domain/screening";
 import type { Database, TypedSupabaseClient } from "../lib/supabase";
-import { buildRetinalStoragePath, RETINAL_IMAGE_BUCKET, SIGNED_IMAGE_URL_TTL_SECONDS } from "../domain/supabaseIntegration";
+import {
+  buildRetinalStoragePath,
+  RETINAL_IMAGE_BUCKET,
+  SIGNED_IMAGE_URL_TTL_SECONDS,
+  validateRetinalImageFile,
+} from "../domain/supabaseIntegration";
 
 
 type AuditAction = Database["public"]["Enums"]["audit_action"];
@@ -214,6 +219,11 @@ export class ScreeningService {
   }
 
   async uploadOrReplaceImage(context: ScreeningMutationContext, input: ImageUploadInput): Promise<RetinalImage> {
+    const fileError = validateRetinalImageFile(input.file);
+    if (fileError) {
+      throw new Error(fileError);
+    }
+
     const hashSha256 = await hashFileSha256(input.file);
     const storagePath = buildRetinalStoragePath({
       organizationId: context.organizationId,
@@ -259,6 +269,9 @@ export class ScreeningService {
     });
 
     if (error) {
+      // La subida binaria ocurre antes de la RPC para conservar el flujo actual.
+      // Si el registro falla, intentamos retirar el objeto para no dejar basura.
+      await this.client.storage.from(RETINAL_IMAGE_BUCKET).remove([storagePath]);
       throw error;
     }
 
