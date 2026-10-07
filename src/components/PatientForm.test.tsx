@@ -48,6 +48,8 @@ describe("PatientForm", () => {
     fireEvent.change(screen.getByLabelText("Apellidos"), { target: { value: "López" } });
     fireEvent.change(screen.getByLabelText("Fecha de nacimiento"), { target: { value: "1980-05-12" } });
     fireEvent.click(screen.getByRole("button", { name: "No tengo teléfono" }));
+    expect(screen.getByLabelText("Teléfono")).toHaveValue("");
+    expect(screen.getByRole("status")).toHaveTextContent("Sin teléfono");
     fireEvent.click(screen.getByRole("button", { name: "Registrar paciente" }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
