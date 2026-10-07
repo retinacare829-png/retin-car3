@@ -1,0 +1,44 @@
+-- Fase 6: un reporte se arma desde filas existentes; esta prueba valida
+-- que el conjunto fuente siga limitado por organization_id/RLS.
+\set ON_ERROR_STOP on
+
+begin;
+
+create function pg_temp.assert_true(condition boolean, message text)
+returns void language plpgsql as $$
+begin
+  if not coalesce(condition, false) then
+    raise exception 'QA_ASSERTION_FAILED: %', message;
+  end if;
+end;
+$$;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000001', true);
+
+select pg_temp.assert_true(
+  (select count(*) from public.screenings where organization_id = '10000000-0000-4000-8000-000000000001' and status in ('REVISADO', 'SEGUIMIENTO_REQUERIDO', 'CERRADO')) > 0,
+  'el profesional debe poder leer screenings reportables de su organización'
+);
+select pg_temp.assert_true(
+  (select count(*) from public.screenings where organization_id = '10000000-0000-4000-8000-000000000002') = 0,
+  'el profesional no debe leer screenings de otra organización'
+);
+select pg_temp.assert_true(
+  (select count(*) from public.professional_reviews where organization_id = '10000000-0000-4000-8000-000000000002') = 0,
+  'el profesional no debe leer revisiones de otra organización'
+);
+
+select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000004', true);
+select pg_temp.assert_true(
+  (select count(*) from public.patients where organization_id = '10000000-0000-4000-8000-000000000001') = 0,
+  'el administrador de Clinica B no debe leer pacientes de Clinica A'
+);
+select pg_temp.assert_true(
+  (select count(*) from public.screenings where organization_id = '10000000-0000-4000-8000-000000000002') > 0,
+  'el administrador de Clinica B debe leer sus fuentes de reporte'
+);
+
+rollback;
+
+\echo 'QA Supabase Fase 6: aislamiento de fuentes de reportes OK'
