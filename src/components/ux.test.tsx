@@ -7,6 +7,9 @@ import { OperationalHome } from "./OperationalHome";
 import { ExecutiveDashboard } from "./ExecutiveDashboard";
 import { EmptyState, LoadingState, StatusBadge } from "./ui";
 
+// Este test cubre el estado desconectado de reportes; no debe depender del .env local.
+vi.mock("../lib/supabase", () => ({ supabase: null }));
+
 const selectOrganization = vi.fn();
 
 vi.mock("../hooks/useOrganizationContext", () => ({
