@@ -241,12 +241,13 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
             disabled={disabled}
             inputMode="numeric"
             maxLength={PHONE_LENGTH}
-            minLength={PHONE_LENGTH}
+            minLength={noPhoneSelected ? undefined : PHONE_LENGTH}
             onChange={(event) => handlePhoneChange(event.target.value)}
-            pattern={legacyPhone ? undefined : "[0-9]{8}"}
-            required
+            pattern={legacyPhone || noPhoneSelected ? undefined : "[0-9]{8}"}
+            placeholder={noPhoneSelected ? "Sin teléfono" : "8 dígitos"}
+            required={!noPhoneSelected}
             type="tel"
-            value={form.phone ?? ""}
+            value={noPhoneSelected ? "" : form.phone ?? ""}
           />
           <button className="text-button phone-fallback-button" disabled={disabled} onClick={selectNoPhone} type="button">
             {noPhoneSelected ? "Sin teléfono seleccionado" : "No tengo teléfono"}
