@@ -46,7 +46,7 @@ describe("PatientService", () => {
       rpc: (name, args) => {
         expect(name).toBe("create_patient");
         rpcArgs = args;
-        return Promise.resolve({ data: patientRow.id, error: null });
+        return Promise.resolve({ data: patientRow, error: null });
       },
       row: patientRow,
     });
@@ -101,12 +101,12 @@ function mapPatient(row: typeof patientRow) {
 }
 
 function createClient(options: {
-  rpc?: (name: string, args: Record<string, unknown>) => Promise<{ data: string | null; error: null }>;
+  rpc?: (name: string, args: Record<string, unknown>) => Promise<{ data: typeof patientRow | null; error: null }>;
   row: typeof patientRow;
   update?: (payload: Record<string, unknown>) => void;
 }): TypedSupabaseClient {
   return {
-    rpc: options.rpc ?? (() => Promise.resolve({ data: options.row.id, error: null })),
+    rpc: options.rpc ?? (() => Promise.resolve({ data: options.row, error: null })),
     from(table: string) {
       const query: Record<string, unknown> = {
         select: () => query,
