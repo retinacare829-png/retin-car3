@@ -36,7 +36,7 @@ describe("patient validation", () => {
       lastNames: "Rojas Cano",
       dateOfBirth: "1962-03-15",
       sex: "male",
-      phone: "",
+      phone: "00000000",
       diabetesDiagnosisDate: "",
       diabetesType: "unknown",
       notes: "",
@@ -55,14 +55,14 @@ describe("patient validation", () => {
       lastNames: "Rojas Cano",
       dateOfBirth: "1962-03-15",
       sex: "male",
-      phone: "",
+      phone: "00000000",
       diabetesDiagnosisDate: "",
       diabetesType: "unknown",
       notes: "",
     });
 
     expect(result.success).toBe(true);
-    expect(result.success ? result.data.phone : null).toBeNull();
+    expect(result.success ? result.data.phone : null).toBe("00000000");
   });
 
   it("rejects diabetes diagnosis dates before birth", () => {
@@ -73,13 +73,38 @@ describe("patient validation", () => {
       lastNames: "Molina",
       dateOfBirth: "1980-01-01",
       sex: "female",
-      phone: "",
+      phone: "00000000",
       diabetesDiagnosisDate: "1979-12-31",
       diabetesType: "type_2",
       notes: "",
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("requires an eight-digit phone or the explicit no-phone sentinel", () => {
+    const result = patientCreateSchema.safeParse({
+      firstNames: "Rosa",
+      lastNames: "Molina",
+      dateOfBirth: "1980-01-01",
+      sex: "female",
+      phone: "1234",
+      diabetesDiagnosisDate: null,
+      diabetesType: "type_2",
+      notes: null,
+    });
+
+    expect(result.success).toBe(false);
+    expect(patientCreateSchema.safeParse({
+      firstNames: "Rosa",
+      lastNames: "Molina",
+      dateOfBirth: "1980-01-01",
+      sex: "female",
+      phone: "00000000",
+      diabetesDiagnosisDate: null,
+      diabetesType: "type_2",
+      notes: null,
+    }).success).toBe(true);
   });
 });
 

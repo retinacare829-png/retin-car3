@@ -16,7 +16,7 @@ import {
 } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { usePatients } from "../hooks/usePatients";
-import { PatientForm } from "./PatientForm";
+import { PatientForm, type PatientFormSubmission } from "./PatientForm";
 import { ScreeningManagement } from "./ScreeningManagement";
 import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 
@@ -55,14 +55,17 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   useEffect(() => { setPage(1); }, [filters, sortOrder]);
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
-  async function handleSubmit(data: PatientCreateData) {
+  async function handleSubmit(data: PatientFormSubmission) {
     if (editingPatient) {
       await patientsApi.updatePatient(editingPatient, data);
       setEditingPatient(null);
       return;
     }
 
-    await patientsApi.createPatient(data);
+    if (data.phone === null) {
+      throw new Error("El telefono es obligatorio para un paciente nuevo.");
+    }
+    await patientsApi.createPatient(data as PatientCreateData);
   }
 
   function focusPatientSearch() {

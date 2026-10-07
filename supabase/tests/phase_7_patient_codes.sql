@@ -76,11 +76,11 @@ select pg_temp.assert_true(
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000003', true);
 insert into public.patients (
   id, organization_id, internal_identifier, medical_record_code, first_names, last_names,
-  date_of_birth, sex, diabetes_type, created_by
+  date_of_birth, sex, phone, diabetes_type, created_by
 ) values (
   '29000000-0000-4000-8000-000000000002',
   '10000000-0000-4000-8000-000000000001',
-  'CLIENT-INSERT', 'CLIENT-INSERT', 'Paciente', 'Trigger', '1981-01-01', 'unknown', 'unknown',
+  'CLIENT-INSERT', 'CLIENT-INSERT', 'Paciente', 'Trigger', '1981-01-01', 'unknown', '00000000', 'unknown',
   '90000000-0000-4000-8000-000000000003'
 );
 select pg_temp.assert_true(

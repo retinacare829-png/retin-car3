@@ -60,11 +60,11 @@ select pg_temp.assert_true((select count(*) from public.retinal_images where org
 
 insert into public.patients (
   id, organization_id, internal_identifier, medical_record_code, first_names, last_names,
-  date_of_birth, sex, diabetes_type, created_by
+  date_of_birth, sex, phone, diabetes_type, created_by
 ) values (
   '29000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000001',
-  'QA-TECH-001', 'QA-EXP-001', 'Paciente', 'QA', '1970-01-01', 'unknown', 'unknown',
+  'QA-TECH-001', 'QA-EXP-001', 'Paciente', 'QA', '1970-01-01', 'unknown', '00000000', 'unknown',
   '90000000-0000-4000-8000-000000000003'
 );
 update public.patients
@@ -77,7 +77,7 @@ update public.patients
 set deleted_at = null, deleted_by = null, updated_by = '90000000-0000-4000-8000-000000000003'
 where id = '29000000-0000-4000-8000-000000000001';
 select pg_temp.assert_true(
-  exists(select 1 from public.patients where internal_identifier ~ '^RC-P-[0-9]+$' and medical_record_code is null and last_names = 'QA Editado' and deleted_at is null),
+  exists(select 1 from public.patients where internal_identifier ~ '^[0-9]{3,}$' and medical_record_code is null and last_names = 'QA Editado' and deleted_at is null),
   'technical_staff debe crear con códigos generados, editar, archivar, restaurar y buscar paciente'
 );
 

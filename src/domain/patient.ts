@@ -30,12 +30,21 @@ const optionalText = (maxLength: number) =>
     .nullish()
     .transform((value) => (value ? value : null));
 
+const newPatientPhoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{8}$/, "Use 8 digitos o 00000000.");
+
+const legacyCompatiblePhoneSchema = z
+  .union([newPatientPhoneSchema, z.string().trim().min(1).max(32), z.null()])
+  .transform((value) => value || null);
+
 const patientEditableFieldsSchema = z.object({
   firstNames: z.string().trim().min(2).max(120),
   lastNames: z.string().trim().min(2).max(120),
   dateOfBirth: isoDateSchema,
   sex: z.enum(patientSexValues),
-  phone: optionalText(32),
+  phone: newPatientPhoneSchema,
   diabetesDiagnosisDate: z
     .string()
     .trim()
@@ -97,14 +106,17 @@ export const patientFormSchema = z
 export type PatientFormInput = z.input<typeof patientFormSchema>;
 export type PatientFormData = z.output<typeof patientFormSchema>;
 export const patientCreateSchema = patientEditableFieldsSchema.superRefine(validatePatientDates);
-export const patientUpdateSchema = patientEditableFieldsSchema.superRefine(validatePatientDates);
+export const patientUpdateSchema = patientEditableFieldsSchema
+  .extend({ phone: legacyCompatiblePhoneSchema })
+  .superRefine(validatePatientDates);
 export type PatientCreateData = z.output<typeof patientCreateSchema>;
 export type PatientUpdateData = z.output<typeof patientUpdateSchema>;
 
-export interface Patient extends Omit<PatientFormData, "internalIdentifier" | "medicalRecordCode"> {
+export interface Patient extends Omit<PatientFormData, "internalIdentifier" | "medicalRecordCode" | "phone"> {
   internalIdentifier: string;
   /** Legacy patient-level value retained for historical compatibility; new visits use Screening.recordCode. */
   medicalRecordCode: string | null;
+  phone: string | null;
   id: string;
   organizationId: string;
   createdAt: string;
@@ -120,6 +132,12 @@ export interface PatientFilters {
   sex: PatientSex | "all";
   diabetesType: DiabetesType | "all";
   includeArchived: boolean;
+}
+
+export interface PatientCodePreview {
+  internalIdentifier: string;
+  recordCode: string;
+  provisional: true;
 }
 
 export const defaultPatientFilters: PatientFilters = {
