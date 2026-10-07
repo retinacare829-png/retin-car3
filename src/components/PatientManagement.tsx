@@ -10,9 +10,10 @@ import {
   patientSexValues,
   type DiabetesType,
   type Patient,
+  type PatientCreateData,
   type PatientFilters,
-  type PatientFormData,
   type PatientSex,
+  type PatientUpdateData,
 } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { usePatients } from "../hooks/usePatients";
@@ -55,7 +56,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   useEffect(() => { setPage(1); }, [filters, sortOrder]);
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
-  async function handleSubmit(data: PatientFormData) {
+  async function handleSubmit(data: PatientCreateData | PatientUpdateData) {
     if (editingPatient) {
       await patientsApi.updatePatient(editingPatient, data);
       setEditingPatient(null);
@@ -63,6 +64,10 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
     }
 
     await patientsApi.createPatient(data);
+  }
+
+  function focusPatientSearch() {
+    globalThis.requestAnimationFrame(() => document.getElementById("patient-search")?.focus());
   }
 
   return (
@@ -88,6 +93,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
         <PatientForm
           disabled={!patientsApi.canWritePatients || patientsApi.saving}
           onCancel={() => setEditingPatient(null)}
+          onFocusExistingPatient={focusPatientSearch}
           onSubmit={handleSubmit}
           patient={editingPatient}
         />
@@ -99,6 +105,8 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
               <span>
                 <Search aria-hidden="true" size={18} />
                 <input
+                  aria-label="Buscar paciente por nombre, identificador o expediente"
+                  id="patient-search"
                   onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))}
                   placeholder="Nombre, codigo o expediente"
                   value={filters.query}
@@ -174,7 +182,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
                     {patient.lastNames}, {patient.firstNames}
                   </strong>
                   <span>
-                    {patient.internalIdentifier} - {patient.medicalRecordCode}
+                    Identificador: {patient.internalIdentifier}
                   </span>
                 </div>
                 <div>

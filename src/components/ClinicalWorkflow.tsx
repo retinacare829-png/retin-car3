@@ -60,7 +60,7 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
         <div>
           <p className="eyebrow">Paciente / Screening / Revisión</p>
           <h2 id="clinical-workflow-title">Workflow clínico</h2>
-          <p>{patient.lastNames}, {patient.firstNames} · {patient.medicalRecordCode}</p>
+          <p>{patient.lastNames}, {patient.firstNames} · Expediente {screening.recordCode}</p>
         </div>
         <StatusBadge label={professionalReviewStatusLabels[workflow.detail.professionalReview?.reviewStatus ?? "PENDIENTE_REVISION"]} tone={getStatusTone(workflow.detail.professionalReview?.reviewStatus ?? "PENDIENTE_REVISION")} />
       </div>

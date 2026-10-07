@@ -422,6 +422,57 @@ textarea {
   padding: 22px;
 }
 
+.patient-form-guidance,
+.patient-generated-fields {
+  display: grid;
+  gap: 8px;
+  padding: 13px 14px;
+  border: 1px solid #c7dfdb;
+  border-radius: 9px;
+  color: #315b56;
+  background: #f1f9f7;
+}
+
+.patient-form-guidance p,
+.patient-form-guidance span,
+.patient-generated-fields p {
+  margin: 0;
+  color: #58716d;
+  font-size: .86rem;
+  line-height: 1.45;
+}
+
+.patient-form-guidance span {
+  padding-top: 4px;
+  border-top: 1px solid #d9ebe8;
+  font-size: .8rem;
+}
+
+.patient-generated-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: #f8fbfa;
+}
+
+.patient-generated-fields p {
+  grid-column: 1 / -1;
+}
+
+.patient-generated-fields input[readonly] {
+  color: #526b67;
+  background: #eef4f3;
+}
+
+.text-button {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  color: var(--rc-primary-dark);
+  background: transparent;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .form-heading h2 {
   margin-bottom: 6px;
   font-size: 1.25rem;
@@ -992,6 +1043,10 @@ textarea {
 
   .workflow-grid,
   .workflow-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-generated-fields {
     grid-template-columns: 1fr;
   }
 

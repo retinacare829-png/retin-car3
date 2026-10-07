@@ -2,11 +2,13 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   diabetesTypeLabels,
   diabetesTypeValues,
-  patientFormSchema,
+  patientCreateSchema,
   patientSexLabels,
   patientSexValues,
+  patientUpdateSchema,
   type Patient,
-  type PatientFormData,
+  type PatientCreateData,
+  type PatientUpdateData,
   type PatientFormInput,
 } from "../domain/patient";
 
@@ -14,12 +16,16 @@ interface PatientFormProps {
   patient: Patient | null;
   disabled: boolean;
   onCancel: () => void;
-  onSubmit: (data: PatientFormData) => Promise<void>;
+  onFocusExistingPatient?: () => void;
+  onSubmit: (data: PatientFormSubmission) => Promise<void>;
 }
 
-const emptyForm: PatientFormInput = {
+export type PatientFormSubmission = PatientCreateData | PatientUpdateData;
+
+type PatientFormState = Omit<PatientFormInput, "medicalRecordCode">;
+
+const emptyForm: PatientFormState = {
   internalIdentifier: "",
-  medicalRecordCode: "",
   firstNames: "",
   lastNames: "",
   dateOfBirth: "",
@@ -30,19 +36,31 @@ const emptyForm: PatientFormInput = {
   notes: "",
 };
 
-export function PatientForm({ patient, disabled, onCancel, onSubmit }: PatientFormProps) {
-  const [form, setForm] = useState<PatientFormInput>(emptyForm);
+function patientSaveError(caught: unknown) {
+  const candidate = caught as { code?: unknown; message?: unknown } | null;
+  const code = typeof candidate?.code === "string" ? candidate.code : "";
+  const message = typeof candidate?.message === "string" ? candidate.message : "";
+
+  if (code === "23505" || /duplicate|unique|already exists/i.test(message)) {
+    return "No se pudo guardar la ficha porque el identificador o expediente ya existe. Busque la ficha existente y edítela; no se fusionan fichas automáticamente.";
+  }
+
+  return "No se pudo guardar el paciente. Revise los datos e intente nuevamente.";
+}
+
+export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatient, onSubmit }: PatientFormProps) {
+  const [form, setForm] = useState<PatientFormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!patient) {
       setForm(emptyForm);
+      setError(null);
       return;
     }
 
     setForm({
       internalIdentifier: patient.internalIdentifier,
-      medicalRecordCode: patient.medicalRecordCode ?? "",
       firstNames: patient.firstNames,
       lastNames: patient.lastNames,
       dateOfBirth: patient.dateOfBirth,
@@ -52,6 +70,7 @@ export function PatientForm({ patient, disabled, onCancel, onSubmit }: PatientFo
       diabetesType: patient.diabetesType,
       notes: patient.notes ?? "",
     });
+    setError(null);
   }, [patient]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -59,44 +78,50 @@ export function PatientForm({ patient, disabled, onCancel, onSubmit }: PatientFo
     if (disabled) return;
     setError(null);
 
-    const parsed = patientFormSchema.safeParse(form);
+    const { internalIdentifier, ...editableFields } = form;
+    void internalIdentifier;
+    const parsed = patient ? patientUpdateSchema.safeParse(editableFields) : patientCreateSchema.safeParse(editableFields);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Revise los datos del paciente.");
       return;
     }
 
-    await onSubmit(parsed.data);
-    setForm(emptyForm);
+    const submission: PatientFormSubmission = parsed.data;
+
+    try {
+      await onSubmit(submission);
+      setError(null);
+      if (!patient) setForm(emptyForm);
+    } catch (caught) {
+      setError(patientSaveError(caught));
+    }
   }
 
   return (
     <form className="patient-form" onSubmit={(event) => void handleSubmit(event)}>
       <div className="form-heading">
         <h2>{patient ? "Editar paciente" : "Registrar paciente"}</h2>
-        <p>Use solamente datos ficticios durante la beta de demostracion.</p>
+        <p>Use solamente datos ficticios durante la beta de demostración.</p>
       </div>
 
+      {!patient ? (
+        <aside className="patient-form-guidance" role="note">
+          <strong>¿La ficha ya existe?</strong>
+          <p>Busque primero por nombre, identificador interno o expediente para evitar duplicar la ficha del paciente.</p>
+          {onFocusExistingPatient ? <button className="text-button" onClick={onFocusExistingPatient} type="button">Buscar ficha existente</button> : null}
+          <span>El identificador interno se asigna al guardar; el expediente se genera para cada visita.</span>
+        </aside>
+      ) : (
+        <div className="patient-generated-fields" aria-label="Identificador de ficha">
+          <label>
+            Identificador interno
+            <input aria-readonly="true" disabled={disabled} readOnly value={form.internalIdentifier} />
+          </label>
+          <p>El identificador interno es fijo por paciente. El expediente se genera y se muestra en cada screening.</p>
+        </div>
+      )}
+
       <div className="form-grid">
-        <label>
-          Identificador interno
-          <input
-            disabled={disabled}
-            onChange={(event) => setForm((current) => ({ ...current, internalIdentifier: event.target.value }))}
-            required
-            value={form.internalIdentifier}
-          />
-        </label>
-
-        <label>
-          Codigo de expediente
-          <input
-            disabled={disabled}
-            onChange={(event) => setForm((current) => ({ ...current, medicalRecordCode: event.target.value }))}
-            required
-            value={form.medicalRecordCode}
-          />
-        </label>
-
         <label>
           Nombres
           <input
@@ -191,7 +216,7 @@ export function PatientForm({ patient, disabled, onCancel, onSubmit }: PatientFo
         </label>
       </div>
 
-      {error ? <div className="form-error">{error}</div> : null}
+      {error ? <div className="form-error" role="alert">{error}</div> : null}
 
       <div className="form-actions">
         <button className="primary-button" disabled={disabled} type="submit">
