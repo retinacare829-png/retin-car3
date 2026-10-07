@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { User } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthPage } from "./AuthPage";
@@ -45,15 +45,15 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled();
   });
 
-  it("presenta layout, identidad y navegación activa", () => {
+  it("presenta layout, identidad y navegación activa", async () => {
     render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
     expect(screen.getByRole("navigation", { name: "Navegación principal" })).toBeInTheDocument();
     expect(screen.getAllByRole("img", { name: "RetinaCare" })[0]).toBeInTheDocument();
     expect(screen.getByText("Clínica RetinaCare Demo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
     fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
-    expect(screen.getByRole("heading", { name: "Reportes" })).toBeInTheDocument();
-    expect(screen.getByText("Reportes no disponibles")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Actividad clínica trazable" })).toBeInTheDocument());
+    expect(screen.getByText("Conector de reportes pendiente")).toBeInTheDocument();
   });
 
   it("ofrece accesos rápidos y conserva el aviso de IA", () => {
