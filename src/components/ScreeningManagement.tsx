@@ -122,7 +122,7 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
           <p className="eyebrow">Paciente / Screenings</p>
           <h2 id="screenings-title">Screenings e imágenes</h2>
           <p>
-            {patient.lastNames}, {patient.firstNames} - {patient.medicalRecordCode}
+            {patient.lastNames}, {patient.firstNames} · Identificador {patient.internalIdentifier}
           </p>
         </div>
       </div>
@@ -203,7 +203,8 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
                   type="button"
                 >
                   <StatusBadge label={screeningStatusLabels[screening.status]} tone={getStatusTone(screening.status)} />
-                  <strong>{new Date(screening.createdAt).toLocaleDateString()}</strong>
+                  <strong>Expediente {screening.recordCode}</strong>
+                  <span>{new Date(screening.createdAt).toLocaleDateString()}</span>
                 </button>
                 <div className="screening-row-actions">
                   <button

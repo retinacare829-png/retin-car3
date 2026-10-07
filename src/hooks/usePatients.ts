@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { can } from "../domain/permissions";
-import type { Patient, PatientFormData } from "../domain/patient";
+import type { Patient, PatientCreateData, PatientUpdateData } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { supabase } from "../lib/supabase";
 import { PatientService } from "../services/patientService";
@@ -14,8 +14,8 @@ export interface UsePatientsResult {
   error: string | null;
   canWritePatients: boolean;
   reload: () => Promise<void>;
-  createPatient: (data: PatientFormData) => Promise<void>;
-  updatePatient: (patient: Patient, data: PatientFormData) => Promise<void>;
+  createPatient: (data: PatientCreateData) => Promise<void>;
+  updatePatient: (patient: Patient, data: PatientUpdateData) => Promise<void>;
   archivePatient: (patientId: string) => Promise<void>;
   restorePatient: (patientId: string) => Promise<void>;
 }
