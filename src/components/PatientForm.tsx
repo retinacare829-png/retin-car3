@@ -41,7 +41,7 @@ function patientSaveError(caught: unknown) {
   const message = typeof candidate?.message === "string" ? candidate.message : "";
 
   if (code === "23505" || /duplicate|unique|already exists/i.test(message)) {
-    return "No se pudo guardar la ficha porque el identificador o expediente ya existe. Busque la ficha existente y edítela; no se fusionan fichas automáticamente.";
+    return "No se pudo guardar la ficha porque el identificador del paciente ya existe. Busque la ficha existente y edítela; no se fusionan fichas automáticamente.";
   }
 
   return "No se pudo guardar el paciente. Revise los datos e intente nuevamente.";
@@ -106,7 +106,7 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
       {!patient ? (
         <aside className="patient-form-guidance" role="note">
           <strong>¿La ficha ya existe?</strong>
-          <p>Busque primero por nombre, identificador interno o expediente para evitar duplicar la ficha del paciente.</p>
+          <p>Busque primero por nombre o identificador interno para evitar duplicar la ficha del paciente.</p>
           {onFocusExistingPatient ? <button className="text-button" onClick={onFocusExistingPatient} type="button">Buscar ficha existente</button> : null}
           <span>El identificador interno se asigna al guardar; el expediente se genera para cada visita.</span>
         </aside>

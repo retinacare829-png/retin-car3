@@ -10,7 +10,7 @@ interface OperationalHomeProps {
 
 const actions = [
   { title: "Registrar paciente", description: "Crear una ficha ficticia o un nuevo registro autorizado.", icon: UserRoundPlus, destination: "patients" as const },
-  { title: "Buscar paciente", description: "Localizar una ficha por nombre, codigo o expediente.", icon: Search, destination: "patients" as const },
+  { title: "Buscar paciente", description: "Localizar una ficha por nombre o identificador.", icon: Search, destination: "patients" as const },
   { title: "Crear screening", description: "Abrir pacientes y comenzar un screening vinculado.", icon: Stethoscope, destination: "screenings" as const },
   { title: "Revisar pendientes", description: "Consultar screenings que requieren continuidad operativa.", icon: ClipboardList, destination: "dashboard" as const },
 ];

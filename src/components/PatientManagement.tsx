@@ -104,10 +104,10 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
               <span>
                 <Search aria-hidden="true" size={18} />
                 <input
-                  aria-label="Buscar paciente por nombre, identificador o expediente"
+                  aria-label="Buscar paciente por nombre o identificador"
                   id="patient-search"
                   onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))}
-                  placeholder="Nombre, codigo o expediente"
+                  placeholder="Nombre o identificador"
                   value={filters.query}
                 />
               </span>
@@ -170,7 +170,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
           {patientsApi.error ? <ErrorNotice message="No se pudieron cargar los pacientes. Verifique su conexión e intente nuevamente." onRetry={() => void patientsApi.reload()} /> : null}
           {patientsApi.loading ? <LoadingState label="Cargando pacientes" /> : null}
           {!patientsApi.loading && filteredPatients.length === 0 ? (
-            <EmptyState icon={Search} title={filters.query ? "Sin coincidencias" : "Aún no hay pacientes"} description={filters.query ? "Pruebe con otro nombre, código o expediente." : "Registre el primer paciente autorizado para comenzar el flujo."} />
+            <EmptyState icon={Search} title={filters.query ? "Sin coincidencias" : "Aún no hay pacientes"} description={filters.query ? "Pruebe con otro nombre o identificador." : "Registre el primer paciente autorizado para comenzar el flujo."} />
           ) : null}
 
           <div className="patient-table" role="table" aria-label="Pacientes registrados">
