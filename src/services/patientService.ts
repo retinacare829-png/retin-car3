@@ -47,7 +47,7 @@ export class PatientService {
 
   async createPatient(context: PatientMutationContext, formData: PatientCreateData): Promise<Patient> {
     const data = patientCreateSchema.parse(formData);
-    const { data: patientId, error } = await this.client.rpc("create_patient", {
+    const { data: inserted, error } = await this.client.rpc("create_patient", {
       target_organization_id: context.organizationId,
       target_first_names: data.firstNames,
       target_last_names: data.lastNames,
@@ -62,15 +62,6 @@ export class PatientService {
     if (error) {
       throw error;
     }
-
-    const { data: inserted, error: readError } = await this.client
-      .from("patients")
-      .select("*")
-      .eq("id", patientId)
-      .eq("organization_id", context.organizationId)
-      .single();
-    if (readError) throw readError;
-
     return mapPatientRow(inserted);
   }
 

@@ -538,7 +538,7 @@ export interface Database {
           target_diabetes_type?: "type_1" | "type_2" | "gestational" | "other" | "unknown";
           target_notes?: string | null;
         };
-        Returns: string;
+        Returns: Database["public"]["Tables"]["patients"]["Row"];
       };
       can_generate_professional_reports: {
         Args: {

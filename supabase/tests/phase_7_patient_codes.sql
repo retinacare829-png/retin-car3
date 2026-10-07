@@ -22,10 +22,18 @@ select pg_temp.assert_true(
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000003', true);
 
-select public.create_patient(
+select created.id as rpc_patient_id,
+  created.internal_identifier as rpc_internal_identifier,
+  coalesce(created.medical_record_code, '<NULL>') as rpc_medical_record_code
+from public.create_patient(
   '10000000-0000-4000-8000-000000000001',
   'Paciente', 'RPC', '1980-01-01', 'unknown', null, null, 'unknown', null
-) as rpc_patient_id \gset
+) as created \gset
+
+select pg_temp.assert_true(
+  :'rpc_internal_identifier' ~ '^RC-P-[0-9]+$' and :'rpc_medical_record_code' = '<NULL>',
+  'el RPC debe devolver los códigos generados en la misma respuesta'
+);
 
 select pg_temp.assert_true(
   (select internal_identifier ~ '^RC-P-[0-9]+$' and medical_record_code is null
@@ -35,8 +43,16 @@ select pg_temp.assert_true(
 select pg_temp.assert_true(
   has_sequence_privilege('authenticated', 'public.patient_internal_identifier_sequence', 'USAGE')
   and has_sequence_privilege('authenticated', 'public.screening_medical_record_code_sequence', 'USAGE')
+  and not has_sequence_privilege('authenticated', 'public.patient_internal_identifier_sequence', 'SELECT')
+  and not has_sequence_privilege('authenticated', 'public.patient_internal_identifier_sequence', 'UPDATE')
+  and not has_sequence_privilege('authenticated', 'public.screening_medical_record_code_sequence', 'SELECT')
+  and not has_sequence_privilege('authenticated', 'public.screening_medical_record_code_sequence', 'UPDATE')
   and not has_sequence_privilege('anon', 'public.patient_internal_identifier_sequence', 'USAGE')
-  and not has_sequence_privilege('anon', 'public.screening_medical_record_code_sequence', 'USAGE'),
+  and not has_sequence_privilege('anon', 'public.patient_internal_identifier_sequence', 'SELECT')
+  and not has_sequence_privilege('anon', 'public.patient_internal_identifier_sequence', 'UPDATE')
+  and not has_sequence_privilege('anon', 'public.screening_medical_record_code_sequence', 'USAGE')
+  and not has_sequence_privilege('anon', 'public.screening_medical_record_code_sequence', 'SELECT')
+  and not has_sequence_privilege('anon', 'public.screening_medical_record_code_sequence', 'UPDATE'),
   'authenticated debe tener USAGE de las secuencias y anon no'
 );
 select pg_temp.assert_true(
