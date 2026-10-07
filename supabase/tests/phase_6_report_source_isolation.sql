@@ -17,6 +17,15 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000001', true);
 
 select pg_temp.assert_true(
+  public.can_generate_professional_reports('10000000-0000-4000-8000-000000000001'),
+  'el profesional autorizado debe poder generar reportes en su organización'
+);
+select pg_temp.assert_true(
+  not public.can_generate_professional_reports('10000000-0000-4000-8000-000000000002'),
+  'el profesional autorizado no debe generar reportes en otra organización'
+);
+
+select pg_temp.assert_true(
   (select count(*) from public.screenings where organization_id = '10000000-0000-4000-8000-000000000001' and status in ('REVISADO', 'SEGUIMIENTO_REQUERIDO', 'CERRADO')) > 0,
   'el profesional debe poder leer screenings reportables de su organización'
 );
@@ -30,6 +39,14 @@ select pg_temp.assert_true(
 );
 
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000004', true);
+select pg_temp.assert_true(
+  public.can_generate_professional_reports('10000000-0000-4000-8000-000000000002'),
+  'el administrador de Clinica B debe poder generar reportes en su organización'
+);
+select pg_temp.assert_true(
+  not public.can_generate_professional_reports('10000000-0000-4000-8000-000000000001'),
+  'el administrador de Clinica B no debe generar reportes en Clinica A'
+);
 select pg_temp.assert_true(
   (select count(*) from public.patients where organization_id = '10000000-0000-4000-8000-000000000001') = 0,
   'el administrador de Clinica B no debe leer pacientes de Clinica A'

@@ -523,6 +523,12 @@ export interface Database {
         };
         Returns: undefined;
       };
+      can_generate_professional_reports: {
+        Args: {
+          target_organization_id: string;
+        };
+        Returns: boolean;
+      };
     };
     Enums: {
       organization_role: "clinic_admin" | "technical_staff" | "authorized_professional";
