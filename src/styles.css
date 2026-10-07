@@ -473,6 +473,30 @@ textarea {
   text-underline-offset: 3px;
 }
 
+.phone-fallback-button {
+  justify-self: start;
+  margin-top: 3px;
+}
+
+.patient-phone-feedback {
+  color: #315b56;
+  font-size: .82rem;
+  line-height: 1.4;
+}
+
+.patient-phone-feedback.error {
+  color: #9a3f36;
+}
+
+.patient-creation-confirmation {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #b8ddd2;
+  border-radius: 9px;
+  color: #245a50;
+  background: #effaf6;
+}
+
 .form-heading h2 {
   margin-bottom: 6px;
   font-size: 1.25rem;

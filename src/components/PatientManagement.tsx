@@ -16,7 +16,7 @@ import {
 } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { usePatients } from "../hooks/usePatients";
-import { PatientForm } from "./PatientForm";
+import { PatientForm, type PatientFormSubmission } from "./PatientForm";
 import { ScreeningManagement } from "./ScreeningManagement";
 import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 
@@ -27,11 +27,21 @@ interface PatientManagementProps {
   initialFocus?: "patients" | "screenings" | "workflow";
 }
 
+function createRequestId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function isPatientCreateData(data: PatientFormSubmission): data is PatientCreateData {
+  return typeof data.phone === "string" && /^\d{8}$/.test(data.phone);
+}
+
 export function PatientManagement({ organizationId, role, user, initialFocus = "patients" }: PatientManagementProps) {
   const [filters, setFilters] = useState<PatientFilters>(defaultPatientFilters);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"name" | "recent">("name");
+  const [creationRequestId, setCreationRequestId] = useState(createRequestId);
+  const [creationConfirmation, setCreationConfirmation] = useState<{ internalIdentifier: string } | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const patientsApi = usePatients(organizationId, role, user, filters.includeArchived, filters.query);
@@ -55,14 +65,20 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   useEffect(() => { setPage(1); }, [filters, sortOrder]);
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
-  async function handleSubmit(data: PatientCreateData) {
+  async function handleSubmit(data: PatientFormSubmission) {
     if (editingPatient) {
       await patientsApi.updatePatient(editingPatient, data);
       setEditingPatient(null);
       return;
     }
 
-    await patientsApi.createPatient(data);
+    if (!isPatientCreateData(data)) {
+      throw new Error("El teléfono del nuevo paciente debe tener 8 dígitos.");
+    }
+    const created = await patientsApi.createPatient(data, creationRequestId);
+    setSelectedPatientId(created.id);
+    setCreationConfirmation({ internalIdentifier: created.internalIdentifier });
+    setCreationRequestId(createRequestId());
   }
 
   function focusPatientSearch() {
@@ -80,7 +96,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
         <button
           className="primary-button"
           disabled={!patientsApi.canWritePatients || patientsApi.saving}
-          onClick={() => setEditingPatient(null)}
+          onClick={() => { setEditingPatient(null); setCreationConfirmation(null); setCreationRequestId(createRequestId()); }}
           type="button"
         >
           <UserRoundPlus aria-hidden="true" size={18} />
@@ -91,10 +107,11 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
       <div className="patient-content">
         <PatientForm
           disabled={!patientsApi.canWritePatients || patientsApi.saving}
-          onCancel={() => setEditingPatient(null)}
+          onCancel={() => { setEditingPatient(null); setCreationConfirmation(null); setCreationRequestId(createRequestId()); }}
           onFocusExistingPatient={focusPatientSearch}
           onSubmit={handleSubmit}
           patient={editingPatient}
+          previewCodes={patientsApi.previewCodes}
         />
 
         <div className="patient-list-panel">
@@ -243,6 +260,13 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
           {filteredPatients.length > pageSize ? <nav className="table-pagination" aria-label="Paginación de pacientes"><span>{(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredPatients.length)} de {filteredPatients.length}</span><div><button className="icon-button" aria-label="Página anterior" disabled={page === 1} onClick={() => setPage((current) => current - 1)} type="button"><ChevronLeft size={18} /></button><span>Página {page} de {totalPages}</span><button className="icon-button" aria-label="Página siguiente" disabled={page === totalPages} onClick={() => setPage((current) => current + 1)} type="button"><ChevronRight size={18} /></button></div></nav> : null}
         </div>
       </div>
+
+      {creationConfirmation ? (
+        <div className="patient-creation-confirmation" role="status">
+          Paciente registrado. Identificador confirmado: <strong>{creationConfirmation.internalIdentifier}</strong>.
+          El primer expediente se muestra en el screening generado abajo.
+        </div>
+      ) : null}
 
       {selectedPatient ? (
         <ScreeningManagement initialFocus={initialFocus} organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
