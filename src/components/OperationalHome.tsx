@@ -25,7 +25,6 @@ export function OperationalHome({ organizationName, role = "clinic_admin", onNav
     <section className="operational-home" aria-labelledby="home-title">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Inicio operativo</p>
           <h1 id="home-title">Buen día, ¿qué necesita hacer?</h1>
           <p>Un espacio claro para organizar pacientes, imágenes y revisiones de {organizationName}.</p>
         </div>

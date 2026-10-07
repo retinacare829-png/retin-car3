@@ -29,15 +29,6 @@ const navigation = [
   { id: "settings" as const, label: "Configuración", icon: Settings, permission: "organization:manage" as const },
 ];
 
-const titles: Record<WorkspaceDestination, { title: string; breadcrumb: string }> = {
-  home: { title: "Inicio operativo", breadcrumb: "Inicio" },
-  patients: { title: "Pacientes", breadcrumb: "Pacientes" },
-  screenings: { title: "Screenings", breadcrumb: "Pacientes / Screenings" },
-  workflow: { title: "Workflow Clínico", breadcrumb: "Pacientes / Screening / Workflow Clínico" },
-  dashboard: { title: "Dashboard", breadcrumb: "Dashboard" }, reports: { title: "Reportes", breadcrumb: "Reportes" },
-  settings: { title: "Configuración", breadcrumb: "Configuración" },
-};
-
 export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
   const { activeOrganization, error, loading, organizations, selectOrganization, registerClinic, saveBranding, logoRevision } = useOrganizationContext(user);
   const [clinicLogoUrl, setClinicLogoUrl] = useState<string | null>(null);
@@ -72,15 +63,12 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
     return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [activeOrganization?.organization.logoPath, logoRevision]);
   const navigate = (page: WorkspaceDestination) => { setActivePage(page); setMobileOpen(false); };
-  const current = titles[activePage];
-
   return (
     <div className="clinical-app-shell" style={themeStyle}>
       <ToastViewport />
       <a className="skip-link" href="#main-content">Saltar al contenido principal</a>
       <aside className={mobileOpen ? "app-sidebar open" : "app-sidebar"} aria-label="Barra lateral de RetinaCare">
-        <div className="sidebar-brand"><img src={logoUrl} alt="RetinaCare" /><button className="mobile-close" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button"><X size={20} /></button></div>
-        <div className="clinic-context"><Building2 aria-hidden="true" size={19} /><div><span>Organización activa</span><strong>{activeOrganization?.organization.name ?? "Sin clínica seleccionada"}</strong></div></div>
+        <div className="sidebar-brand"><div className="sidebar-clinic-logo">{clinicLogoUrl ? <img src={clinicLogoUrl} alt={`Logo de ${activeOrganization?.organization.name ?? "la clínica"}`} /> : <span className="sidebar-clinic-fallback"><Building2 aria-hidden="true" size={27} /><strong>{activeOrganization?.organization.name ?? "Clínica"}</strong></span>}</div><button className="mobile-close" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button"><X size={20} /></button></div>
         <nav aria-label="Navegación principal">{navigation.filter((item) => !item.permission || (activeOrganization && can(activeOrganization.role, item.permission))).map(({ id, label, icon: Icon }) => <button aria-current={activePage === id ? "page" : undefined} className={activePage === id ? "nav-item active" : "nav-item"} key={id} onClick={() => navigate(id)} type="button"><Icon aria-hidden="true" size={19} /><span>{label}</span></button>)}</nav>
         <div className="sidebar-disclaimer"><strong>Versión beta</strong><span>No realiza diagnóstico automatizado.</span></div>
       </aside>
@@ -89,8 +77,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
       <div className="app-main-column">
         <header className="workspace-topbar">
           <button className="menu-button" aria-label="Abrir navegación" onClick={() => setMobileOpen(true)} type="button"><Menu size={22} /></button>
-          <img className="topbar-logo" src={logoUrl} alt="RetinaCare" /><div className="topbar-page-context"><span>{current.breadcrumb}</span><strong>{current.title}</strong></div><form className="topbar-search" onSubmit={(event) => { event.preventDefault(); navigate("patients"); }} role="search"><Search aria-hidden="true" size={17} /><label className="sr-only" htmlFor="global-search">Buscar en RetinaCare</label><input id="global-search" placeholder="Buscar paciente..." /></form><time className="topbar-date" dateTime={new Date().toISOString()}>{new Intl.DateTimeFormat("es-NI", { day: "numeric", month: "short" }).format(new Date())}</time><button className="notification-button" aria-label="Notificaciones" type="button"><Bell aria-hidden="true" size={19} /></button>
-          {activeOrganization ? <div className="topbar-clinic-brand">{clinicLogoUrl ? <img alt={`Logo de ${activeOrganization.organization.name}`} src={clinicLogoUrl} /> : <Building2 aria-hidden="true" size={20} />}<span>{activeOrganization.organization.name}</span></div> : null}
+          <img className="topbar-logo" src={logoUrl} alt="RetinaCare" /><form className="topbar-search" onSubmit={(event) => { event.preventDefault(); navigate("patients"); }} role="search"><Search aria-hidden="true" size={17} /><label className="sr-only" htmlFor="global-search">Buscar en RetinaCare</label><input id="global-search" placeholder="Buscar paciente..." /></form><time className="topbar-date" dateTime={new Date().toISOString()}>{new Intl.DateTimeFormat("es-NI", { day: "numeric", month: "short" }).format(new Date())}</time><button className="notification-button" aria-label="Notificaciones" type="button"><Bell aria-hidden="true" size={19} /></button>
           <div className="user-menu"><span className="user-avatar" aria-hidden="true">{(user.email?.[0] ?? "U").toUpperCase()}</span><div><strong>{user.email ?? "Usuario RetinaCare"}</strong><span>{activeOrganization ? roleLabels[activeOrganization.role] : "Rol no disponible"}</span></div><ChevronDown aria-hidden="true" size={16} /><button className="logout-button" onClick={() => void onSignOut()} type="button"><LogOut aria-hidden="true" size={18} /><span>Cerrar sesión</span></button></div>
         </header>
 

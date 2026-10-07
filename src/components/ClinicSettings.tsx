@@ -62,7 +62,7 @@ export function ClinicSettings({ context, userEmail, onRegisterClinic, onSaveBra
     <div className="clinic-settings-grid">
       <form className="info-card clinic-settings-form" onSubmit={(event) => void save(event)}>
         <h2>Identidad visual de {context.organization.name}</h2>
-        <p>El logo de RetinaCare permanece en la esquina izquierda; el de la clínica se muestra a la derecha.</p>
+        <p>El logo de tu clínica aparece en el panel lateral; RetinaCare permanece en la barra superior.</p>
         <fieldset className="clinic-theme-choices"><legend>Paleta de colores</legend>
           {(Object.entries(clinicThemes) as Array<[ClinicTheme, typeof clinicThemes[ClinicTheme]]>).map(([id, palette]) =>
             <label className={theme === id ? "clinic-theme-option selected" : "clinic-theme-option"} key={id}>
