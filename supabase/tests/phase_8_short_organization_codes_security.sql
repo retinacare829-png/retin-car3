@@ -137,8 +137,9 @@ select pg_temp.assert_true(
      and action = 'patient.created')
   and (select count(*) = 1
        from public.audit_logs
-       where entity_id = :'created_id'
-         and action = 'screening.created'),
+       where entity_type = 'screening'
+         and action = 'screening.created'
+         and metadata ->> 'patient_id' = :'created_id'),
   'paciente y primera visita deben dejar auditoría atómica'
 );
 
