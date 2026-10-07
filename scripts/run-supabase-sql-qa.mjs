@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 
 const container = process.env.SUPABASE_DB_CONTAINER || "supabase_db_retinacare-beta";
-const sql = readFileSync("supabase/tests/phase_4_6_rls_validation.sql", "utf8");
+const sql = readFileSync("supabase/tests/phase_6_security_qa.sql", "utf8");
 const dockerCommand = process.platform === "win32" ? "docker.exe" : "docker";
 
 const child = spawn(
