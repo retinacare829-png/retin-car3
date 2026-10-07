@@ -150,6 +150,7 @@ export interface Database {
           organization_id: string;
           internal_identifier: string;
           medical_record_code: string | null;
+          creation_request_id: string | null;
           first_names: string;
           last_names: string;
           date_of_birth: string;
@@ -170,6 +171,7 @@ export interface Database {
           organization_id: string;
           internal_identifier?: string;
           medical_record_code?: string | null;
+          creation_request_id?: string | null;
           first_names: string;
           last_names: string;
           date_of_birth: string;
@@ -190,6 +192,7 @@ export interface Database {
           organization_id?: string;
           internal_identifier?: string;
           medical_record_code?: string | null;
+          creation_request_id?: string | null;
           first_names?: string;
           last_names?: string;
           date_of_birth?: string;
@@ -533,12 +536,21 @@ export interface Database {
           target_last_names: string;
           target_date_of_birth: string;
           target_sex: "female" | "male" | "other" | "unknown";
-          target_phone?: string | null;
+          target_phone: string;
           target_diabetes_diagnosis_date?: string | null;
           target_diabetes_type?: "type_1" | "type_2" | "gestational" | "other" | "unknown";
           target_notes?: string | null;
+          target_request_id?: string | null;
         };
         Returns: Database["public"]["Tables"]["patients"]["Row"];
+      };
+      preview_patient_codes: {
+        Args: { target_organization_id: string };
+        Returns: Array<{
+          internal_identifier: string;
+          record_code: string;
+          provisional: boolean;
+        }>;
       };
       can_generate_professional_reports: {
         Args: {

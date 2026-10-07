@@ -123,10 +123,10 @@ begin
   begin
     insert into public.patients (
       organization_id, internal_identifier, medical_record_code, first_names, last_names,
-      date_of_birth, created_by
+      date_of_birth, phone, created_by
     ) values (
       '10000000-0000-4000-8000-000000000001', 'QA-PRO-001', 'QA-PRO-001', 'QA', 'Profesional',
-      '1980-01-01', '90000000-0000-4000-8000-000000000001'
+      '1980-01-01', '00000000', '90000000-0000-4000-8000-000000000001'
     );
     raise exception 'QA_ASSERTION_FAILED: profesional creó paciente';
   exception when insufficient_privilege then null;

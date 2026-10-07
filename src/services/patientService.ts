@@ -1,4 +1,4 @@
-import { getChangedPatientFields, patientCreateSchema, patientUpdateSchema, type Patient, type PatientCreateData, type PatientUpdateData } from "../domain/patient";
+import { getChangedPatientFields, patientCreateSchema, patientUpdateSchema, type Patient, type PatientCodePreview, type PatientCreateData, type PatientUpdateData } from "../domain/patient";
 import type { Database, TypedSupabaseClient } from "../lib/supabase";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
@@ -45,7 +45,21 @@ export class PatientService {
     return (data ?? []).map(mapPatientRow);
   }
 
-  async createPatient(context: PatientMutationContext, formData: PatientCreateData): Promise<Patient> {
+  async previewPatientCodes(organizationId: string): Promise<PatientCodePreview> {
+    const { data, error } = await this.client.rpc("preview_patient_codes", {
+      target_organization_id: organizationId,
+    });
+    if (error) throw error;
+    const preview = data?.[0];
+    if (!preview) throw new Error("No se pudo obtener la vista previa de códigos.");
+    return {
+      internalIdentifier: preview.internal_identifier,
+      recordCode: preview.record_code,
+      provisional: true,
+    };
+  }
+
+  async createPatient(context: PatientMutationContext, formData: PatientCreateData, requestId?: string): Promise<Patient> {
     const data = patientCreateSchema.parse(formData);
     const { data: inserted, error } = await this.client.rpc("create_patient", {
       target_organization_id: context.organizationId,
@@ -57,6 +71,7 @@ export class PatientService {
       target_diabetes_diagnosis_date: data.diabetesDiagnosisDate,
       target_diabetes_type: data.diabetesType,
       target_notes: data.notes,
+      target_request_id: requestId ?? null,
     });
 
     if (error) {

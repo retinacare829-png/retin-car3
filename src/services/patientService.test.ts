@@ -16,7 +16,7 @@ const patientRow = {
   last_names: "Demo",
   date_of_birth: "1970-01-01",
   sex: "unknown" as const,
-  phone: null,
+  phone: "00000000",
   diabetes_diagnosis_date: null,
   diabetes_type: "unknown" as const,
   notes: null,
@@ -33,7 +33,7 @@ const editableData = {
   lastNames: "Demo",
   dateOfBirth: "1970-01-01",
   sex: "unknown" as const,
-  phone: null,
+  phone: "00000000",
   diabetesDiagnosisDate: null,
   diabetesType: "unknown" as const,
   notes: null,
@@ -51,12 +51,17 @@ describe("PatientService", () => {
       row: patientRow,
     });
 
-    const patient = await new PatientService(client).createPatient(context, editableData);
+    const patient = await new PatientService(client).createPatient(
+      context,
+      editableData,
+      "70000000-0000-4000-8000-000000000001",
+    );
 
     expect(patient.internalIdentifier).toBe("RC-P-01000000");
     expect(patient.medicalRecordCode).toBeNull();
     expect(rpcArgs).not.toHaveProperty("internal_identifier");
     expect(rpcArgs).not.toHaveProperty("medical_record_code");
+    expect(rpcArgs).toMatchObject({ target_request_id: "70000000-0000-4000-8000-000000000001" });
   });
 
   it("does not send identifiers when editing an existing patient", async () => {
