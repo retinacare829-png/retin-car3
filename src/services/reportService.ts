@@ -36,6 +36,7 @@ export class ReportService {
   async listCandidates(filtersInput: ReportFiltersInput, actorRole: Role): Promise<ReportCandidate[]> {
     this.assertCanGenerate(actorRole);
     const filters = reportFiltersSchema.parse(filtersInput);
+    await this.assertServerReportAccess(filters.organizationId);
 
     let query = this.client
       .from("screenings")
@@ -84,6 +85,7 @@ export class ReportService {
   async generate(contextInput: unknown): Promise<ProfessionalReport> {
     const context = reportGenerationContextSchema.parse(contextInput);
     this.assertCanGenerate(context.actorRole);
+    await this.assertServerReportAccess(context.organizationId);
 
     const [patientResult, screeningResult, imageResult, qualityResult, reviewResult, followUpResult, referralResult] = await Promise.all([
       this.client.from("patients").select("*").eq("organization_id", context.organizationId).eq("id", context.patientId).is("deleted_at", null).maybeSingle(),
@@ -180,6 +182,7 @@ export class ReportService {
   ): Promise<PatientReport> {
     const context = reportGenerationContextSchema.pick({ organizationId: true, patientId: true, actorUserId: true, actorRole: true }).parse(contextInput);
     this.assertCanGenerate(context.actorRole);
+    await this.assertServerReportAccess(context.organizationId);
 
     const [patientResult, screeningsResult] = await Promise.all([
       this.client.from("patients").select("*").eq("organization_id", context.organizationId).eq("id", context.patientId).is("deleted_at", null).maybeSingle(),
@@ -221,6 +224,7 @@ export class ReportService {
   ): Promise<OperationalReport> {
     this.assertCanGenerate(actorRole);
     const filters = operationalReportFiltersSchema.parse(filtersInput);
+    await this.assertServerReportAccess(filters.organizationId);
     const start = `${filters.from}T00:00:00.000Z`;
     const end = `${nextDate(filters.to)}T00:00:00.000Z`;
     const [patientsResult, screeningsResult, reviewsResult, followUpsResult, referralsResult] = await Promise.all([
@@ -302,6 +306,14 @@ export class ReportService {
   private assertCanGenerate(actorRole: Role): void {
     // This is a UI/capability guard only. Tenant and row authorization remains Supabase RLS.
     if (!can(actorRole, "reports:generate")) throw reportPermissionError;
+  }
+
+  private async assertServerReportAccess(organizationId: string): Promise<void> {
+    const { data, error } = await this.client.rpc("can_generate_professional_reports", {
+      target_organization_id: organizationId,
+    });
+    if (error) throw error;
+    if (data !== true) throw reportPermissionError;
   }
 }
 

@@ -138,6 +138,7 @@ const referralRow = {
 
 function createClient(results: Record<string, { data: unknown; error: null }>, calls: Array<[string, unknown]> = []): TypedSupabaseClient {
   return {
+    rpc: () => Promise.resolve({ data: true, error: null }),
     from(table: string) {
       const result = results[table] ?? { data: [], error: null };
       const resultData = result.data;
