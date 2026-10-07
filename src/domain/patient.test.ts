@@ -3,6 +3,7 @@ import {
   defaultPatientFilters,
   filterPatients,
   getChangedPatientFields,
+  patientCreateSchema,
   patientFormSchema,
   type Patient,
 } from "./patient";
@@ -29,6 +30,23 @@ const patient: Patient = {
 };
 
 describe("patient validation", () => {
+  it("accepts creation data without client-provided identifiers", () => {
+    const result = patientCreateSchema.safeParse({
+      firstNames: "Luis Alberto",
+      lastNames: "Rojas Cano",
+      dateOfBirth: "1962-03-15",
+      sex: "male",
+      phone: "",
+      diabetesDiagnosisDate: "",
+      diabetesType: "unknown",
+      notes: "",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.success ? result.data : null).not.toHaveProperty("internalIdentifier");
+    expect(result.success ? result.data : null).not.toHaveProperty("medicalRecordCode");
+  });
+
   it("accepts a valid fictitious patient form", () => {
     const result = patientFormSchema.safeParse({
       internalIdentifier: "DEMO-002",
@@ -81,8 +99,6 @@ describe("patient filtering and audit helpers", () => {
 
   it("returns changed fields without clinical interpretation", () => {
     const changed = getChangedPatientFields(patient, {
-      internalIdentifier: patient.internalIdentifier,
-      medicalRecordCode: patient.medicalRecordCode,
       firstNames: "Ana",
       lastNames: patient.lastNames,
       dateOfBirth: patient.dateOfBirth,

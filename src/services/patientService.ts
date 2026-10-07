@@ -1,4 +1,4 @@
-import { getChangedPatientFields, patientFormSchema, type Patient, type PatientFormData } from "../domain/patient";
+import { getChangedPatientFields, patientCreateSchema, patientUpdateSchema, type Patient, type PatientCreateData, type PatientUpdateData } from "../domain/patient";
 import type { Database, TypedSupabaseClient } from "../lib/supabase";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
@@ -45,45 +45,42 @@ export class PatientService {
     return (data ?? []).map(mapPatientRow);
   }
 
-  async createPatient(context: PatientMutationContext, formData: PatientFormData): Promise<Patient> {
-    const data = patientFormSchema.parse(formData);
-    const { data: inserted, error } = await this.client
-      .from("patients")
-      .insert({
-        organization_id: context.organizationId,
-        internal_identifier: data.internalIdentifier,
-        medical_record_code: data.medicalRecordCode,
-        first_names: data.firstNames,
-        last_names: data.lastNames,
-        date_of_birth: data.dateOfBirth,
-        sex: data.sex,
-        phone: data.phone,
-        diabetes_diagnosis_date: data.diabetesDiagnosisDate,
-        diabetes_type: data.diabetesType,
-        notes: data.notes,
-        created_by: context.actorUserId,
-      })
-      .select("*")
-      .single();
+  async createPatient(context: PatientMutationContext, formData: PatientCreateData): Promise<Patient> {
+    const data = patientCreateSchema.parse(formData);
+    const { data: patientId, error } = await this.client.rpc("create_patient", {
+      target_organization_id: context.organizationId,
+      target_first_names: data.firstNames,
+      target_last_names: data.lastNames,
+      target_date_of_birth: data.dateOfBirth,
+      target_sex: data.sex,
+      target_phone: data.phone,
+      target_diabetes_diagnosis_date: data.diabetesDiagnosisDate,
+      target_diabetes_type: data.diabetesType,
+      target_notes: data.notes,
+    });
 
     if (error) {
       throw error;
     }
 
-    const patient = mapPatientRow(inserted);
-    await this.recordPatientChange(context, patient.id, "patient.created", ["created"], "Paciente registrado");
-    return patient;
+    const { data: inserted, error: readError } = await this.client
+      .from("patients")
+      .select("*")
+      .eq("id", patientId)
+      .eq("organization_id", context.organizationId)
+      .single();
+    if (readError) throw readError;
+
+    return mapPatientRow(inserted);
   }
 
-  async updatePatient(context: PatientMutationContext, patient: Patient, formData: PatientFormData): Promise<Patient> {
-    const data = patientFormSchema.parse(formData);
+  async updatePatient(context: PatientMutationContext, patient: Patient, formData: PatientUpdateData): Promise<Patient> {
+    const data = patientUpdateSchema.parse(formData);
     const changedFields = getChangedPatientFields(patient, data);
 
     const { data: updated, error } = await this.client
       .from("patients")
       .update({
-        internal_identifier: data.internalIdentifier,
-        medical_record_code: data.medicalRecordCode,
         first_names: data.firstNames,
         last_names: data.lastNames,
         date_of_birth: data.dateOfBirth,

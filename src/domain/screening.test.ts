@@ -13,6 +13,7 @@ const screening: Screening = {
   id: "30000000-0000-4000-8000-000000000001",
   organizationId: "10000000-0000-4000-8000-000000000001",
   patientId: "20000000-0000-4000-8000-000000000001",
+  recordCode: "EXP-01000000",
   status: "BORRADOR",
   generalObservations: null,
   assignedReviewerId: null,

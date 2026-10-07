@@ -34,7 +34,7 @@ describe("report domain contract", () => {
         fullName: "Paciente Demo", dateOfBirth: "1970-01-01", sex: "unknown", diabetesType: "unknown",
       },
       screening: {
-        id: "30000000-0000-4000-8000-000000000001", status: "REVISADO", generalObservations: null,
+        id: "30000000-0000-4000-8000-000000000001", recordCode: "EXP-01000000", status: "REVISADO", generalObservations: null,
         createdAt: "2026-10-06T10:00:00.000Z", updatedAt: "2026-10-06T11:00:00.000Z", closedAt: null,
       },
       images: [], professionalReview: null, followUps: [], referrals: [],

@@ -456,6 +456,7 @@ function mapScreeningRow(row: ScreeningRow): Screening {
     id: row.id,
     organizationId: row.organization_id,
     patientId: row.patient_id,
+    recordCode: row.medical_record_code,
     status: row.status,
     generalObservations: row.general_observations,
     assignedReviewerId: row.assigned_reviewer_id,

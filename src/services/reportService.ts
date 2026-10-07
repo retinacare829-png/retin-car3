@@ -130,6 +130,7 @@ export class ReportService {
       },
       screening: {
         id: screening.id,
+        recordCode: screening.medical_record_code,
         status: screening.status,
         generalObservations: screening.general_observations,
         createdAt: screening.created_at,
@@ -289,6 +290,7 @@ export class ReportService {
       },
       screenings: entries.map(({ screening, images, review, followUps, referrals }) => ({
         id: screening.id,
+        recordCode: screening.medical_record_code,
         status: screening.status,
         createdAt: screening.created_at,
         closedAt: screening.closed_at,

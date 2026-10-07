@@ -50,7 +50,7 @@ export type ReportableScreeningStatus = (typeof reportableScreeningStatuses)[num
 const reportPatientSchema = z.object({
   id: uuid,
   internalIdentifier: z.string(),
-  medicalRecordCode: z.string(),
+  medicalRecordCode: z.string().nullable(),
   fullName: z.string(),
   dateOfBirth: z.string().date(),
   sex: z.enum(["female", "male", "other", "unknown"]),
@@ -103,6 +103,7 @@ export const professionalReportSchema = z.object({
   patient: reportPatientSchema,
   screening: z.object({
     id: uuid,
+    recordCode: z.string(),
     status: z.enum(screeningStatusValues),
     generalObservations: z.string().nullable(),
     createdAt: z.string().datetime(),
@@ -128,6 +129,7 @@ export const patientReportSchema = z.object({
   patient: reportPatientSchema,
   screenings: z.array(z.object({
     id: uuid,
+    recordCode: z.string(),
     status: z.enum(screeningStatusValues),
     createdAt: z.string().datetime(),
     closedAt: z.string().datetime().nullable(),

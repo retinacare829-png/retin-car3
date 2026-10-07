@@ -91,13 +91,13 @@ describe("ReportService", () => {
 });
 
 const patientRow = {
-  id: context.patientId, organization_id: context.organizationId, internal_identifier: "P-1", medical_record_code: "E-1",
+  id: context.patientId, organization_id: context.organizationId, internal_identifier: "P-1", medical_record_code: null,
   first_names: "Paciente", last_names: "Demo", date_of_birth: "1970-01-01", sex: "unknown", diabetes_type: "type_2",
   phone: null, diabetes_diagnosis_date: null, notes: null, created_by: context.actorUserId, updated_by: null,
   deleted_at: null, deleted_by: null, created_at: "2026-10-01T10:00:00.000Z", updated_at: "2026-10-06T10:00:00.000Z",
 };
 const screeningRow = {
-  id: context.screeningId, organization_id: context.organizationId, patient_id: context.patientId, status: "REVISADO",
+  id: context.screeningId, organization_id: context.organizationId, patient_id: context.patientId, medical_record_code: "EXP-01000000", status: "REVISADO",
   general_observations: "Observacion manual", assigned_reviewer_id: context.actorUserId, created_by: context.actorUserId,
   updated_by: context.actorUserId, closed_at: null, closed_by: null, deleted_at: null, deleted_by: null,
   created_at: "2026-10-06T10:00:00.000Z", updated_at: "2026-10-06T11:00:00.000Z",

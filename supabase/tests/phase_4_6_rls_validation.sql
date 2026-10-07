@@ -77,8 +77,8 @@ update public.patients
 set deleted_at = null, deleted_by = null, updated_by = '90000000-0000-4000-8000-000000000003'
 where id = '29000000-0000-4000-8000-000000000001';
 select pg_temp.assert_true(
-  exists(select 1 from public.patients where internal_identifier = 'QA-TECH-001' and last_names = 'QA Editado' and deleted_at is null),
-  'technical_staff debe crear, editar, archivar, restaurar y buscar paciente'
+  exists(select 1 from public.patients where internal_identifier ~ '^RC-P-[0-9]+$' and medical_record_code is null and last_names = 'QA Editado' and deleted_at is null),
+  'technical_staff debe crear con códigos generados, editar, archivar, restaurar y buscar paciente'
 );
 
 insert into public.screenings (

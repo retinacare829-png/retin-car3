@@ -119,6 +119,8 @@ export interface Screening extends Omit<ScreeningFormData, "patientId"> {
   id: string;
   organizationId: string;
   patientId: string;
+  /** Immutable expediente code generated for this visit. */
+  recordCode: string;
   createdBy: string | null;
   updatedBy: string | null;
   closedAt: string | null;

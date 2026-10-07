@@ -27,68 +27,84 @@ const optionalText = (maxLength: number) =>
     .string()
     .trim()
     .max(maxLength)
-    .optional()
+    .nullish()
     .transform((value) => (value ? value : null));
 
-export const patientFormSchema = z
-  .object({
-    internalIdentifier: z.string().trim().min(2).max(64),
-    medicalRecordCode: z.string().trim().min(2).max(64),
-    firstNames: z.string().trim().min(2).max(120),
-    lastNames: z.string().trim().min(2).max(120),
-    dateOfBirth: isoDateSchema,
-    sex: z.enum(patientSexValues),
-    phone: optionalText(32),
-    diabetesDiagnosisDate: z
-      .string()
-      .trim()
-      .optional()
-      .transform((value) => (value ? value : null)),
-    diabetesType: z.enum(diabetesTypeValues),
-    notes: optionalText(1000),
-  })
-  .superRefine((value, context) => {
-    const today = new Date().toISOString().slice(0, 10);
+const patientEditableFieldsSchema = z.object({
+  firstNames: z.string().trim().min(2).max(120),
+  lastNames: z.string().trim().min(2).max(120),
+  dateOfBirth: isoDateSchema,
+  sex: z.enum(patientSexValues),
+  phone: optionalText(32),
+  diabetesDiagnosisDate: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => (value ? value : null)),
+  diabetesType: z.enum(diabetesTypeValues),
+  notes: optionalText(1000),
+});
 
-    if (value.dateOfBirth > today) {
+function validatePatientDates(
+  value: { dateOfBirth: string; diabetesDiagnosisDate: string | null },
+  context: z.RefinementCtx,
+) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (value.dateOfBirth > today) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "La fecha de nacimiento no puede ser futura.",
+      path: ["dateOfBirth"],
+    });
+  }
+
+  if (value.diabetesDiagnosisDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value.diabetesDiagnosisDate)) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "La fecha de nacimiento no puede ser futura.",
-        path: ["dateOfBirth"],
+        message: "Use formato YYYY-MM-DD.",
+        path: ["diabetesDiagnosisDate"],
       });
     }
 
-    if (value.diabetesDiagnosisDate) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(value.diabetesDiagnosisDate)) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Use formato YYYY-MM-DD.",
-          path: ["diabetesDiagnosisDate"],
-        });
-      }
-
-      if (value.diabetesDiagnosisDate > today) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "La fecha de diagnostico no puede ser futura.",
-          path: ["diabetesDiagnosisDate"],
-        });
-      }
-
-      if (value.diabetesDiagnosisDate < value.dateOfBirth) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "La fecha de diagnostico no puede ser anterior al nacimiento.",
-          path: ["diabetesDiagnosisDate"],
-        });
-      }
+    if (value.diabetesDiagnosisDate > today) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La fecha de diagnostico no puede ser futura.",
+        path: ["diabetesDiagnosisDate"],
+      });
     }
-  });
+
+    if (value.diabetesDiagnosisDate < value.dateOfBirth) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La fecha de diagnostico no puede ser anterior al nacimiento.",
+        path: ["diabetesDiagnosisDate"],
+      });
+    }
+  }
+}
+
+export const patientFormSchema = z
+  .object({
+    internalIdentifier: z.string().trim().min(2).max(64).optional(),
+    medicalRecordCode: z.string().trim().min(2).max(64).optional(),
+    ...patientEditableFieldsSchema.shape,
+  })
+  .superRefine(validatePatientDates);
 
 export type PatientFormInput = z.input<typeof patientFormSchema>;
 export type PatientFormData = z.output<typeof patientFormSchema>;
+export const patientCreateSchema = patientEditableFieldsSchema.superRefine(validatePatientDates);
+export const patientUpdateSchema = patientEditableFieldsSchema.superRefine(validatePatientDates);
+export type PatientCreateData = z.output<typeof patientCreateSchema>;
+export type PatientUpdateData = z.output<typeof patientUpdateSchema>;
 
-export interface Patient extends PatientFormData {
+export interface Patient extends Omit<PatientFormData, "internalIdentifier" | "medicalRecordCode"> {
+  internalIdentifier: string;
+  /** Legacy patient-level value retained for historical compatibility; new visits use Screening.recordCode. */
+  medicalRecordCode: string | null;
   id: string;
   organizationId: string;
   createdAt: string;
@@ -146,7 +162,7 @@ export function filterPatients(patients: readonly Patient[], filters: PatientFil
   });
 }
 
-export function getChangedPatientFields(previous: Patient, next: PatientFormData): string[] {
-  const fields = Object.keys(next) as Array<keyof PatientFormData>;
+export function getChangedPatientFields(previous: Patient, next: PatientUpdateData): string[] {
+  const fields = Object.keys(next) as Array<keyof PatientUpdateData>;
   return fields.filter((field) => previous[field] !== next[field]);
 }

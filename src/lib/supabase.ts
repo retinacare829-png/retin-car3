@@ -149,7 +149,7 @@ export interface Database {
           id: string;
           organization_id: string;
           internal_identifier: string;
-          medical_record_code: string;
+          medical_record_code: string | null;
           first_names: string;
           last_names: string;
           date_of_birth: string;
@@ -168,8 +168,8 @@ export interface Database {
         Insert: {
           id?: string;
           organization_id: string;
-          internal_identifier: string;
-          medical_record_code: string;
+          internal_identifier?: string;
+          medical_record_code?: string | null;
           first_names: string;
           last_names: string;
           date_of_birth: string;
@@ -189,7 +189,7 @@ export interface Database {
           id?: string;
           organization_id?: string;
           internal_identifier?: string;
-          medical_record_code?: string;
+          medical_record_code?: string | null;
           first_names?: string;
           last_names?: string;
           date_of_birth?: string;
@@ -212,6 +212,7 @@ export interface Database {
           id: string;
           organization_id: string;
           patient_id: string;
+          medical_record_code: string;
           status: ScreeningStatus;
           general_observations: string | null;
           assigned_reviewer_id: string | null;
@@ -228,6 +229,7 @@ export interface Database {
           id?: string;
           organization_id: string;
           patient_id: string;
+          medical_record_code?: string;
           status?: ScreeningStatus;
           general_observations?: string | null;
           assigned_reviewer_id?: string | null;
@@ -244,6 +246,7 @@ export interface Database {
           id?: string;
           organization_id?: string;
           patient_id?: string;
+          medical_record_code?: string;
           status?: ScreeningStatus;
           general_observations?: string | null;
           assigned_reviewer_id?: string | null;
@@ -522,6 +525,20 @@ export interface Database {
           target_screening_id: string;
         };
         Returns: undefined;
+      };
+      create_patient: {
+        Args: {
+          target_organization_id: string;
+          target_first_names: string;
+          target_last_names: string;
+          target_date_of_birth: string;
+          target_sex: "female" | "male" | "other" | "unknown";
+          target_phone?: string | null;
+          target_diabetes_diagnosis_date?: string | null;
+          target_diabetes_type?: "type_1" | "type_2" | "gestational" | "other" | "unknown";
+          target_notes?: string | null;
+        };
+        Returns: string;
       };
       can_generate_professional_reports: {
         Args: {

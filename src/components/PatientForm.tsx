@@ -42,7 +42,7 @@ export function PatientForm({ patient, disabled, onCancel, onSubmit }: PatientFo
 
     setForm({
       internalIdentifier: patient.internalIdentifier,
-      medicalRecordCode: patient.medicalRecordCode,
+      medicalRecordCode: patient.medicalRecordCode ?? "",
       firstNames: patient.firstNames,
       lastNames: patient.lastNames,
       dateOfBirth: patient.dateOfBirth,

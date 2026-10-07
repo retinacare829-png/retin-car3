@@ -4,7 +4,7 @@ import type { ScreeningDetail } from "./screening";
 
 const screening: ScreeningDetail = {
   id: "30000000-0000-4000-8000-000000000001", organizationId: "10000000-0000-4000-8000-000000000001",
-  patientId: "20000000-0000-4000-8000-000000000001", status: "PENDIENTE_REVISION", generalObservations: null,
+  patientId: "20000000-0000-4000-8000-000000000001", recordCode: "EXP-01000000", status: "PENDIENTE_REVISION", generalObservations: null,
   assignedReviewerId: null, createdBy: "user", updatedBy: null, closedAt: null, closedBy: null, deletedAt: null,
   deletedBy: null, createdAt: "2026-08-28T00:00:00Z", updatedAt: "2026-08-28T00:00:00Z",
   images: (["OD", "OI"] as const).map((laterality, index) => ({
