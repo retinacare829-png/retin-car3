@@ -43,7 +43,7 @@ Las identidades email se crean junto con `auth.users`; sus campos de token se in
 
 ## Migraciones y aislamiento
 
-La migración `202608280002_phase_4_6_supabase_validation.sql` agrega controles sin reescribir migraciones históricas:
+Las migraciones de validación y endurecimiento agregan controles sin reescribir migraciones históricas:
 
 - claves foráneas compuestas por organización, paciente y screening;
 - coherencia completa de imágenes y revisiones de calidad;
@@ -52,6 +52,8 @@ La migración `202608280002_phase_4_6_supabase_validation.sql` agrega controles 
 - políticas de Storage con parseo seguro del UUID de organización;
 - RPC `register_retinal_image` para resolver altas y reemplazos sin violar el índice de lateralidad activa;
 - RPC `close_screening_workflow` para cierre, revisión, auditoría y timeline en una transacción.
+
+La migración `202610050001_harden_retinal_uploads.sql` añade validación de nombre, MIME, ruta privada y tamaño máximo de 15 MiB en `register_retinal_image`, además de eliminación controlada para personal autorizado.
 
 El RPC rechaza usuarios anónimos, personal técnico, screenings incompletos, registros cerrados y combinaciones incoherentes.
 
@@ -78,7 +80,7 @@ npm run supabase:qa:smoke
 ```
 
 - `supabase:check` valida archivos y garantías sin conexión.
-- `supabase:qa:sql` ejecuta pruebas RLS transaccionales en el contenedor y hace rollback.
+- `supabase:qa:sql` ejecuta `supabase/tests/phase_6_security_qa.sql` en el contenedor y hace rollback.
 - `supabase:qa:smoke` valida Auth, roles, tenants, privacidad, expiración de URL firmada y límite de 15 MiB mediante la API real.
 
 Para validar subida, URL firmada y bloqueo público en un entorno desechable, configure `SUPABASE_QA_ALLOW_STORAGE_MUTATIONS=true`. La prueba carga un PNG técnico de 1 px bajo una ruta `qa-*`; resetee el entorno al finalizar.
