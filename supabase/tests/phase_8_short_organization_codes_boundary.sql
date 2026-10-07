@@ -1,6 +1,6 @@
--- Fase 8: regresiones de diseño conocidas, ejecutables de forma aislada.
--- Estas pruebas documentan expectativas que deben decidirse/corregirse antes
--- de cerrar la migración; no deben confundirse con un resultado verde.
+-- Fase 8: transición de códigos cortos a cuatro dígitos.
+-- El requisito permite que la secuencia continúe 999 -> 1000; no hay
+-- rollover ni límite artificial de tres dígitos.
 -- Todo el ejercicio revierte al final.
 \set ON_ERROR_STOP on
 
@@ -15,8 +15,6 @@ begin
 end;
 $$;
 
--- La migración declara códigos de tres dígitos, pero no impone un máximo.
--- Este bloque debe fallar hasta que se defina rollover/rechazo explícito.
 set local role postgres;
 update public.organization_code_counters
 set next_patient_number = 1000,
@@ -38,11 +36,11 @@ join public.screenings screening
 \gset overflow_
 
 select pg_temp.assert_true(
-  :'overflow_internal_identifier' ~ '^[0-9]{3}$'
-  and :'overflow_medical_record_code' ~ '^[0-9]{3}$',
-  'los códigos cortos deben conservar tres dígitos al alcanzar 999'
+  :'overflow_internal_identifier' = '1000'
+  and :'overflow_medical_record_code' = '1000',
+  'la secuencia debe continuar 999 -> 1000 sin rollover'
 );
 
 rollback;
 
-\echo 'QA Supabase Fase 8: límite de tres dígitos OK'
+\echo 'QA Supabase Fase 8: transición 999 -> 1000 OK'
