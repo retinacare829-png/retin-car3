@@ -130,6 +130,7 @@ select pg_temp.assert_true(
   'create_patient debe crear exactamente la primera visita en el mismo tenant'
 );
 
+set local role postgres;
 select pg_temp.assert_true(
   (select count(*) = 1
    from public.audit_logs
@@ -143,6 +144,8 @@ select pg_temp.assert_true(
   'paciente y primera visita deben dejar auditoría atómica'
 );
 
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000003', true);
 select internal_identifier, record_code
 from public.preview_patient_codes('10000000-0000-4000-8000-000000000001')
 \gset preview_after_
