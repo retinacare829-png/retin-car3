@@ -34,9 +34,11 @@ import {
   type ScreeningFormInput,
 } from "../domain/screening";
 import { useScreenings } from "../hooks/useScreenings";
+import { validateRetinalImageFile } from "../domain/supabaseIntegration";
 import { getStatusTone } from "../domain/statusTone";
 import { ClinicalWorkflow } from "./ClinicalWorkflow";
 import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
+import "./ImageCaptureControl.css";
 
 interface ScreeningManagementProps {
   organizationId: string;
@@ -359,7 +361,7 @@ interface ImageCaptureControlProps {
   onDelete: (image: RetinalImage) => Promise<void>;
 }
 
-function ImageCaptureControl({
+export function ImageCaptureControl({
   laterality,
   image,
   canUpload,
@@ -368,23 +370,48 @@ function ImageCaptureControl({
   onUpload,
   onDelete,
 }: ImageCaptureControlProps) {
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const hintId = `image-upload-hint-${laterality}`;
+  const errorId = `image-upload-error-${laterality}`;
+
+  async function handleFileSelection(file: File) {
+    const validationError = validateRetinalImageFile(file);
+    setUploadError(validationError);
+    if (validationError) return;
+
+    setUploading(true);
+    try {
+      await onUpload(file);
+      setUploadError(null);
+    } catch (caught) {
+      setUploadError(caught instanceof Error ? caught.message : "No se pudo subir la imagen.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="image-capture-row">
       <div>
         <strong>{retinalImageLateralityLabels[laterality]}</strong>
         <span>{image ? image.originalFileName : "Sin imagen"}</span>
+        <small id={hintId}>JPG, PNG o WEBP · máximo 15 MB</small>
       </div>
       <label className="file-button">
         <Upload aria-hidden="true" size={18} />
         {image ? "Reemplazar" : "Cargar"}
         <input
           accept="image/png,image/jpeg,image/webp"
-          disabled={!canUpload || saving}
+          aria-label={`Cargar imagen ${laterality}`}
+          aria-describedby={uploadError ? `${hintId} ${errorId}` : hintId}
+          aria-invalid={Boolean(uploadError)}
+          disabled={!canUpload || saving || uploading}
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (file) {
-              void onUpload(file);
               event.target.value = "";
+              void handleFileSelection(file);
             }
           }}
           type="file"
@@ -392,7 +419,7 @@ function ImageCaptureControl({
       </label>
       <button
         className="icon-button danger"
-        disabled={!image || !canDelete || saving}
+        disabled={!image || !canDelete || saving || uploading}
         onClick={() => {
           if (image && globalThis.confirm(`¿Retirar la imagen ${laterality}? Esta acción quedará registrada.`)) {
             void onDelete(image);
@@ -403,6 +430,7 @@ function ImageCaptureControl({
       >
         <Archive aria-hidden="true" size={18} />
       </button>
+      {uploadError ? <p className="image-upload-error" id={errorId} role="alert">{uploadError}</p> : null}
     </div>
   );
 }
