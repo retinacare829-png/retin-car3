@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { can } from "../domain/permissions";
-import type { Patient, PatientCreateData, PatientUpdateData } from "../domain/patient";
+import type { Patient, PatientCodePreview, PatientCreateData, PatientUpdateData } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { supabase } from "../lib/supabase";
 import { PatientService } from "../services/patientService";
@@ -12,9 +12,10 @@ export interface UsePatientsResult {
   loading: boolean;
   saving: boolean;
   error: string | null;
+  previewCodes: PatientCodePreview | null;
   canWritePatients: boolean;
   reload: () => Promise<void>;
-  createPatient: (data: PatientCreateData) => Promise<void>;
+  createPatient: (data: PatientCreateData, requestId: string) => Promise<Patient>;
   updatePatient: (patient: Patient, data: PatientUpdateData) => Promise<void>;
   archivePatient: (patientId: string) => Promise<void>;
   restorePatient: (patientId: string) => Promise<void>;
@@ -32,11 +33,13 @@ export function usePatients(
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewCodes, setPreviewCodes] = useState<PatientCodePreview | null>(null);
   const canWritePatients = role ? can(role, "patients:write") : false;
 
   const reload = useCallback(async () => {
     if (!service || !organizationId) {
       setPatients([]);
+      setPreviewCodes(null);
       return;
     }
 
@@ -46,12 +49,21 @@ export function usePatients(
     try {
       const nextPatients = await service.listPatients({ organizationId, includeArchived, query });
       setPatients(nextPatients);
+      if (canWritePatients) {
+        try {
+          setPreviewCodes(await service.previewPatientCodes(organizationId));
+        } catch {
+          setPreviewCodes(null);
+        }
+      } else {
+        setPreviewCodes(null);
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudieron cargar los pacientes.");
     } finally {
       setLoading(false);
     }
-  }, [includeArchived, organizationId, query, service]);
+  }, [canWritePatients, includeArchived, organizationId, query, service]);
 
   useEffect(() => {
     void reload();
@@ -59,7 +71,7 @@ export function usePatients(
 
   useEffect(() => subscribeToDataInvalidation("patients", () => void reload()), [reload]);
 
-  async function mutate(operation: () => Promise<void>) {
+  async function mutate<T>(operation: () => Promise<T>): Promise<T> {
     if (!service || !organizationId || !user) {
       throw new Error("No hay contexto de organizacion activo.");
     }
@@ -71,8 +83,9 @@ export function usePatients(
     setSaving(true);
     setError(null);
     try {
-      await operation();
+      const result = await operation();
       await reload();
+      return result;
     } catch (caught) {
       const message = friendlyError(caught, "No se pudo guardar el cambio.");
       setError(message); notify(message, "error");
@@ -87,12 +100,15 @@ export function usePatients(
     loading,
     saving,
     error,
+    previewCodes,
     canWritePatients,
     reload,
-    createPatient: async (data) =>
+    createPatient: async (data, requestId) =>
       mutate(async () => {
-        await service?.createPatient({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, data);
+        const created = await service?.createPatient({ organizationId: organizationId ?? "", actorUserId: user?.id ?? "" }, data, requestId);
+        if (!created) throw new Error("No se recibió la ficha creada.");
         invalidateData("dashboard"); notify("Paciente creado correctamente.");
+        return created;
       }),
     updatePatient: async (patient, data) =>
       mutate(async () => {

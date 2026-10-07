@@ -7,8 +7,10 @@ import {
   patientSexValues,
   patientUpdateSchema,
   type Patient,
+  type PatientCodePreview,
   type PatientCreateData,
   type PatientFormInput,
+  type PatientUpdateData,
 } from "../domain/patient";
 
 interface PatientFormProps {
@@ -16,12 +18,15 @@ interface PatientFormProps {
   disabled: boolean;
   onCancel: () => void;
   onFocusExistingPatient?: () => void;
+  previewCodes?: PatientCodePreview | null;
   onSubmit: (data: PatientFormSubmission) => Promise<void>;
 }
 
-export type PatientFormSubmission = PatientCreateData;
+export type PatientFormSubmission = PatientCreateData | PatientUpdateData;
 
 type PatientFormState = Omit<PatientFormInput, "medicalRecordCode">;
+const PHONE_LENGTH = 8;
+const NO_PHONE_VALUE = "00000000";
 
 const emptyForm: PatientFormState = {
   internalIdentifier: "",
@@ -41,20 +46,40 @@ function patientSaveError(caught: unknown) {
   const message = typeof candidate?.message === "string" ? candidate.message : "";
 
   if (code === "23505" || /duplicate|unique|already exists/i.test(message)) {
-    return "No se pudo guardar la ficha porque el identificador del paciente ya existe. Busque la ficha existente y edítela; no se fusionan fichas automáticamente.";
+    return "No se pudo guardar la ficha porque el identificador del paciente ya existe (código 23505). Busque la ficha existente y edítela; no se fusionan fichas automáticamente.";
+  }
+
+  if (code === "42501") {
+    return "No tiene permisos suficientes para guardar el paciente (código 42501).";
+  }
+
+  if (code === "23514") {
+    return "Los datos del paciente no cumplen una regla de validación (código 23514). Revise el teléfono y las fechas.";
+  }
+
+  if (/^[A-Z0-9]{4,8}$/.test(code)) {
+    return `No se pudo guardar el paciente (código ${code}). Revise los datos e intente nuevamente.`;
   }
 
   return "No se pudo guardar el paciente. Revise los datos e intente nuevamente.";
 }
 
-export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatient, onSubmit }: PatientFormProps) {
+export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatient, previewCodes, onSubmit }: PatientFormProps) {
   const [form, setForm] = useState<PatientFormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [noPhoneSelected, setNoPhoneSelected] = useState(false);
+  const [initialPhone, setInitialPhone] = useState("");
+  const [legacyPhone, setLegacyPhone] = useState(false);
 
   useEffect(() => {
     if (!patient) {
       setForm(emptyForm);
       setError(null);
+      setPhoneError(null);
+      setNoPhoneSelected(false);
+      setInitialPhone("");
+      setLegacyPhone(false);
       return;
     }
 
@@ -70,16 +95,51 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
       notes: patient.notes ?? "",
     });
     setError(null);
+    setPhoneError(null);
+    setInitialPhone(patient.phone ?? "");
+    setLegacyPhone(Boolean(patient.phone && !/^\d{8}$/.test(patient.phone)));
+    setNoPhoneSelected(patient.phone === NO_PHONE_VALUE);
   }, [patient]);
+
+  function handlePhoneChange(value: string) {
+    if (!/^\d*$/.test(value)) {
+      setPhoneError("El teléfono solo puede contener dígitos.");
+      return;
+    }
+
+    if (value.length > PHONE_LENGTH) {
+      setPhoneError("El teléfono debe tener exactamente 8 dígitos.");
+      return;
+    }
+
+    setForm((current) => ({ ...current, phone: value }));
+    setNoPhoneSelected(value === NO_PHONE_VALUE);
+    setPhoneError(value.length === 0 || value.length === PHONE_LENGTH ? null : "El teléfono debe tener exactamente 8 dígitos.");
+  }
+
+  function selectNoPhone() {
+    setForm((current) => ({ ...current, phone: NO_PHONE_VALUE }));
+    setNoPhoneSelected(true);
+    setPhoneError(null);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (disabled) return;
     setError(null);
+    setPhoneError(null);
+
+    const currentPhone = form.phone ?? "";
+    const preserveLegacyPhone = Boolean(patient && legacyPhone && currentPhone === initialPhone);
+    if (!preserveLegacyPhone && !/^\d{8}$/.test(currentPhone)) {
+      setPhoneError(currentPhone ? "El teléfono debe tener exactamente 8 dígitos." : "Ingrese un teléfono de 8 dígitos o seleccione «No tengo teléfono».");
+      return;
+    }
 
     const { internalIdentifier, ...editableFields } = form;
     void internalIdentifier;
-    const parsed = patient ? patientUpdateSchema.safeParse(editableFields) : patientCreateSchema.safeParse(editableFields);
+    const parsedFields = preserveLegacyPhone ? { ...editableFields, phone: initialPhone } : editableFields;
+    const parsed = patient ? patientUpdateSchema.safeParse(parsedFields) : patientCreateSchema.safeParse(parsedFields);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Revise los datos del paciente.");
       return;
@@ -109,6 +169,12 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
           <p>Busque primero por nombre o identificador interno para evitar duplicar la ficha del paciente.</p>
           {onFocusExistingPatient ? <button className="text-button" onClick={onFocusExistingPatient} type="button">Buscar ficha existente</button> : null}
           <span>El identificador interno se asigna al guardar; el expediente se genera para cada visita.</span>
+          {previewCodes ? (
+            <span>
+              Vista previa provisional: identificador {previewCodes.internalIdentifier} · primer expediente {previewCodes.recordCode}.
+              Puede cambiar si otra persona registra un paciente antes de guardar.
+            </span>
+          ) : null}
         </aside>
       ) : (
         <div className="patient-generated-fields" aria-label="Identificador de ficha">
@@ -168,12 +234,26 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
         </label>
 
         <label>
-          Telefono opcional
+          Teléfono
           <input
+            aria-describedby={phoneError ? "patient-phone-error" : undefined}
+            aria-invalid={phoneError ? "true" : "false"}
             disabled={disabled}
-            onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
+            inputMode="numeric"
+            maxLength={PHONE_LENGTH}
+            minLength={PHONE_LENGTH}
+            onChange={(event) => handlePhoneChange(event.target.value)}
+            pattern={legacyPhone ? undefined : "[0-9]{8}"}
+            required
+            type="tel"
             value={form.phone ?? ""}
           />
+          <button className="text-button phone-fallback-button" disabled={disabled} onClick={selectNoPhone} type="button">
+            {noPhoneSelected ? "Sin teléfono seleccionado" : "No tengo teléfono"}
+          </button>
+          {legacyPhone ? <span className="patient-phone-feedback legacy" role="status">Este teléfono histórico se conservará mientras no lo cambie. Para corregirlo, ingrese 8 dígitos.</span> : null}
+          {noPhoneSelected ? <span className="patient-phone-feedback" role="status">Sin teléfono: se guardará como dato no disponible.</span> : null}
+          {phoneError ? <span className="patient-phone-feedback error" id="patient-phone-error" role="alert">{phoneError}</span> : null}
         </label>
 
         <label>
