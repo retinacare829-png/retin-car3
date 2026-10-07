@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { Bell, Building2, BarChart3, ChevronDown, ClipboardList, FileText, Home, LogOut, Menu, Search, Settings, Stethoscope, UsersRound, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { roleLabels } from "../domain/roles";
@@ -7,6 +7,8 @@ import logoUrl from "../../assets/retinacare.jpeg";
 import { OperationalHome, type WorkspaceDestination } from "./OperationalHome";
 import { EmptyState, ErrorNotice, LoadingState, ToastViewport } from "./ui";
 import { can } from "../domain/permissions";
+import { supabase } from "../lib/supabase";
+import { createReportsAdapter } from "../services/reportsAdapter";
 
 const PatientManagement = lazy(() => import("./PatientManagement").then((module) => ({ default: module.PatientManagement })));
 const ExecutiveDashboard = lazy(() => import("./ExecutiveDashboard").then((module) => ({ default: module.ExecutiveDashboard })));
@@ -35,6 +37,11 @@ const titles: Record<WorkspaceDestination, { title: string; breadcrumb: string }
 
 export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
   const { activeOrganization, error, loading, organizations, selectOrganization } = useOrganizationContext(user);
+  const reportRole = activeOrganization?.role;
+  const reportsAdapter = useMemo(
+    () => reportRole && supabase ? createReportsAdapter(supabase, reportRole, user.id) : undefined,
+    [reportRole, user.id],
+  );
   const [activePage, setActivePage] = useState<WorkspaceDestination>("home");
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = (page: WorkspaceDestination) => { setActivePage(page); setMobileOpen(false); };
@@ -67,7 +74,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
           {activeOrganization && activePage === "home" ? <OperationalHome organizationName={activeOrganization.organization.name} onNavigate={navigate} /> : null}
           {activeOrganization && activePage === "dashboard" && can(activeOrganization.role, "dashboard:view") ? <Suspense fallback={<LoadingState label="Cargando dashboard" />}><ExecutiveDashboard organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} onNavigate={navigate} /></Suspense> : null}
           {activeOrganization && ["patients", "screenings", "workflow"].includes(activePage) ? <Suspense fallback={<LoadingState label="Cargando módulo clínico" />}><PatientManagement initialFocus={activePage as "patients" | "screenings" | "workflow"} organizationId={activeOrganization.organization.id} role={activeOrganization.role} user={user} /></Suspense> : null}
-          {activeOrganization && activePage === "reports" ? <Suspense fallback={<LoadingState label="Cargando reportes" />}><ReportsPage organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} /></Suspense> : null}
+          {activeOrganization && activePage === "reports" ? <Suspense fallback={<LoadingState label="Cargando reportes" />}><ReportsPage adapter={reportsAdapter} organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} /></Suspense> : null}
           {activeOrganization && activePage === "settings" ? <section className="simple-page" aria-labelledby="settings-title"><p className="eyebrow">Alcance beta</p><h1 id="settings-title">Configuración</h1><article className="info-card"><h2>Contexto de sesión</h2><dl className="settings-list"><div><dt>Organización</dt><dd>{activeOrganization.organization.name}</dd></div><div><dt>Usuario</dt><dd>{user.email}</dd></div><div><dt>Rol</dt><dd>{roleLabels[activeOrganization.role]}</dd></div></dl><p className="scope-note">La administración avanzada de usuarios y clínica no forma parte de esta fase.</p></article></section> : null}
         </main>
       </div>

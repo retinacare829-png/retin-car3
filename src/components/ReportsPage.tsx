@@ -41,9 +41,8 @@ export function ReportsPage({ organizationId, organizationName, role, adapter }:
   const [view, setView] = useState<ReportView>("patients");
   const [filters, setFilters] = useState<ReportFilters>(defaultReportFilters);
   const reports = useReports(organizationId, filters, adapter);
-  const hasResults = Boolean(reports.data && (
-    reports.data.patientRows.length || reports.data.screeningRows.length || reports.data.operationMetrics.length
-  ));
+  const visibleResults = view === "patients" ? reports.data?.patientRows.length
+    : view === "screenings" ? reports.data?.screeningRows.length : reports.data?.operationMetrics.length;
   const reportStatus = useMemo(() => {
     if (reports.loading) return "Actualizando reporte...";
     if (reports.data) return `Generado ${formatDate(reports.data.generatedAt)}.`;
@@ -89,13 +88,14 @@ export function ReportsPage({ organizationId, organizationName, role, adapter }:
           <legend className="sr-only">Filtros del reporte</legend>
           <label className="report-search-field">
             Buscar paciente o expediente
-            <span><Search aria-hidden="true" size={17} /><input aria-label="Buscar paciente o expediente" onChange={(event) => updateFilter("query", event.target.value)} placeholder="Nombre, código o expediente" value={filters.query} /></span>
+            <span><Search aria-hidden="true" size={17} /><input aria-label="Buscar paciente o expediente" disabled={view === "operations"} onChange={(event) => updateFilter("query", event.target.value)} placeholder="Nombre, código o expediente" value={filters.query} /></span>
           </label>
-          <label>Estado<select aria-label="Estado del reporte" onChange={(event) => updateFilter("status", event.target.value as ReportStatusFilter)} value={filters.status}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label>Estado<select aria-label="Estado del reporte" disabled={view === "operations"} onChange={(event) => updateFilter("status", event.target.value as ReportStatusFilter)} value={filters.status}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label>Desde<input aria-label="Fecha desde" onChange={(event) => updateFilter("from", event.target.value)} type="date" value={filters.from} /></label>
           <label>Hasta<input aria-label="Fecha hasta" onChange={(event) => updateFilter("to", event.target.value)} type="date" value={filters.to} /></label>
         </fieldset>
-        <div className="reports-control-actions"><button className="ghost-button" disabled={reports.loading || reports.notConfigured} onClick={clearFilters} type="button"><Filter aria-hidden="true" size={17} />Limpiar filtros</button><button className="secondary-button" disabled={!hasResults || reports.loading} onClick={printReport} type="button"><Printer aria-hidden="true" size={17} />Imprimir reporte</button></div>
+        {view === "operations" ? <p>Los indicadores operativos se filtran por fechas.</p> : null}
+        <div className="reports-control-actions"><button className="ghost-button" disabled={reports.loading || reports.notConfigured} onClick={clearFilters} type="button"><Filter aria-hidden="true" size={17} />Limpiar filtros</button><button className="secondary-button" disabled={!visibleResults || reports.loading} onClick={printReport} type="button"><Printer aria-hidden="true" size={17} />Imprimir reporte</button></div>
       </section>
 
       <div className="report-view-tabs" role="tablist" aria-label="Vista del reporte">
@@ -106,7 +106,7 @@ export function ReportsPage({ organizationId, organizationName, role, adapter }:
       {reports.error ? <div className="reports-state reports-state-error" role="alert"><AlertCircle aria-hidden="true" size={22} /><div><strong>No pudimos cargar el reporte</strong><p>{reports.error}</p></div><button className="ghost-button" onClick={reports.reload} type="button"><RefreshCw aria-hidden="true" size={17} />Reintentar</button></div> : null}
       {reports.notConfigured ? <div className="reports-state" role="status"><CalendarDays aria-hidden="true" size={22} /><div><strong>Conector de reportes pendiente</strong><p>La experiencia de filtros, vistas, estados e impresión está lista. El adaptador del servicio de reportes de Fase 6 debe conectarse para mostrar datos de la organización.</p></div></div> : null}
       {!reports.loading && !reports.error && !reports.notConfigured && reports.data ? <ReportContent data={reports.data} view={view} /> : null}
-      {!reports.loading && !reports.error && !reports.notConfigured && reports.data && !hasResults ? <EmptyState icon={Search} title="Sin datos para este reporte" description="Ajuste los filtros o registre actividad operativa antes de generar una vista imprimible." /> : null}
+      {!reports.loading && !reports.error && !reports.notConfigured && reports.data && !visibleResults ? <EmptyState icon={Search} title="Sin datos para este reporte" description="Ajuste los filtros o registre actividad operativa antes de generar una vista imprimible." /> : null}
     </section>
   );
 }
