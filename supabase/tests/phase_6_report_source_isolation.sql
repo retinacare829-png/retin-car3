@@ -13,6 +13,23 @@ begin
 end;
 $$;
 
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from pg_proc
+    where oid = 'public.can_generate_professional_reports(uuid)'::regprocedure
+      and not prosecdef
+  ),
+  'la funcion de acceso a reportes debe ejecutarse como SECURITY INVOKER'
+);
+select pg_temp.assert_true(
+  has_function_privilege('authenticated', 'public.can_generate_professional_reports(uuid)', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.can_generate_professional_reports(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.has_org_role(uuid, public.organization_role[])', 'EXECUTE')
+  and not has_function_privilege('anon', 'public.has_org_role(uuid, public.organization_role[])', 'EXECUTE'),
+  'solo authenticated debe ejecutar las funciones de autorización de reportes'
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000001', true);
 
@@ -52,8 +69,8 @@ select pg_temp.assert_true(
   'el administrador de Clinica B no debe leer pacientes de Clinica A'
 );
 select pg_temp.assert_true(
-  (select count(*) from public.screenings where organization_id = '10000000-0000-4000-8000-000000000002') > 0,
-  'el administrador de Clinica B debe leer sus fuentes de reporte'
+  (select count(*) from public.patients where organization_id = '10000000-0000-4000-8000-000000000002') > 0,
+  'el administrador de Clinica B debe leer sus fuentes de pacientes'
 );
 
 rollback;
