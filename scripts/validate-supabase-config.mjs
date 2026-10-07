@@ -6,7 +6,7 @@ const files = {
   migration: "supabase/migrations/202608280002_phase_4_6_supabase_validation.sql",
   storageMigration: "supabase/migrations/202608270001_phase_3_screenings_images.sql",
   seed: "supabase/seed.sql",
-  sqlQa: "supabase/tests/phase_4_6_rls_validation.sql",
+  sqlQa: "supabase/tests/phase_6_security_qa.sql",
   service: "src/services/clinicalWorkflowService.ts",
 };
 
@@ -22,7 +22,7 @@ const checks = [
   ["claves multi-tenant compuestas", content.migration.includes("retinal_images_screening_tenant_fk") && content.migration.includes("image_quality_reviews_image_tenant_fk")],
   ["cierre atomico", content.migration.includes("close_screening_workflow") && content.service.includes('.rpc("close_screening_workflow"')],
   ["reemplazo de imagen atomico", content.migration.includes("register_retinal_image")],
-  ["pruebas RLS ejecutables", content.sqlQa.includes("QA Supabase Fase 4.6: OK") && content.sqlQa.includes("rollback;")],
+  ["pruebas Fase 6 ejecutables", content.sqlQa.includes("QA Supabase Fase 6 Seguridad: OK") && content.sqlQa.includes("rollback;")],
   ["roles demo", ["clinic_admin", "technical_staff", "authorized_professional", "suspended"].every((role) => content.seed.includes(role))],
 ];
 
@@ -34,5 +34,5 @@ for (const [label, passed] of checks) {
 if (failed.length > 0) {
   process.exitCode = 1;
 } else {
-  console.log("Configuracion Supabase Fase 4.6 validada estaticamente.");
+  console.log("Configuracion Supabase Fase 6 Seguridad validada estaticamente.");
 }
