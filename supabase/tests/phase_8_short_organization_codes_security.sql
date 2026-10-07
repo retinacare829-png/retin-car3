@@ -44,6 +44,16 @@ select pg_temp.assert_true(
 );
 
 select pg_temp.assert_true(
+  not has_sequence_privilege('authenticated', 'public.patient_internal_identifier_sequence', 'SELECT')
+  and not has_sequence_privilege('authenticated', 'public.patient_internal_identifier_sequence', 'UPDATE')
+  and not has_sequence_privilege('authenticated', 'public.screening_medical_record_code_sequence', 'SELECT')
+  and not has_sequence_privilege('authenticated', 'public.screening_medical_record_code_sequence', 'UPDATE')
+  and not has_sequence_privilege('anon', 'public.patient_internal_identifier_sequence', 'USAGE')
+  and not has_sequence_privilege('anon', 'public.screening_medical_record_code_sequence', 'USAGE'),
+  'las secuencias legacy deben seguir protegidas contra lectura y setval directo'
+);
+
+select pg_temp.assert_true(
   not exists (
     select 1
     from pg_proc
