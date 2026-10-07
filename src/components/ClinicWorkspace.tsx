@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Bell, Building2, BarChart3, ChevronDown, ClipboardList, FileText, Home, LogOut, Menu, Search, Settings, Stethoscope, UsersRound, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { roleLabels } from "../domain/roles";
@@ -9,6 +9,9 @@ import { EmptyState, ErrorNotice, LoadingState, ToastViewport } from "./ui";
 import { can } from "../domain/permissions";
 import { supabase } from "../lib/supabase";
 import { createReportsAdapter } from "../services/reportsAdapter";
+import { OrganizationService } from "../services/organizationService";
+import { clinicThemes } from "../domain/clinicBranding";
+import { ClinicSettings } from "./ClinicSettings";
 
 const PatientManagement = lazy(() => import("./PatientManagement").then((module) => ({ default: module.PatientManagement })));
 const ExecutiveDashboard = lazy(() => import("./ExecutiveDashboard").then((module) => ({ default: module.ExecutiveDashboard })));
@@ -36,7 +39,14 @@ const titles: Record<WorkspaceDestination, { title: string; breadcrumb: string }
 };
 
 export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
-  const { activeOrganization, error, loading, organizations, selectOrganization } = useOrganizationContext(user);
+  const { activeOrganization, error, loading, organizations, selectOrganization, registerClinic, saveBranding, logoRevision } = useOrganizationContext(user);
+  const [clinicLogoUrl, setClinicLogoUrl] = useState<string | null>(null);
+  const palette = clinicThemes[activeOrganization?.organization.brandTheme ?? "retina"] ?? clinicThemes.retina;
+  const themeStyle = {
+    "--rc-primary": palette.primary, "--rc-primary-dark": palette.dark,
+    "--rc-primary-soft": palette.soft, "--rc-sidebar-bg": palette.sidebar,
+    "--rc-accent": palette.accent,
+  } as CSSProperties;
   const reportRole = activeOrganization?.role;
   const reportsAdapter = useMemo(
     () => reportRole && supabase ? createReportsAdapter(supabase, reportRole, user.id) : undefined,
@@ -44,11 +54,28 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
   );
   const [activePage, setActivePage] = useState<WorkspaceDestination>("home");
   const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(() => { setActivePage("home"); }, [activeOrganization?.organization.id]);
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    const path = activeOrganization?.organization.logoPath;
+    setClinicLogoUrl(null);
+    if (path && supabase) {
+      new OrganizationService(supabase).downloadLogo(path)
+        .then((blob) => {
+          if (cancelled) return;
+          objectUrl = URL.createObjectURL(blob);
+          setClinicLogoUrl(objectUrl);
+        })
+        .catch(() => { if (!cancelled) setClinicLogoUrl(null); });
+    }
+    return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [activeOrganization?.organization.logoPath, logoRevision]);
   const navigate = (page: WorkspaceDestination) => { setActivePage(page); setMobileOpen(false); };
   const current = titles[activePage];
 
   return (
-    <div className="clinical-app-shell">
+    <div className="clinical-app-shell" style={themeStyle}>
       <ToastViewport />
       <a className="skip-link" href="#main-content">Saltar al contenido principal</a>
       <aside className={mobileOpen ? "app-sidebar open" : "app-sidebar"} aria-label="Barra lateral de RetinaCare">
@@ -63,6 +90,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
         <header className="workspace-topbar">
           <button className="menu-button" aria-label="Abrir navegación" onClick={() => setMobileOpen(true)} type="button"><Menu size={22} /></button>
           <img className="topbar-logo" src={logoUrl} alt="RetinaCare" /><div className="topbar-page-context"><span>{current.breadcrumb}</span><strong>{current.title}</strong></div><form className="topbar-search" onSubmit={(event) => { event.preventDefault(); navigate("patients"); }} role="search"><Search aria-hidden="true" size={17} /><label className="sr-only" htmlFor="global-search">Buscar en RetinaCare</label><input id="global-search" placeholder="Buscar paciente..." /></form><time className="topbar-date" dateTime={new Date().toISOString()}>{new Intl.DateTimeFormat("es-NI", { day: "numeric", month: "short" }).format(new Date())}</time><button className="notification-button" aria-label="Notificaciones" type="button"><Bell aria-hidden="true" size={19} /></button>
+          {activeOrganization ? <div className="topbar-clinic-brand">{clinicLogoUrl ? <img alt={`Logo de ${activeOrganization.organization.name}`} src={clinicLogoUrl} /> : <Building2 aria-hidden="true" size={20} />}<span>{activeOrganization.organization.name}</span></div> : null}
           <div className="user-menu"><span className="user-avatar" aria-hidden="true">{(user.email?.[0] ?? "U").toUpperCase()}</span><div><strong>{user.email ?? "Usuario RetinaCare"}</strong><span>{activeOrganization ? roleLabels[activeOrganization.role] : "Rol no disponible"}</span></div><ChevronDown aria-hidden="true" size={16} /><button className="logout-button" onClick={() => void onSignOut()} type="button"><LogOut aria-hidden="true" size={18} /><span>Cerrar sesión</span></button></div>
         </header>
 
@@ -71,11 +99,11 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
           {error ? <ErrorNotice message="No se pudo cargar el contexto de la clínica. Verifique su conexión e intente nuevamente." /> : null}
           {!loading && !error && !activeOrganization ? <EmptyState icon={Building2} title="Sin organización activa" description="Su usuario necesita una membresía clínica activa para continuar." /> : null}
           {activeOrganization && organizations.length > 1 ? <label className="organization-selector compact-selector">Cambiar organización<select onChange={(event) => selectOrganization(event.target.value)} value={activeOrganization.organization.id}>{organizations.map((context) => <option key={context.organization.id} value={context.organization.id}>{context.organization.name} · {roleLabels[context.role]}</option>)}</select></label> : null}
-          {activeOrganization && activePage === "home" ? <OperationalHome organizationName={activeOrganization.organization.name} onNavigate={navigate} /> : null}
-          {activeOrganization && activePage === "dashboard" && can(activeOrganization.role, "dashboard:view") ? <Suspense fallback={<LoadingState label="Cargando dashboard" />}><ExecutiveDashboard organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} onNavigate={navigate} /></Suspense> : null}
+          {activeOrganization && activePage === "home" ? <OperationalHome organizationName={activeOrganization.organization.name} role={activeOrganization.role} onNavigate={navigate} /> : null}
+          {activeOrganization && activePage === "dashboard" && can(activeOrganization.role, "dashboard:view") ? <Suspense fallback={<LoadingState label="Cargando dashboard" />}><ExecutiveDashboard organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} onNavigate={navigate} /></Suspense> : null}
           {activeOrganization && ["patients", "screenings", "workflow"].includes(activePage) ? <Suspense fallback={<LoadingState label="Cargando módulo clínico" />}><PatientManagement initialFocus={activePage as "patients" | "screenings" | "workflow"} organizationId={activeOrganization.organization.id} role={activeOrganization.role} user={user} /></Suspense> : null}
           {activeOrganization && activePage === "reports" ? <Suspense fallback={<LoadingState label="Cargando reportes" />}><ReportsPage adapter={reportsAdapter} organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} /></Suspense> : null}
-          {activeOrganization && activePage === "settings" ? <section className="simple-page" aria-labelledby="settings-title"><p className="eyebrow">Alcance beta</p><h1 id="settings-title">Configuración</h1><article className="info-card"><h2>Contexto de sesión</h2><dl className="settings-list"><div><dt>Organización</dt><dd>{activeOrganization.organization.name}</dd></div><div><dt>Usuario</dt><dd>{user.email}</dd></div><div><dt>Rol</dt><dd>{roleLabels[activeOrganization.role]}</dd></div></dl><p className="scope-note">La administración avanzada de usuarios y clínica no forma parte de esta fase.</p></article></section> : null}
+          {activeOrganization && activePage === "settings" && can(activeOrganization.role, "organization:manage") ? <ClinicSettings context={activeOrganization} userEmail={user.email ?? "Usuario RetinaCare"} onRegisterClinic={registerClinic} onSaveBranding={saveBranding} /> : null}
         </main>
       </div>
     </div>

@@ -1,10 +1,13 @@
 import { ArrowUp, ArrowRight, CalendarDays, ClipboardList, ImagePlus, Search, Stethoscope, UserRoundPlus } from "lucide-react";
 import { betaAiUnavailableMessage } from "../domain/screening";
+import { can } from "../domain/permissions";
+import type { Role } from "../domain/roles";
 
 export type WorkspaceDestination = "home" | "patients" | "screenings" | "workflow" | "dashboard" | "reports" | "settings";
 
 interface OperationalHomeProps {
   organizationName: string;
+  role?: Role;
   onNavigate: (destination: WorkspaceDestination) => void;
 }
 
@@ -15,7 +18,9 @@ const actions = [
   { title: "Revisar pendientes", description: "Consultar screenings que requieren continuidad operativa.", icon: ClipboardList, destination: "dashboard" as const },
 ];
 
-export function OperationalHome({ organizationName, onNavigate }: OperationalHomeProps) {
+export function OperationalHome({ organizationName, role = "clinic_admin", onNavigate }: OperationalHomeProps) {
+  const visibleActions = actions.filter((action) => action.title === "Registrar paciente" ? can(role, "patients:write") : action.title === "Crear screening" ? can(role, "screenings:create") : true);
+  const canUpload = can(role, "images:upload");
   return (
     <section className="operational-home" aria-labelledby="home-title">
       <div className="page-heading">
@@ -27,7 +32,7 @@ export function OperationalHome({ organizationName, onNavigate }: OperationalHom
         <span className="beta-label">Espacio clínico · beta</span>
       </div>
 
-      <article className="upload-hero">
+      {canUpload ? <article className="upload-hero">
         <div className="upload-hero-copy">
           <p className="eyebrow">Captura retinal</p>
           <h2>Sube las imágenes de tu próximo screening</h2>
@@ -36,10 +41,10 @@ export function OperationalHome({ organizationName, onNavigate }: OperationalHom
           <small>JPG, PNG o WEBP · hasta 15 MB por imagen</small>
         </div>
         <div className="retina-art" aria-hidden="true"><span /><i /><b /></div>
-      </article>
+      </article> : null}
 
       <div className="quick-actions" aria-label="Accesos rapidos">
-        {actions.map(({ title, description, icon: Icon, destination }) => (
+        {visibleActions.map(({ title, description, icon: Icon, destination }) => (
           <button className="quick-action" key={title} onClick={() => onNavigate(destination)} type="button">
             <span className="quick-action-icon"><Icon aria-hidden="true" size={22} /></span>
             <span><strong>{title}</strong><small>{description}</small></span>
@@ -52,7 +57,7 @@ export function OperationalHome({ organizationName, onNavigate }: OperationalHom
         <article className="info-card recent-home-card">
           <div className="section-title-row"><div><p className="eyebrow">Accesos frecuentes</p><h2>Lo que puedes hacer ahora</h2></div><CalendarDays aria-hidden="true" size={22} /></div>
           <div className="home-button-list">
-            {actions.filter(({ destination }) => destination !== "screenings").slice(0, 3).map(({ title, description, icon: Icon, destination }) => <button className="home-list-button" key={title} onClick={() => onNavigate(destination)} type="button"><span><Icon aria-hidden="true" size={19} /></span><span><strong>{title}</strong><small>{description}</small></span><ArrowRight aria-hidden="true" size={16} /></button>)}
+            {visibleActions.filter(({ destination }) => destination !== "screenings").slice(0, 3).map(({ title, description, icon: Icon, destination }) => <button className="home-list-button" key={title} onClick={() => onNavigate(destination)} type="button"><span><Icon aria-hidden="true" size={19} /></span><span><strong>{title}</strong><small>{description}</small></span><ArrowRight aria-hidden="true" size={16} /></button>)}
           </div>
         </article>
         <article className="info-card">

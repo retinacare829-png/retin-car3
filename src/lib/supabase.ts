@@ -55,6 +55,8 @@ export interface Database {
           created_at: string;
           updated_at: string;
           created_by: string | null;
+          brand_theme: "retina" | "ocean" | "violet" | "sunset";
+          logo_path: string | null;
         };
         Insert: {
           id?: string;
@@ -68,6 +70,8 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
+          brand_theme?: "retina" | "ocean" | "violet" | "sunset";
+          logo_path?: string | null;
         };
         Update: {
           id?: string;
@@ -81,6 +85,8 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
+          brand_theme?: "retina" | "ocean" | "violet" | "sunset";
+          logo_path?: string | null;
         };
         Relationships: [];
       };
@@ -507,6 +513,10 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      register_clinic: {
+        Args: { clinic_name: string };
+        Returns: string;
+      };
       register_retinal_image: {
         Args: {
           target_organization_id: string;

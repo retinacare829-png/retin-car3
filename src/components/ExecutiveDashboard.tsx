@@ -1,10 +1,12 @@
 import { Activity, CalendarDays, CalendarClock, CheckCircle2, ClipboardList, ListChecks, Search, Stethoscope, UserRoundPlus, UsersRound } from "lucide-react";
 import type { DashboardData, DashboardStatus } from "../domain/dashboard";
 import { useDashboard } from "../hooks/useDashboard";
+import { can } from "../domain/permissions";
+import type { Role } from "../domain/roles";
 import { EmptyState, ErrorNotice, LoadingState } from "./ui";
 import type { WorkspaceDestination } from "./OperationalHome";
 
-interface Props { organizationId: string; organizationName: string; onNavigate: (destination: WorkspaceDestination) => void; }
+interface Props { organizationId: string; organizationName: string; role?: Role; onNavigate: (destination: WorkspaceDestination) => void; }
 const formatDateTime = (value: string) => new Intl.DateTimeFormat("es-NI", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(value));
 
 function StatusChart({ data }: { data: DashboardStatus[] }) {
@@ -34,7 +36,7 @@ function AppointmentCalendar({ appointments = [] }: { appointments?: DashboardDa
   </article>;
 }
 
-export function ExecutiveDashboard({ organizationId, organizationName, onNavigate }: Props) {
+export function ExecutiveDashboard({ organizationId, organizationName, role = "clinic_admin", onNavigate }: Props) {
   const { data, error, loading } = useDashboard(organizationId);
   const hour = new Date().getHours(); const greeting = hour < 12 ? "Buenos días" : hour < 18 ? "Buenas tardes" : "Buenas noches";
   if (loading) return <LoadingState label="Cargando dashboard" />;
@@ -53,7 +55,7 @@ export function ExecutiveDashboard({ organizationId, organizationName, onNavigat
     <div className="dashboard-chart-grid"><AppointmentCalendar appointments={data.appointments} /><article className="dashboard-card"><header><div><p className="eyebrow">Carga operativa</p><h2>Distribución por estado</h2></div></header>{data.statusDistribution.length ? <StatusChart data={data.statusDistribution} /> : <EmptyState icon={ClipboardList} title="No existen screenings registrados" description="La distribución aparecerá cuando se registre el primer screening." />}</article></div>
     <div className="dashboard-lower-grid"><article className="dashboard-card"><header><div><p className="eyebrow">Timeline</p><h2>Actividad reciente</h2></div></header>{data.recentActivity.length ? <ol className="activity-timeline">{data.recentActivity.map((item) => <li key={item.id}><span aria-hidden="true" /><div><strong>{item.title}</strong><time dateTime={item.occurredAt}>{formatDateTime(item.occurredAt)}</time></div></li>)}</ol> : <EmptyState icon={Activity} title="Sin actividad reciente" description="Los eventos clínicos aparecerán aquí al registrarse en el Timeline." />}</article>
     <article className="dashboard-card"><header><div><p className="eyebrow">Prioridades</p><h2>Agenda de Hoy</h2></div></header>{data.agenda.length ? <ol className="agenda-list">{data.agenda.map((item) => <li key={item.id}><time dateTime={item.occurredAt}>{new Intl.DateTimeFormat("es-NI", { hour: "numeric", minute: "2-digit" }).format(new Date(item.occurredAt))}</time><div><strong>{item.title}</strong><span>{item.detail}</span></div>{item.priority === "high" ? <em>Prioridad</em> : null}</li>)}</ol> : <EmptyState icon={CalendarClock} title="Agenda al día" description="No hay seguimientos o revisiones programadas para hoy." />}</article></div>
-    <section className="dashboard-actions" aria-labelledby="actions-title"><div><p className="eyebrow">Acciones rápidas</p><h2 id="actions-title">Continuar el trabajo</h2></div><div><button className="primary-button" onClick={() => onNavigate("patients")} type="button"><UserRoundPlus aria-hidden="true" size={18} />Nuevo Paciente</button><button className="secondary-button" onClick={() => onNavigate("screenings")} type="button"><Stethoscope aria-hidden="true" size={18} />Nuevo Screening</button><button className="secondary-button" onClick={() => onNavigate("patients")} type="button"><Search aria-hidden="true" size={18} />Buscar Paciente</button></div></section>
+    <section className="dashboard-actions" aria-labelledby="actions-title"><div><p className="eyebrow">Acciones rápidas</p><h2 id="actions-title">Continuar el trabajo</h2></div><div>{can(role, "patients:write") ? <button className="primary-button" onClick={() => onNavigate("patients")} type="button"><UserRoundPlus aria-hidden="true" size={18} />Nuevo Paciente</button> : null}{can(role, "screenings:create") ? <button className="secondary-button" onClick={() => onNavigate("screenings")} type="button"><Stethoscope aria-hidden="true" size={18} />Nuevo Screening</button> : null}<button className="secondary-button" onClick={() => onNavigate("patients")} type="button"><Search aria-hidden="true" size={18} />Buscar Paciente</button></div></section>
     <aside className="demo-guide" aria-labelledby="demo-guide-title"><div><span className="summary-icon"><ListChecks aria-hidden="true" size={21} /></span><div><p className="eyebrow">Modo Demo</p><h2 id="demo-guide-title">Recorrido sugerido</h2><p>Guía breve para presentar el flujo sin alterar información clínica.</p></div></div><ol><li><span>1</span>Abra a Mariana López</li><li><span>2</span>Revise OD y OI</li><li><span>3</span>Registre calidad</li><li><span>4</span>Complete workflow</li><li><span>5</span>Vuelva al Dashboard</li></ol><div><button className="secondary-button" onClick={() => onNavigate("patients")} type="button"><Search aria-hidden="true" size={17} />Abrir pacientes demo</button><button className="ghost-button" onClick={() => onNavigate("workflow")} type="button"><Stethoscope aria-hidden="true" size={17} />Ir al workflow</button></div></aside>
   </section>;
 }

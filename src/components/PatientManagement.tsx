@@ -93,26 +93,26 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
           <h1 id="patients-title">Gestión de pacientes</h1>
           <p>Busque una ficha y continúe hacia sus screenings y workflow clínico.</p>
         </div>
-        <button
+        {patientsApi.canWritePatients ? <button
           className="primary-button"
-          disabled={!patientsApi.canWritePatients || patientsApi.saving}
+          disabled={patientsApi.saving}
           onClick={() => { setEditingPatient(null); setCreationConfirmation(null); setCreationRequestId(createRequestId()); }}
           type="button"
         >
           <UserRoundPlus aria-hidden="true" size={18} />
           Nuevo paciente
-        </button>
+        </button> : null}
       </div>
 
-      <div className="patient-content">
-        <PatientForm
+      <div className={patientsApi.canWritePatients ? "patient-content" : "patient-content patient-content-readonly"}>
+        {patientsApi.canWritePatients ? <PatientForm
           disabled={!patientsApi.canWritePatients || patientsApi.saving}
           onCancel={() => { setEditingPatient(null); setCreationConfirmation(null); setCreationRequestId(createRequestId()); }}
           onFocusExistingPatient={focusPatientSearch}
           onSubmit={handleSubmit}
           patient={editingPatient}
           previewCodes={patientsApi.previewCodes}
-        />
+        /> : null}
 
         <div className="patient-list-panel">
           <div className="filters-row">
@@ -220,7 +220,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
                   >
                     <Images aria-hidden="true" size={18} />
                   </button>
-                  <button
+                  {patientsApi.canWritePatients ? <button
                     className="icon-button"
                     aria-label={`Editar ficha de ${patient.firstNames} ${patient.lastNames}`}
                     disabled={!patientsApi.canWritePatients || patientsApi.saving || Boolean(patient.deletedAt)}
@@ -229,8 +229,8 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
                     type="button"
                   >
                     <Edit3 aria-hidden="true" size={18} />
-                  </button>
-                  {patient.deletedAt ? (
+                  </button> : null}
+                  {patientsApi.canWritePatients && patient.deletedAt ? (
                     <button
                       className="icon-button"
                       aria-label={`Restaurar ficha de ${patient.firstNames} ${patient.lastNames}`}
@@ -241,7 +241,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
                     >
                       <RotateCcw aria-hidden="true" size={18} />
                     </button>
-                  ) : (
+                  ) : patientsApi.canWritePatients ? (
                     <button
                       className="icon-button danger"
                       aria-label={`Archivar ficha de ${patient.firstNames} ${patient.lastNames}`}
@@ -252,7 +252,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
                     >
                       <Archive aria-hidden="true" size={18} />
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </article>
             ))}

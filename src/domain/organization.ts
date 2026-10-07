@@ -1,4 +1,5 @@
 import type { Role } from "./roles";
+import type { ClinicTheme } from "./clinicBranding";
 
 export type OrganizationMemberStatus = "active" | "invited" | "suspended";
 
@@ -7,6 +8,8 @@ export interface Organization {
   name: string;
   countryCode: string;
   timezone: string;
+  brandTheme: ClinicTheme;
+  logoPath: string | null;
 }
 
 export interface OrganizationMembership {

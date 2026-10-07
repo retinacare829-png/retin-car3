@@ -52,7 +52,7 @@ describe("UX de la demo clínica", () => {
     render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
     expect(screen.getByRole("navigation", { name: "Navegación principal" })).toBeInTheDocument();
     expect(screen.getAllByRole("img", { name: "RetinaCare" })[0]).toBeInTheDocument();
-    expect(screen.getByText("Clínica RetinaCare Demo")).toBeInTheDocument();
+    expect(screen.getAllByText("Clínica RetinaCare Demo").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
     fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Actividad clínica trazable" })).toBeInTheDocument());
@@ -65,6 +65,14 @@ describe("UX de la demo clínica", () => {
     fireEvent.click(screen.getByRole("button", { name: /Crear screening/i }));
     expect(onNavigate).toHaveBeenCalledWith("screenings");
     expect(screen.getByText("Módulo de Inteligencia Artificial no disponible en esta versión beta.")).toBeInTheDocument();
+  });
+
+  it("no ofrece alta ni carga de imágenes al profesional", () => {
+    render(<OperationalHome organizationName="Clínica Demo" role="authorized_professional" onNavigate={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: /Registrar paciente/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Crear screening/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Subir imágenes/i })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Buscar paciente/i }).length).toBeGreaterThan(0);
   });
 
   it("renderiza estados vacíos, carga y badges sin depender solo del color", () => {

@@ -71,6 +71,14 @@ El RPC rechaza usuarios anónimos, personal técnico, screenings incompletos, re
 - URL firmada: 300 segundos por defecto.
 - Acceso público directo: no permitido.
 
+## Registro y apariencia de clínicas
+
+Un administrador de clínica autenticado puede abrir **Configuración → Registrar otra clínica**. El registro usa `register_clinic`: crea la nueva organización y su primera membresía de administrador en una sola transacción, y después la selecciona en la interfaz. El personal técnico y el profesional autorizado no pueden registrar clínicas. Para la primera clínica de una instalación nueva se requiere el aprovisionamiento inicial de un administrador; esta pantalla no es un registro público ni permite crear una organización sin una membresía administrativa previa.
+
+En **Configuración → Apariencia** el administrador puede elegir entre cuatro paletas y subir el logotipo de su clínica. El de RetinaCare permanece visible por separado. La paleta se guarda en la organización y se aplica al cambiar de clínica. El logotipo se guarda en el bucket privado `clinic-branding-private`, bajo `<organization_id>/logo`; solo miembros activos pueden leerlo y solo administradores de esa clínica pueden subirlo o reemplazarlo. Se admiten JPEG, PNG o WebP de hasta 1 MiB; no se admiten SVG.
+
+Para actualizar una base local existente sin eliminar pacientes ni volver a cargar los seeds, ejecute `npx supabase migration up --local` después de revisar las migraciones pendientes. La migración `20261007182138_clinic_branding_registration.sql` añade estos campos, el bucket y sus políticas. La prueba SQL transaccional de la fase está en `supabase/tests/phase_9_clinic_branding_registration.sql` y termina en `ROLLBACK`.
+
 ## Validaciones
 
 ```bash
