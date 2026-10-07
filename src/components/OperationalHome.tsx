@@ -1,4 +1,4 @@
-import { ArrowRight, ClipboardList, Search, Stethoscope, UserRoundPlus } from "lucide-react";
+import { ArrowUp, ArrowRight, CalendarDays, ClipboardList, ImagePlus, Search, Stethoscope, UserRoundPlus } from "lucide-react";
 import { betaAiUnavailableMessage } from "../domain/screening";
 
 export type WorkspaceDestination = "home" | "patients" | "screenings" | "workflow" | "dashboard" | "reports" | "settings";
@@ -21,11 +21,22 @@ export function OperationalHome({ organizationName, onNavigate }: OperationalHom
       <div className="page-heading">
         <div>
           <p className="eyebrow">Inicio operativo</p>
-          <h1 id="home-title">Buen dia. ¿Que necesita hacer?</h1>
-          <p>Accesos directos para el flujo de {organizationName}. La beta valida el proceso clínico y no realiza diagnóstico.</p>
+          <h1 id="home-title">Buen día, ¿qué necesita hacer?</h1>
+          <p>Un espacio claro para organizar pacientes, imágenes y revisiones de {organizationName}.</p>
         </div>
-        <span className="beta-label">Beta clínica · v0.6</span>
+        <span className="beta-label">Espacio clínico · beta</span>
       </div>
+
+      <article className="upload-hero">
+        <div className="upload-hero-copy">
+          <p className="eyebrow">Captura retinal</p>
+          <h2>Sube las imágenes de tu próximo screening</h2>
+          <p>Guarda OD y OI en un espacio privado, revisa su calidad y continúa el flujo con el profesional autorizado.</p>
+          <button className="hero-upload-button" onClick={() => onNavigate("screenings")} type="button"><ImagePlus aria-hidden="true" size={18} />Subir imágenes <ArrowUp aria-hidden="true" size={17} /></button>
+          <small>JPG, PNG o WEBP · hasta 15 MB por imagen</small>
+        </div>
+        <div className="retina-art" aria-hidden="true"><span /><i /><b /></div>
+      </article>
 
       <div className="quick-actions" aria-label="Accesos rapidos">
         {actions.map(({ title, description, icon: Icon, destination }) => (
@@ -37,10 +48,16 @@ export function OperationalHome({ organizationName, onNavigate }: OperationalHom
         ))}
       </div>
 
-      <div className="home-information-grid">
+      <div className="home-information-grid home-information-grid-balanced">
+        <article className="info-card recent-home-card">
+          <div className="section-title-row"><div><p className="eyebrow">Accesos frecuentes</p><h2>Lo que puedes hacer ahora</h2></div><CalendarDays aria-hidden="true" size={22} /></div>
+          <div className="home-button-list">
+            {actions.filter(({ destination }) => destination !== "screenings").slice(0, 3).map(({ title, description, icon: Icon, destination }) => <button className="home-list-button" key={title} onClick={() => onNavigate(destination)} type="button"><span><Icon aria-hidden="true" size={19} /></span><span><strong>{title}</strong><small>{description}</small></span><ArrowRight aria-hidden="true" size={16} /></button>)}
+          </div>
+        </article>
         <article className="info-card">
           <p className="eyebrow">Recorrido recomendado</p>
-          <h2>Demostracion clínica guiada</h2>
+          <h2>Demostración clínica guiada</h2>
           <ol className="demo-steps">
             <li>Busque un paciente ficticio.</li>
             <li>Abra un screening y revise OD/OI.</li>

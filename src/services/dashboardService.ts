@@ -52,6 +52,17 @@ export class DashboardService {
       today: { pendingScreenings: screenings.filter((item) => pendingScreeningStatuses.has(item.status)).length, scheduledFollowUps: activeFollowUps.filter((item) => item.due_date === todayKey).length, pendingReviews: pendingReviews.length, newPatients: patients.filter((item) => isToday(item.created_at)).length },
       screeningsByMonth: months, statusDistribution,
       recentActivity: (timelineResult.data ?? []).map((item) => ({ id: item.id, title: item.title, occurredAt: item.created_at })), agenda,
+      appointments: activeFollowUps
+        .filter((item) => item.due_date)
+        .sort((a, b) => String(a.due_date).localeCompare(String(b.due_date)))
+        .slice(0, 42)
+        .map((item) => ({
+          id: `appointment-${item.id}`,
+          date: item.due_date as string,
+          title: followUpLabels[item.follow_up_type] ?? "Cita clínica",
+          detail: item.follow_up_status === "CONTROL_PROGRAMADO" ? "Control programado" : "Continuidad de atención",
+          status: item.follow_up_status,
+        })),
     };
   }
 }
