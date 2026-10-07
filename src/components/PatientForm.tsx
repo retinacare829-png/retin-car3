@@ -236,6 +236,7 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
         <label>
           Teléfono
           <input
+            aria-label="Teléfono"
             aria-describedby={phoneError ? "patient-phone-error" : undefined}
             aria-invalid={phoneError ? "true" : "false"}
             disabled={disabled}
