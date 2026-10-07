@@ -1,6 +1,5 @@
--- Fase 8: regresión conocida en el límite 999 -> 1000.
--- PostgreSQL trunca lpad('1000', 3, '0') a '100', lo que puede colisionar.
--- Esta prueba debe fallar hasta que el backend deje de truncar el código.
+-- Fase 8: transición de códigos 999 -> 1000.
+-- El formato usa padding mínimo de tres dígitos y se expande sin truncar.
 -- Todo el ejercicio revierte al final.
 \set ON_ERROR_STOP on
 
@@ -24,15 +23,18 @@ where organization_id = '10000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000003', true);
 
-select created.internal_identifier, screening.medical_record_code
+select created.id as patient_id, created.internal_identifier
 from public.create_patient(
   '10000000-0000-4000-8000-000000000001',
   'Limite', 'Numerico', '1988-01-01', 'unknown', '00000000', null, 'unknown',
   null, '88000000-0000-4000-8000-000000000003'
 ) as created
-join public.screenings screening
-  on screening.patient_id = created.id
- and screening.organization_id = created.organization_id
+\gset overflow_
+
+select screening.medical_record_code
+from public.screenings screening
+where screening.patient_id = :'overflow_patient_id'
+  and screening.organization_id = '10000000-0000-4000-8000-000000000001'
 \gset overflow_
 
 select pg_temp.assert_true(

@@ -1,8 +1,7 @@
--- Fase 8: regresión conocida de idempotencia.
--- EXPECTED FAILURE hasta que el contador se reserve solo cuando el INSERT
--- realmente gana el conflicto de creation_request_id.
--- En PostgreSQL el BEFORE INSERT actual incrementa el contador antes de que
--- ON CONFLICT DO NOTHING descarte el reintento.
+-- Fase 8: reintento idempotente sin consumo duplicado de contador.
+-- El RPC serializa la misma organización/request_id antes de consultar o
+-- insertar, por lo que un retry devuelve la ficha original sin avanzar la
+-- preview nuevamente.
 \set ON_ERROR_STOP on
 
 begin;
