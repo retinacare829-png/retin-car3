@@ -260,6 +260,20 @@ No incluido:
 
 - Fase 6, IA, PDF, nuevas entidades o cambios de seguridad, arquitectura y paleta.
 
-## Fase 6 - Beta para presentacion clinica
+## Fase 6 - Beta para presentación clínica
 
-Pendiente.
+Estado actual: implementada en ramas de trabajo y pendiente de integración final.
+
+Incluido en esta fase:
+
+- Reportes profesionales no diagnósticos con alcance por organización, paciente, screening y operación.
+- Backend de reportes con contrato explícito, control de acceso y consultas limitadas a la organización activa.
+- Frontend de reportes con navegación, filtros, vistas por paciente/screening/operación, detalle operativo OD/OI, estados, accesibilidad e impresión del navegador.
+- QA de seguridad para acceso a reportes, aislamiento multi-organización y límites no diagnósticos.
+- Documentación de dependencias y puntos de integración entre backend, frontend y validación.
+
+No incluido:
+
+- IA clínica, clasificación automática o diagnóstico automatizado.
+- Generación o exportación PDF.
+- Merge, push o despliegue de las ramas preparatorias.
