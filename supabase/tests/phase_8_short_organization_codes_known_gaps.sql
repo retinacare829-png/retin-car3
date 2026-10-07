@@ -1,6 +1,6 @@
--- Fase 8: transición de códigos cortos a cuatro dígitos.
--- El requisito permite que la secuencia continúe 999 -> 1000; no hay
--- rollover ni límite artificial de tres dígitos.
+-- Fase 8: regresión conocida en el límite 999 -> 1000.
+-- PostgreSQL trunca lpad('1000', 3, '0') a '100', lo que puede colisionar.
+-- Esta prueba debe fallar hasta que el backend deje de truncar el código.
 -- Todo el ejercicio revierte al final.
 \set ON_ERROR_STOP on
 
@@ -38,7 +38,7 @@ join public.screenings screening
 select pg_temp.assert_true(
   :'overflow_internal_identifier' = '1000'
   and :'overflow_medical_record_code' = '1000',
-  'la secuencia debe continuar 999 -> 1000 sin rollover'
+  'la secuencia debe continuar 999 -> 1000 sin truncar a 100'
 );
 
 rollback;
