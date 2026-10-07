@@ -10,6 +10,7 @@ import { can } from "../domain/permissions";
 
 const PatientManagement = lazy(() => import("./PatientManagement").then((module) => ({ default: module.PatientManagement })));
 const ExecutiveDashboard = lazy(() => import("./ExecutiveDashboard").then((module) => ({ default: module.ExecutiveDashboard })));
+const ReportsPage = lazy(() => import("./ReportsPage").then((module) => ({ default: module.ReportsPage })));
 
 interface ClinicWorkspaceProps { user: User; onSignOut: () => Promise<void>; }
 
@@ -66,7 +67,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
           {activeOrganization && activePage === "home" ? <OperationalHome organizationName={activeOrganization.organization.name} onNavigate={navigate} /> : null}
           {activeOrganization && activePage === "dashboard" && can(activeOrganization.role, "dashboard:view") ? <Suspense fallback={<LoadingState label="Cargando dashboard" />}><ExecutiveDashboard organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} onNavigate={navigate} /></Suspense> : null}
           {activeOrganization && ["patients", "screenings", "workflow"].includes(activePage) ? <Suspense fallback={<LoadingState label="Cargando módulo clínico" />}><PatientManagement initialFocus={activePage as "patients" | "screenings" | "workflow"} organizationId={activeOrganization.organization.id} role={activeOrganization.role} user={user} /></Suspense> : null}
-          {activeOrganization && activePage === "reports" ? <section className="simple-page" aria-labelledby="reports-title"><p className="eyebrow">Próximamente</p><h1 id="reports-title">Reportes</h1><EmptyState icon={FileText} title="Reportes no disponibles" description="La generación de reportes no forma parte de esta fase." /></section> : null}
+          {activeOrganization && activePage === "reports" ? <Suspense fallback={<LoadingState label="Cargando reportes" />}><ReportsPage organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} /></Suspense> : null}
           {activeOrganization && activePage === "settings" ? <section className="simple-page" aria-labelledby="settings-title"><p className="eyebrow">Alcance beta</p><h1 id="settings-title">Configuración</h1><article className="info-card"><h2>Contexto de sesión</h2><dl className="settings-list"><div><dt>Organización</dt><dd>{activeOrganization.organization.name}</dd></div><div><dt>Usuario</dt><dd>{user.email}</dd></div><div><dt>Rol</dt><dd>{roleLabels[activeOrganization.role]}</dd></div></dl><p className="scope-note">La administración avanzada de usuarios y clínica no forma parte de esta fase.</p></article></section> : null}
         </main>
       </div>
