@@ -1,5 +1,5 @@
 import type { Organization } from "../domain/organization";
-import { validateClinicLogo, type ClinicTheme } from "../domain/clinicBranding";
+import { paletteFromLogo, validateClinicLogo, type ClinicTheme } from "../domain/clinicBranding";
 import type { Role } from "../domain/roles";
 import type { TypedSupabaseClient } from "../lib/supabase";
 
@@ -65,10 +65,11 @@ export class OrganizationService {
     if (logo) {
       const validationError = validateClinicLogo(logo);
       if (validationError) throw new Error(validationError);
+      await paletteFromLogo(logo);
       const path = `${organizationId}/logo`;
       const { error: uploadError } = await this.client.storage
         .from("clinic-branding-private")
-        .upload(path, logo, { upsert: true, contentType: logo.type, cacheControl: "60" });
+        .upload(path, logo, { upsert: true, contentType: logo.type, cacheControl: "0" });
       if (uploadError) throw uploadError;
       const { error: updateError } = await this.client.from("organizations")
         .update({ brand_theme: theme, logo_path: path })

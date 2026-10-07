@@ -10,7 +10,7 @@ import { can } from "../domain/permissions";
 import { supabase } from "../lib/supabase";
 import { createReportsAdapter } from "../services/reportsAdapter";
 import { OrganizationService } from "../services/organizationService";
-import { clinicThemes } from "../domain/clinicBranding";
+import { clinicThemes, paletteFromLogo, type ClinicPalette } from "../domain/clinicBranding";
 import { ClinicSettings } from "./ClinicSettings";
 
 const PatientManagement = lazy(() => import("./PatientManagement").then((module) => ({ default: module.PatientManagement })));
@@ -32,7 +32,8 @@ const navigation = [
 export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
   const { activeOrganization, error, loading, organizations, selectOrganization, registerClinic, saveBranding, logoRevision } = useOrganizationContext(user);
   const [clinicLogoUrl, setClinicLogoUrl] = useState<string | null>(null);
-  const palette = clinicThemes[activeOrganization?.organization.brandTheme ?? "retina"] ?? clinicThemes.retina;
+  const [logoPalette, setLogoPalette] = useState<ClinicPalette | null>(null);
+  const palette = logoPalette ?? clinicThemes.retina;
   const themeStyle = {
     "--rc-primary": palette.primary, "--rc-primary-dark": palette.dark,
     "--rc-primary-soft": palette.soft, "--rc-sidebar-bg": palette.sidebar,
@@ -45,18 +46,27 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
   );
   const [activePage, setActivePage] = useState<WorkspaceDestination>("home");
   const [mobileOpen, setMobileOpen] = useState(false);
-  useEffect(() => { setActivePage("home"); }, [activeOrganization?.organization.id]);
+  useEffect(() => {
+    setActivePage((page) => page === "settings" && activeOrganization?.role === "clinic_admin" ? "settings" : "home");
+  }, [activeOrganization?.organization.id, activeOrganization?.role]);
   useEffect(() => {
     let cancelled = false;
     let objectUrl: string | null = null;
     const path = activeOrganization?.organization.logoPath;
     setClinicLogoUrl(null);
+    setLogoPalette(null);
     if (path && supabase) {
       new OrganizationService(supabase).downloadLogo(path)
-        .then((blob) => {
+        .then(async (blob) => {
           if (cancelled) return;
           objectUrl = URL.createObjectURL(blob);
           setClinicLogoUrl(objectUrl);
+          try {
+            const derived = await paletteFromLogo(blob);
+            if (!cancelled) setLogoPalette(derived);
+          } catch {
+            if (!cancelled) setLogoPalette(null);
+          }
         })
         .catch(() => { if (!cancelled) setClinicLogoUrl(null); });
     }
@@ -68,9 +78,8 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
       <ToastViewport />
       <a className="skip-link" href="#main-content">Saltar al contenido principal</a>
       <aside className={mobileOpen ? "app-sidebar open" : "app-sidebar"} aria-label="Barra lateral de RetinaCare">
-        <div className="sidebar-brand"><div className="sidebar-clinic-logo">{clinicLogoUrl ? <img src={clinicLogoUrl} alt={`Logo de ${activeOrganization?.organization.name ?? "la clínica"}`} /> : <span className="sidebar-clinic-fallback"><Building2 aria-hidden="true" size={27} /><strong>{activeOrganization?.organization.name ?? "Clínica"}</strong></span>}</div><button className="mobile-close" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button"><X size={20} /></button></div>
+        <div className="sidebar-brand"><div className="sidebar-clinic-identity"><div className="sidebar-clinic-logo">{clinicLogoUrl ? <img src={clinicLogoUrl} alt={`Logo de ${activeOrganization?.organization.name ?? "la clínica"}`} /> : <span className="clinic-logo-placeholder"><Building2 aria-hidden="true" size={30} /><small>Logo pendiente</small></span>}</div><strong className="sidebar-clinic-name">{activeOrganization?.organization.name ?? "Clínica"}</strong></div><button className="mobile-close" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button"><X size={20} /></button></div>
         <nav aria-label="Navegación principal">{navigation.filter((item) => !item.permission || (activeOrganization && can(activeOrganization.role, item.permission))).map(({ id, label, icon: Icon }) => <button aria-current={activePage === id ? "page" : undefined} className={activePage === id ? "nav-item active" : "nav-item"} key={id} onClick={() => navigate(id)} type="button"><Icon aria-hidden="true" size={19} /><span>{label}</span></button>)}</nav>
-        <div className="sidebar-disclaimer"><strong>Versión beta</strong><span>No realiza diagnóstico automatizado.</span></div>
       </aside>
       {mobileOpen ? <button className="sidebar-scrim" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button" /> : null}
 
