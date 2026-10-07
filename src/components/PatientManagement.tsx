@@ -13,7 +13,6 @@ import {
   type PatientCreateData,
   type PatientFilters,
   type PatientSex,
-  type PatientUpdateData,
 } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { usePatients } from "../hooks/usePatients";
@@ -56,7 +55,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   useEffect(() => { setPage(1); }, [filters, sortOrder]);
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
-  async function handleSubmit(data: PatientCreateData | PatientUpdateData) {
+  async function handleSubmit(data: PatientCreateData) {
     if (editingPatient) {
       await patientsApi.updatePatient(editingPatient, data);
       setEditingPatient(null);

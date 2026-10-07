@@ -8,7 +8,6 @@ import {
   patientUpdateSchema,
   type Patient,
   type PatientCreateData,
-  type PatientUpdateData,
   type PatientFormInput,
 } from "../domain/patient";
 
@@ -20,7 +19,7 @@ interface PatientFormProps {
   onSubmit: (data: PatientFormSubmission) => Promise<void>;
 }
 
-export type PatientFormSubmission = PatientCreateData | PatientUpdateData;
+export type PatientFormSubmission = PatientCreateData;
 
 type PatientFormState = Omit<PatientFormInput, "medicalRecordCode">;
 
