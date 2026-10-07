@@ -6,8 +6,8 @@ create or replace function public.can_generate_professional_reports(target_organ
 returns boolean
 language sql
 stable
-security definer
-set search_path = public
+security invoker
+set search_path = ''
 as $$
   select public.has_org_role(
     target_organization_id,
@@ -16,4 +16,6 @@ as $$
 $$;
 
 revoke all on function public.can_generate_professional_reports(uuid) from public;
+revoke all on function public.can_generate_professional_reports(uuid) from anon;
+revoke all on function public.has_org_role(uuid, public.organization_role[]) from anon;
 grant execute on function public.can_generate_professional_reports(uuid) to authenticated;
