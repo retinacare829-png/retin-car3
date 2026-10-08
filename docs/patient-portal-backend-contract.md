@@ -47,7 +47,7 @@ El backend debe derivar el usuario desde el JWT/sesión y resolver la relación 
       "recordCode": "RC-0001",
       "title": "Informe de screening",
       "summary": "Texto aprobado para compartir con el paciente.",
-      "nextStep": "Control según indicación de la clínica",
+      "nextStep": null,
       "publishedAt": "2026-10-08T13:00:00Z",
       "publishedBy": "Profesional autorizado"
     }
@@ -58,7 +58,8 @@ El backend debe derivar el usuario desde el JWT/sesión y resolver la relación 
 ## Reglas de seguridad y publicación
 
 - La respuesta debe pertenecer exclusivamente al paciente autenticado.
-- El estado de un screening puede ser básico y operativo; no debe incluir observaciones internas, imágenes privadas, notas del profesional ni borradores.
+- Solo se devuelven screenings publicados. Su estado es básico y operativo; no incluye observaciones internas, imágenes privadas, notas del profesional ni borradores.
 - `reports` debe contener únicamente informes con aprobación explícita y publicación efectiva. Los informes pendientes, borradores y resultados no aprobados deben excluirse del payload, no enviarse con una bandera para que el frontend los oculte.
+- El resumen compartido se congela en `patient_report_summary` al aprobar, a partir de `general_observations`. El profesional debe revisar ese texto antes de publicar; cambios posteriores no alteran el informe mostrado. Si está vacío, se envía un aviso genérico; las notas internas de revisión, seguimiento y referencia nunca se envían.
 - La autorización debe aplicarse en la RPC/RLS y el backend debe devolver una respuesta de acceso denegado cuando corresponda. El frontend no debe usar `user_metadata` ni modificar JWT metadata para vincular pacientes.
 - No exponer `service_role` ni credenciales privilegiadas al navegador.
