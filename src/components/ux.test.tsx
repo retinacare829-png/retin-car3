@@ -79,6 +79,7 @@ describe("UX de la demo clínica", () => {
 
   it("presenta layout, identidad y navegación activa", async () => {
     render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
+    fireEvent.click(screen.getByRole("button", { name: "Abrir navegación" }));
     expect(screen.getByRole("navigation", { name: "Navegación principal" })).toBeInTheDocument();
     expect(screen.getAllByRole("img", { name: "RetinaCare" })[0]).toBeInTheDocument();
     expect(screen.getAllByText("Clínica RetinaCare Demo").length).toBeGreaterThan(0);
@@ -90,6 +91,20 @@ describe("UX de la demo clínica", () => {
     fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Actividad clínica trazable" })).toBeInTheDocument());
     expect(screen.getByText("Conector de reportes pendiente")).toBeInTheDocument();
+  });
+
+  it("abre el menú radial y conserva la navegación clínica", () => {
+    render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
+    const toggle = screen.getByRole("button", { name: "Abrir navegación" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(screen.getByRole("navigation", { name: "Navegación principal" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cerrar navegación" })).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Pacientes" }));
+    expect(screen.getByRole("button", { name: "Abrir navegación" })).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(screen.getByRole("button", { name: "Abrir navegación" }));
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.getByRole("button", { name: "Abrir navegación" })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("ofrece accesos rápidos y conserva el aviso de IA", () => {

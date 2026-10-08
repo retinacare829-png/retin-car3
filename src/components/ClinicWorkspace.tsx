@@ -45,7 +45,14 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
     [reportRole, user.id],
   );
   const [activePage, setActivePage] = useState<WorkspaceDestination>("home");
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [radialOpen, setRadialOpen] = useState(false);
+  const allowedNavigation = navigation.filter((item) => !item.permission || (activeOrganization && can(activeOrganization.role, item.permission)));
+  useEffect(() => {
+    if (!radialOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setRadialOpen(false); };
+    globalThis.addEventListener("keydown", closeOnEscape);
+    return () => globalThis.removeEventListener("keydown", closeOnEscape);
+  }, [radialOpen]);
   useEffect(() => {
     setActivePage((page) => page === "settings" && activeOrganization?.role === "clinic_admin" ? "settings" : "home");
   }, [activeOrganization?.organization.id, activeOrganization?.role]);
@@ -72,20 +79,24 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
     }
     return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [activeOrganization?.organization.logoPath, logoRevision]);
-  const navigate = (page: WorkspaceDestination) => { setActivePage(page); setMobileOpen(false); };
+  const navigate = (page: WorkspaceDestination) => { setActivePage(page); setRadialOpen(false); };
   return (
-    <div className="clinical-app-shell" style={themeStyle}>
+    <div className="clinical-app-shell radial-workspace" style={themeStyle}>
       <ToastViewport />
       <a className="skip-link" href="#main-content">Saltar al contenido principal</a>
-      <aside className={mobileOpen ? "app-sidebar open" : "app-sidebar"} aria-label="Barra lateral de RetinaCare">
-        <div className="sidebar-brand"><div className="sidebar-clinic-identity"><div className="sidebar-clinic-logo">{clinicLogoUrl ? <img src={clinicLogoUrl} alt={`Logo de ${activeOrganization?.organization.name ?? "la clínica"}`} /> : <span className="clinic-logo-placeholder"><Building2 aria-hidden="true" size={30} /><small>Logo pendiente</small></span>}</div><strong className="sidebar-clinic-name">{activeOrganization?.organization.name ?? "Clínica"}</strong></div><button className="mobile-close" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button"><X size={20} /></button></div>
-        <nav aria-label="Navegación principal">{navigation.filter((item) => !item.permission || (activeOrganization && can(activeOrganization.role, item.permission))).map(({ id, label, icon: Icon }) => <button aria-current={activePage === id ? "page" : undefined} className={activePage === id ? "nav-item active" : "nav-item"} key={id} onClick={() => navigate(id)} type="button"><Icon aria-hidden="true" size={19} /><span>{label}</span></button>)}</nav>
+      {radialOpen ? <button className="radial-scrim" aria-label="Cerrar menú radial" onClick={() => setRadialOpen(false)} type="button" /> : null}
+      <aside className={radialOpen ? "radial-sidebar open" : "radial-sidebar"} aria-hidden={!radialOpen} aria-label="Menú de RetinaCare" id="radial-navigation">
+        <div className="radial-sidebar-shape" aria-hidden="true" />
+        <div className="radial-clinic-logo">{clinicLogoUrl ? <img src={clinicLogoUrl} alt={`Logo de ${activeOrganization?.organization.name ?? "la clínica"}`} /> : <Building2 aria-hidden="true" size={68} />}</div>
+        <div className="radial-clinic-name">{activeOrganization?.organization.name ?? "Clínica"}</div>
+        <div className="radial-quick-actions" aria-label="Accesos rápidos">{allowedNavigation.slice(0, 3).map(({ id, label, icon: Icon }, index) => <button aria-label={`Acceso rápido: ${label}`} className="radial-quick-action" key={id} onClick={() => navigate(id)} style={{ "--radial-index": index } as CSSProperties} tabIndex={radialOpen ? 0 : -1} title={label} type="button"><Icon aria-hidden="true" size={23} /></button>)}</div>
+        <nav aria-label="Navegación principal">{allowedNavigation.map(({ id, label, icon: Icon }, index) => <button aria-current={activePage === id ? "page" : undefined} className={activePage === id ? "radial-nav-item active" : "radial-nav-item"} key={id} onClick={() => navigate(id)} style={{ "--radial-index": index } as CSSProperties} tabIndex={radialOpen ? 0 : -1} type="button"><Icon aria-hidden="true" size={18} /><span>{label}</span></button>)}</nav>
       </aside>
-      {mobileOpen ? <button className="sidebar-scrim" aria-label="Cerrar navegación" onClick={() => setMobileOpen(false)} type="button" /> : null}
+      <button className="radial-menu-toggle" aria-controls="radial-navigation" aria-expanded={radialOpen} aria-label={radialOpen ? "Cerrar navegación" : "Abrir navegación"} onClick={() => setRadialOpen((current) => !current)} type="button">{radialOpen ? <X aria-hidden="true" size={24} /> : <Menu aria-hidden="true" size={24} />}</button>
 
       <div className="app-main-column">
         <header className="workspace-topbar">
-          <button className="menu-button" aria-label="Abrir navegación" onClick={() => setMobileOpen(true)} type="button"><Menu size={22} /></button>
+          <button className="menu-button" aria-label="Abrir menú desde la barra superior" onClick={() => setRadialOpen(true)} type="button"><Menu size={22} /></button>
           <img className="topbar-logo" src={logoUrl} alt="RetinaCare" /><form className="topbar-search" onSubmit={(event) => { event.preventDefault(); navigate("patients"); }} role="search"><Search aria-hidden="true" size={17} /><label className="sr-only" htmlFor="global-search">Buscar en RetinaCare</label><input id="global-search" placeholder="Buscar paciente..." /></form><time className="topbar-date" dateTime={new Date().toISOString()}>{new Intl.DateTimeFormat("es-NI", { day: "numeric", month: "short" }).format(new Date())}</time><button className="notification-button" aria-label="Notificaciones" type="button"><Bell aria-hidden="true" size={19} /></button>
           <div className="user-menu"><span className="user-avatar" aria-hidden="true">{(user.email?.[0] ?? "U").toUpperCase()}</span><div><strong>{user.email ?? "Usuario RetinaCare"}</strong><span>{activeOrganization ? roleLabels[activeOrganization.role] : "Rol no disponible"}</span></div><ChevronDown aria-hidden="true" size={16} /><button className="logout-button" onClick={() => void onSignOut()} type="button"><LogOut aria-hidden="true" size={18} /><span>Cerrar sesión</span></button></div>
         </header>

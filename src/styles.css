@@ -1270,6 +1270,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .auth-copy h1 { font-size: clamp(2rem, 8vw, 3.2rem); }
 }
 
+
 @media (max-width: 600px) {
   .quick-actions { grid-template-columns: 1fr; }
   .quick-action { min-height: 96px; }
@@ -1555,7 +1556,44 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .reports-state { display: flex; gap: 12px; align-items: flex-start; padding: 17px; border: 1px dashed #b9cfcb; border-radius: 11px; color: var(--rc-ink); background: #f9fcfb; }.reports-state > svg { flex: 0 0 auto; margin-top: 1px; color: #52746f; }.reports-state strong, .reports-state p { display: block; }.reports-state p { margin: 4px 0 0; color: var(--rc-muted); font-size: .9rem; line-height: 1.45; }.reports-state-error { align-items: center; border-style: solid; border-color: #e5b8b4; color: #782b25; background: #fff5f4; }.reports-state-error > svg { color: #a64337; }.reports-state-error .ghost-button { margin-left: auto; }.reports-state-restricted { border-color: #ead59b; color: #684313; background: #fff8e6; }.reports-state-restricted > svg { color: #c98220; }
 @media (max-width: 900px) { .reports-controls fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); }.operation-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }.screening-detail-card dl { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 620px) { .reports-heading, .reports-controls-heading { align-items: flex-start; flex-direction: column; }.reports-controls fieldset, .operation-metrics, .screening-detail-card dl { grid-template-columns: 1fr; }.reports-control-actions { justify-content: stretch; flex-direction: column; }.reports-control-actions button { width: 100%; }.report-view-tabs { overflow-x: auto; flex-wrap: nowrap; }.report-view-tabs button { flex: 0 0 auto; }.report-panel { padding: 16px; }.report-panel-heading { flex-direction: column; gap: 8px; }.reports-state-error { align-items: flex-start; flex-wrap: wrap; }.reports-state-error .ghost-button { margin-left: 34px; } }
+/* Variante radial: experimento de navegación aislado en la rama alternativa. */
+.clinical-app-shell.radial-workspace { display: block; }
+.radial-workspace .menu-button { display: inline-grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; color: var(--rc-primary-dark); }
+.radial-scrim { position: fixed; z-index: 50; inset: 0; width: 100%; border: 0; background: color-mix(in srgb, var(--rc-sidebar-bg) 82%, transparent); }
+.radial-sidebar { position: fixed; z-index: 51; top: 0; left: 0; width: min(540px, 100vw); height: 100dvh; opacity: 0; pointer-events: none; transform: translateX(-56px); transition: opacity .28s ease, transform .28s ease; }
+.radial-sidebar.open { opacity: 1; pointer-events: auto; transform: translateX(0); }
+.radial-sidebar-shape { position: absolute; top: -25%; left: -225px; width: 560px; height: 150%; border: 1px solid var(--rc-accent); border-radius: 50%; background: var(--rc-primary); box-shadow: 14px 0 45px color-mix(in srgb, var(--rc-primary-dark) 38%, transparent); }
+.radial-sidebar-shape::after { position: absolute; top: 6%; left: 7%; width: 96%; height: 88%; border: 1px solid color-mix(in srgb, var(--rc-accent) 54%, transparent); border-radius: 50%; content: ""; }
+.radial-clinic-logo { position: absolute; z-index: 1; top: 50%; left: -45px; display: grid; width: 230px; height: 230px; place-items: center; padding: 30px 30px 30px 60px; border: 7px solid color-mix(in srgb, var(--rc-accent) 70%, white); border-radius: 50%; color: var(--rc-primary-dark); background: #fff; transform: translateY(-50%); box-shadow: 0 12px 30px color-mix(in srgb, var(--rc-primary-dark) 30%, transparent); }
+.radial-clinic-logo img { width: 100%; max-height: 100%; object-fit: contain; }
+.radial-clinic-name { position: absolute; z-index: 2; top: calc(50% + 132px); left: 20px; width: 170px; color: #fff; font-size: .88rem; font-weight: 800; line-height: 1.35; text-align: center; overflow-wrap: anywhere; }
+.radial-quick-actions { position: absolute; z-index: 2; top: 50%; left: 205px; display: grid; gap: 30px; transform: translateY(-50%); }
+.radial-quick-action { display: grid; width: 52px; height: 52px; place-items: center; border: 2px solid var(--rc-accent); border-radius: 50%; color: var(--rc-primary-dark); background: #fff; cursor: pointer; box-shadow: 0 5px 16px color-mix(in srgb, var(--rc-primary-dark) 28%, transparent); transition: transform .2s ease, background .2s ease; transition-delay: calc(var(--radial-index) * 45ms); }
+.radial-quick-action:hover, .radial-quick-action:focus-visible { background: var(--rc-primary-soft); transform: translateX(5px); }
+.radial-sidebar nav { position: absolute; z-index: 2; top: 50%; left: 318px; display: grid; width: 205px; gap: 10px; transform: translateY(-50%); }
+.radial-nav-item { display: flex; min-height: 44px; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid transparent; border-radius: 12px; color: #fff; background: transparent; font-size: .9rem; font-weight: 700; text-align: left; cursor: pointer; transition: background .2s ease, transform .2s ease; transition-delay: calc(var(--radial-index) * 35ms); }
+.radial-nav-item:nth-child(1), .radial-nav-item:nth-child(6) { transform: translateX(-15px); }
+.radial-nav-item:nth-child(2), .radial-nav-item:nth-child(5) { transform: translateX(-7px); }
+.radial-nav-item:hover, .radial-nav-item:focus-visible { background: color-mix(in srgb, var(--rc-primary) 45%, transparent); }
+.radial-nav-item.active { border-color: var(--rc-accent); color: var(--rc-primary-dark); background: #fff; }
+.radial-menu-toggle { position: fixed; z-index: 52; bottom: 22px; left: 22px; display: grid; width: 54px; height: 54px; place-items: center; border: 2px solid var(--rc-accent); border-radius: 50%; color: var(--rc-primary-dark); background: #fff; cursor: pointer; box-shadow: 0 5px 20px color-mix(in srgb, var(--rc-primary-dark) 30%, transparent); }
+.radial-menu-toggle:hover { background: var(--rc-primary-soft); }
+
+@media (max-width: 700px) {
+  .radial-sidebar { width: min(350px, 92vw); overflow-y: auto; overflow-x: hidden; background: var(--rc-sidebar-bg); }
+  .radial-sidebar-shape { top: -170px; left: -160px; width: 490px; height: 385px; }
+  .radial-clinic-logo { top: 26px; left: 22px; width: 100px; height: 100px; padding: 13px; border-width: 4px; transform: none; }
+  .radial-clinic-name { top: 145px; left: 24px; width: calc(100% - 48px); text-align: left; }
+  .radial-quick-actions { display: none; }
+  .radial-sidebar nav { position: relative; top: auto; left: auto; width: auto; gap: 8px; margin: 230px 20px 90px; transform: none; }
+  .radial-nav-item, .radial-nav-item:nth-child(1), .radial-nav-item:nth-child(2), .radial-nav-item:nth-child(5), .radial-nav-item:nth-child(6) { min-height: 48px; transform: none; }
+  .radial-nav-item { border-color: color-mix(in srgb, var(--rc-accent) 40%, transparent); background: color-mix(in srgb, var(--rc-primary) 35%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) { .radial-sidebar, .radial-quick-action, .radial-nav-item { transition: none; } }
+
 @media print {
+  .radial-sidebar, .radial-menu-toggle, .radial-scrim { display: none !important; }
   @page { margin: 14mm; }
   body { min-width: 0; background: #fff; }
   .app-sidebar, .workspace-topbar, .reports-controls, .report-view-tabs, .toast-viewport, .skip-link { display: none !important; }
