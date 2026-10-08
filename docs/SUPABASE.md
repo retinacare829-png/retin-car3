@@ -110,3 +110,11 @@ Para abrir la demo desde otros celulares o laptops, **no** publique Supabase loc
 7. Verifique con una cuenta demo desde otro dispositivo: inicio de sesión, listado de pacientes, creación de una ficha ficticia y aislamiento entre clínicas. Revise también `npm run supabase:qa:smoke` con credenciales QA independientes y sin mutaciones de Storage primero.
 
 El `git push` del código no crea el proyecto hospedado ni ejecuta las migraciones remotas. Esta guía prepara el despliegue, pero no afirma que el proyecto demo ya exista ni que `db push` se haya ejecutado.
+
+## Enlace temporal para un hackatón
+
+Si los evaluadores están en la misma Wi‑Fi, basta con el paso 6 anterior. Para evaluadores en otras redes, puede publicarse **solo el frontend compilado** mediante un Quick Tunnel gratuito de Cloudflare. Primero compruebe que la app ya usa `https://<proyecto>.supabase.co` y que las pruebas de Auth, pacientes y RLS pasan con datos ficticios. No apunte el túnel a Supabase local ni a los puertos 54321–54323.
+
+En Windows, descargue `cloudflared.exe` desde la [página oficial](https://developers.cloudflare.com/tunnel/downloads/) y compruebe su firma. En una terminal ejecute `npm run build` y luego `python -m http.server 4173 --bind 127.0.0.1 --directory dist`. En otra terminal ejecute `cloudflared tunnel --url http://127.0.0.1:4173`. Comparta únicamente la URL HTTPS `trycloudflare.com` que aparezca; si la URL cambia, actualice la URL de Auth para recuperación de contraseña. El enlace deja de funcionar al cerrar el túnel o apagar el equipo. [Cloudflare indica](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/) que Quick Tunnels son para pruebas y no tienen garantía de disponibilidad.
+
+La opción de APK/Capacitor no resuelve la conectividad de la base de datos: también necesitaría Supabase hospedado. Para la demo inmediata, el navegador móvil evita el trabajo adicional de empaquetado, firma e instalación.
