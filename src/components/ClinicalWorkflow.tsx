@@ -51,7 +51,13 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const reviewApproved = ["REVISION_COMPLETADA", "SEGUIMIENTO_REQUERIDO"].includes(workflow.detail.professionalReview?.reviewStatus ?? "");
-  const canPublish = workflow.canReview && reviewApproved && ["REVISADO", "SEGUIMIENTO_REQUERIDO"].includes(screening.status);
+  const publicationMissing = checklist.items.filter((item) => ["image_od", "image_oi", "quality_od", "quality_oi", "review"].includes(item.key) && !item.complete).map((item) => item.label);
+  const publicationBlockers = [
+    ...(!workflow.canReview ? ["Su rol no puede aprobar publicaciones."] : []),
+    ...publicationMissing,
+    ...(!["REVISADO", "SEGUIMIENTO_REQUERIDO"].includes(screening.status) ? ["El screening aún no está marcado como revisado."] : []),
+  ];
+  const canPublish = workflow.canReview && reviewApproved && publicationBlockers.length === 0;
   const reportSummary = screening.generalObservations?.trim() || "Tu clínica compartió este informe. Consulta al profesional para conocer sus conclusiones.";
 
   async function publishForPatient() {
@@ -101,6 +107,7 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
       </div>
 
       <div className="ai-placeholder" role="status"><strong>{betaAiUnavailableMessage}</strong><code>NOT_AVAILABLE</code></div>
+      <aside className="workflow-guide" role="note"><strong>¿Qué sigue en este flujo?</strong><span>Primero confirme las imágenes OD/OI y su calidad. Luego complete la revisión profesional; solo después podrá compartir un resumen con el paciente o cerrar el screening.</span></aside>
       {workflow.error ? <div className="form-error">{workflow.error}</div> : null}
       {workflow.loading ? <LoadingState label="Cargando workflow clínico" /> : null}
       {!workflow.loading && !workflow.detail.professionalReview ? <EmptyState title="Sin revisión profesional" description="Complete la revisión manual cuando un profesional autorizado haya evaluado el screening." /> : null}
@@ -118,10 +125,11 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
           <button className="primary-button" disabled={publishing || workflow.loading || !canPublish || Boolean(screening.patientPublishedAt)} onClick={() => void publishForPatient()} type="button">
             <ExternalLink aria-hidden="true" size={18} />{screening.patientPublishedAt ? "Informe compartido" : publishing ? "Compartiendo…" : "Aprobar y compartir con paciente"}
           </button>
-          {!canPublish && !screening.patientPublishedAt ? <p className="permission-note">Requiere revisión profesional completada y screening revisado.</p> : null}
+          {!canPublish && !screening.patientPublishedAt ? <p className="permission-note">Para habilitar esta acción falta: {publicationBlockers.join(", ")}.</p> : null}
         </section>
         <section className="workflow-card closure-card">
           <div className="panel-title"><ClipboardCheck aria-hidden="true" size={20} /><h3>Checklist de cierre</h3></div>
+          <p className="field-help">El cierre congela el workflow clínico y conserva su trazabilidad. Complete todos los puntos antes de cerrar.</p>
           <ul className="closure-checklist">
             {checklist.items.map((item) => <li className={item.complete ? "complete" : "missing"} key={item.key}>{item.complete ? <Check size={17} /> : <X size={17} />}<span>{item.label}</span></li>)}
           </ul>
@@ -148,7 +156,8 @@ function ProfessionalReviewForm({ disabled, review, onSave }: { disabled: boolea
   };
   async function submit(event: FormEvent) { event.preventDefault(); const parsed = professionalReviewSchema.safeParse(form); if (parsed.success) await onSave(parsed.data); }
   return <form className="workflow-card" onSubmit={(event) => void submit(event)}>
-    <div className="panel-title"><ClipboardCheck size={20} /><h3>Revision profesional</h3></div>
+    <div className="panel-title"><ClipboardCheck size={20} /><h3>Revisión profesional</h3></div>
+    <p className="field-help">Un profesional autorizado registra aquí la revisión manual y las acciones siguientes. No es una conclusión generada por IA.</p>
     <label>Estado<select disabled={disabled} value={form.reviewStatus} onChange={(event) => setForm((current) => ({ ...current, reviewStatus: event.target.value as ProfessionalReviewInput["reviewStatus"] }))}>{professionalReviewStatusValues.filter((value) => value !== "CERRADO" || review?.reviewStatus === "CERRADO").map((value) => <option key={value} value={value}>{professionalReviewStatusLabels[value]}</option>)}</select></label>
     <div className="structured-observations">{Object.entries(observationLabels).map(([key, label]) => <label className="checkbox-field" key={key}><input checked={Boolean(form.structuredObservations[key as keyof StructuredObservations])} disabled={disabled} onChange={(event) => setForm((current) => ({ ...current, structuredObservations: { ...current.structuredObservations, [key]: event.target.checked } }))} type="checkbox" />{label}</label>)}</div>
     <label>Comentarios adicionales<textarea disabled={disabled} maxLength={1600} rows={4} value={form.notes ?? ""} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} /></label>
@@ -158,16 +167,17 @@ function ProfessionalReviewForm({ disabled, review, onSave }: { disabled: boolea
 
 const defaultFollowUp = (): FollowUpInput => ({ assignedTo: "", followUpType: "CONTROL_PROGRAMADO", followUpStatus: "SIN_SEGUIMIENTO", dueDate: "", completedAt: null, notes: "" });
 function FollowUpPanel({ disabled, followUps, onSave }: { disabled: boolean; followUps: FollowUp[]; onSave: (data: ReturnType<typeof followUpSchema.parse>, current?: FollowUp) => Promise<void> }) {
-  const [editing, setEditing] = useState<FollowUp | undefined>(); const [form, setForm] = useState<FollowUpInput>(defaultFollowUp());
+  const [editing, setEditing] = useState<FollowUp | undefined>(); const [form, setForm] = useState<FollowUpInput>(defaultFollowUp()); const [formError, setFormError] = useState<string | null>(null);
   function edit(item: FollowUp) { setEditing(item); setForm({ assignedTo: item.assignedTo ?? "", followUpType: item.followUpType, followUpStatus: item.followUpStatus, dueDate: item.dueDate ?? "", completedAt: item.completedAt, notes: item.notes ?? "" }); }
-  async function submit(event: FormEvent) { event.preventDefault(); const candidate = { ...form, completedAt: form.followUpStatus === "SEGUIMIENTO_COMPLETADO" ? (editing?.completedAt ?? new Date().toISOString()) : null }; const parsed = followUpSchema.safeParse(candidate); if (parsed.success) { await onSave(parsed.data, editing); setEditing(undefined); setForm(defaultFollowUp()); } }
+  async function submit(event: FormEvent) { event.preventDefault(); const candidate = { ...form, completedAt: form.followUpStatus === "SEGUIMIENTO_COMPLETADO" ? (editing?.completedAt ?? new Date().toISOString()) : null }; const parsed = followUpSchema.safeParse(candidate); if (!parsed.success) { setFormError(parsed.error.issues[0]?.message ?? "Revise los datos del seguimiento."); return; } setFormError(null); await onSave(parsed.data, editing); setEditing(undefined); setForm(defaultFollowUp()); }
   return <form className="workflow-card" onSubmit={(event) => void submit(event)}><div className="panel-title"><Save size={20} /><h3>Seguimiento</h3></div>
     <label>Tipo<select disabled={disabled} value={form.followUpType} onChange={(event) => setForm((c) => ({ ...c, followUpType: event.target.value as FollowUpInput["followUpType"] }))}>{followUpTypeValues.map((v) => <option key={v} value={v}>{followUpTypeLabels[v]}</option>)}</select></label>
     <label>Estado<select disabled={disabled} value={form.followUpStatus} onChange={(event) => setForm((c) => ({ ...c, followUpStatus: event.target.value as FollowUpInput["followUpStatus"] }))}>{followUpStatusValues.map((v) => <option key={v} value={v}>{followUpStatusLabels[v]}</option>)}</select></label>
     <label>Fecha sugerida<input disabled={disabled} type="date" value={form.dueDate ?? ""} onChange={(event) => setForm((c) => ({ ...c, dueDate: event.target.value }))} /></label>
-    <label>Responsable (UUID, opcional)<input disabled={disabled} value={form.assignedTo ?? ""} onChange={(event) => setForm((c) => ({ ...c, assignedTo: event.target.value }))} /></label>
+    <label>Responsable del seguimiento (opcional)<input aria-describedby="follow-up-assignee-help" disabled={disabled} placeholder="Identificador interno, si aplica" value={form.assignedTo ?? ""} onChange={(event) => setForm((c) => ({ ...c, assignedTo: event.target.value }))} /><span className="field-help" id="follow-up-assignee-help">Use el identificador interno de la persona responsable. Puede dejarlo vacío.</span></label>
     <label>Notas<textarea disabled={disabled} maxLength={1200} rows={3} value={form.notes ?? ""} onChange={(event) => setForm((c) => ({ ...c, notes: event.target.value }))} /></label>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />{editing ? "Actualizar" : "Registrar"} seguimiento</button>
+    {formError ? <div className="form-error" role="alert">{formError}</div> : null}
     {followUps.length === 0 ? <EmptyState title="Sin seguimientos" description="Registre un seguimiento solo cuando el profesional lo indique." /> : null}
     <ul className="workflow-records">{followUps.map((item) => <li key={item.id}><span><strong>{followUpTypeLabels[item.followUpType]}</strong>{followUpStatusLabels[item.followUpStatus]}{item.dueDate ? ` · ${item.dueDate}` : ""}</span><button className="ghost-button" disabled={disabled} onClick={() => edit(item)} type="button">Editar</button></li>)}</ul>
   </form>;
@@ -175,9 +185,9 @@ function FollowUpPanel({ disabled, followUps, onSave }: { disabled: boolean; fol
 
 const defaultReferral = (): ReferralInput => ({ referralReason: "", referralDestination: "", referralStatus: "BORRADOR", requestedDate: new Date().toISOString().slice(0, 10), completedDate: "", notes: "" });
 function ReferralPanel({ disabled, referrals, onSave }: { disabled: boolean; referrals: Referral[]; onSave: (data: ReturnType<typeof referralSchema.parse>, current?: Referral) => Promise<void> }) {
-  const [editing, setEditing] = useState<Referral | undefined>(); const [form, setForm] = useState<ReferralInput>(defaultReferral());
+  const [editing, setEditing] = useState<Referral | undefined>(); const [form, setForm] = useState<ReferralInput>(defaultReferral()); const [formError, setFormError] = useState<string | null>(null);
   function edit(item: Referral) { setEditing(item); setForm({ referralReason: item.referralReason, referralDestination: item.referralDestination, referralStatus: item.referralStatus, requestedDate: item.requestedDate, completedDate: item.completedDate ?? "", notes: item.notes ?? "" }); }
-  async function submit(event: FormEvent) { event.preventDefault(); const candidate = { ...form, completedDate: form.referralStatus === "COMPLETADA" ? (form.completedDate || new Date().toISOString().slice(0, 10)) : form.completedDate }; const parsed = referralSchema.safeParse(candidate); if (parsed.success) { await onSave(parsed.data, editing); setEditing(undefined); setForm(defaultReferral()); } }
+  async function submit(event: FormEvent) { event.preventDefault(); const candidate = { ...form, completedDate: form.referralStatus === "COMPLETADA" ? (form.completedDate || new Date().toISOString().slice(0, 10)) : form.completedDate }; const parsed = referralSchema.safeParse(candidate); if (!parsed.success) { setFormError(parsed.error.issues[0]?.message ?? "Revise los datos de la referencia."); return; } setFormError(null); await onSave(parsed.data, editing); setEditing(undefined); setForm(defaultReferral()); }
   return <form className="workflow-card" onSubmit={(event) => void submit(event)}><div className="panel-title"><ExternalLink size={20} /><h3>Referencia</h3></div>
     <label>Motivo<input disabled={disabled} maxLength={500} value={form.referralReason} onChange={(event) => setForm((c) => ({ ...c, referralReason: event.target.value }))} /></label>
     <label>Destino<input disabled={disabled} maxLength={300} value={form.referralDestination} onChange={(event) => setForm((c) => ({ ...c, referralDestination: event.target.value }))} /></label>
@@ -186,6 +196,7 @@ function ReferralPanel({ disabled, referrals, onSave }: { disabled: boolean; ref
     <label>Fecha completada<input disabled={disabled || form.referralStatus !== "COMPLETADA"} type="date" value={form.completedDate ?? ""} onChange={(event) => setForm((c) => ({ ...c, completedDate: event.target.value }))} /></label>
     <label>Notas<textarea disabled={disabled} maxLength={1200} rows={3} value={form.notes ?? ""} onChange={(event) => setForm((c) => ({ ...c, notes: event.target.value }))} /></label>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />{editing ? "Actualizar" : "Registrar"} referencia</button>
+    {formError ? <div className="form-error" role="alert">{formError}</div> : null}
     {referrals.length === 0 ? <EmptyState title="Sin referencias" description="Las referencias manuales aparecerán aquí cuando se registren." /> : null}
     <ul className="workflow-records">{referrals.map((item) => <li key={item.id}><span><strong>{item.referralDestination}</strong>{referralStatusLabels[item.referralStatus]} · {item.requestedDate}</span><button className="ghost-button" disabled={disabled} onClick={() => edit(item)} type="button">Editar</button></li>)}</ul>
   </form>;

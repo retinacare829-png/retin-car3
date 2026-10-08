@@ -15,6 +15,7 @@ import {
   type PatientSex,
 } from "../domain/patient";
 import type { Role } from "../domain/roles";
+import { can } from "../domain/permissions";
 import { usePatients } from "../hooks/usePatients";
 import { PatientForm, type PatientFormSubmission } from "./PatientForm";
 import { ScreeningManagement } from "./ScreeningManagement";
@@ -25,6 +26,7 @@ interface PatientManagementProps {
   role: Role;
   user: User;
   initialFocus?: "patients" | "screenings" | "workflow";
+  initialQuery?: string;
 }
 
 function createRequestId(): string {
@@ -35,8 +37,8 @@ function isPatientCreateData(data: PatientFormSubmission): data is PatientCreate
   return typeof data.phone === "string" && /^\d{8}$/.test(data.phone);
 }
 
-export function PatientManagement({ organizationId, role, user, initialFocus = "patients" }: PatientManagementProps) {
-  const [filters, setFilters] = useState<PatientFilters>(defaultPatientFilters);
+export function PatientManagement({ organizationId, role, user, initialFocus = "patients", initialQuery = "" }: PatientManagementProps) {
+  const [filters, setFilters] = useState<PatientFilters>({ ...defaultPatientFilters, query: initialQuery });
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"name" | "recent">("name");
@@ -63,6 +65,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   }, [filteredPatients, initialFocus, selectedPatientId]);
 
   useEffect(() => { setPage(1); }, [filters, sortOrder]);
+  useEffect(() => { setFilters((current) => current.query === initialQuery ? current : { ...current, query: initialQuery }); }, [initialQuery]);
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
   async function handleSubmit(data: PatientFormSubmission) {
@@ -269,7 +272,13 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
       ) : null}
 
       {selectedPatient ? (
-        <ScreeningManagement initialFocus={initialFocus} organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
+        <>
+          <div className="selected-patient-cta" role="region" aria-label="Paciente seleccionado">
+            <div><span className="eyebrow">Paciente seleccionado</span><strong>{selectedPatient.lastNames}, {selectedPatient.firstNames}</strong><p>Desde aquí puede registrar una nueva visita o continuar con sus screenings.</p></div>
+            {can(role, "screenings:create") ? <button className="secondary-button" onClick={() => document.getElementById("new-screening-form")?.scrollIntoView({ behavior: "smooth", block: "start" })} type="button"><Images aria-hidden="true" size={17} />Nueva visita</button> : null}
+          </div>
+          <ScreeningManagement initialFocus={initialFocus} organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
+        </>
       ) : null}
     </section>
   );

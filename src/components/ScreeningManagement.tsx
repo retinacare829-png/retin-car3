@@ -130,9 +130,10 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
       {screeningsApi.error ? <ErrorNotice message="No se pudo cargar la información del screening. Intente nuevamente." onRetry={() => void screeningsApi.reload()} /> : null}
 
       <div className="screening-layout">
-        <form className="screening-form" onSubmit={(event) => void handleSubmit(event)}>
+        <form className="screening-form" id="new-screening-form" onSubmit={(event) => void handleSubmit(event)}>
           <div className="form-heading">
             <h2>{editingScreening ? "Actualizar screening" : "Nuevo screening"}</h2>
+            <p className="field-help">Esta visita queda asociada a la ficha del paciente. Después podrá cargar las imágenes de ambos ojos y registrar su calidad.</p>
           </div>
 
           <label>
