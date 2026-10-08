@@ -1,9 +1,10 @@
-import { ArrowRight, ClipboardList, ImagePlus, Search, Stethoscope, UserRoundPlus, UsersRound } from "lucide-react";
+import { ArrowRight, BarChart3, ClipboardList, ImagePlus, Search, Stethoscope, UserRoundPlus, UsersRound } from "lucide-react";
 import { betaAiUnavailableMessage } from "../domain/screening";
 import { can } from "../domain/permissions";
 import type { Role } from "../domain/roles";
 import { useDashboard } from "../hooks/useDashboard";
 import { ErrorNotice, LoadingState } from "./ui";
+import { HomeScreeningChart } from "./HomeScreeningChart";
 
 export type WorkspaceDestination = "home" | "patients" | "screenings" | "workflow" | "reports" | "settings";
 
@@ -40,15 +41,21 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
           </div>
         </section>
 
-        <section className="home-pending" aria-labelledby="home-pending-title">
-          <div className="home-section-heading"><div><p className="eyebrow">Prioridades</p><h2 id="home-pending-title">Por atender</h2></div></div>
-          <div className="home-pending-grid">
-            <p><strong>{data.today.pendingReviews}</strong><span>Revisiones pendientes</span></p>
-            <p><strong>{data.today.pendingScreenings}</strong><span>Screenings pendientes</span></p>
-            <p><strong>{data.today.scheduledFollowUps}</strong><span>Seguimientos para hoy</span></p>
-          </div>
-          {data.today.pendingReviews === 0 && data.today.pendingScreenings === 0 && data.today.scheduledFollowUps === 0 ? <p className="home-empty-note">No hay tareas pendientes.</p> : null}
-        </section>
+        <div className="home-insights">
+          <section className="home-trend" aria-labelledby="home-trend-title">
+            <div className="home-section-heading"><div><p className="eyebrow">Actividad</p><h2 id="home-trend-title">Screenings por mes</h2></div><BarChart3 aria-hidden="true" size={19} /></div>
+            <HomeScreeningChart months={data.screeningsByMonth} />
+          </section>
+          <section className="home-pending" aria-labelledby="home-pending-title">
+            <div className="home-section-heading"><div><p className="eyebrow">Prioridades</p><h2 id="home-pending-title">Por atender</h2></div></div>
+            <div className="home-pending-grid">
+              <p><strong>{data.today.pendingReviews}</strong><span>Revisiones pendientes</span></p>
+              <p><strong>{data.today.pendingScreenings}</strong><span>Screenings pendientes</span></p>
+              <p><strong>{data.today.scheduledFollowUps}</strong><span>Seguimientos para hoy</span></p>
+            </div>
+            {data.today.pendingReviews === 0 && data.today.pendingScreenings === 0 && data.today.scheduledFollowUps === 0 ? <p className="home-empty-note">No hay tareas pendientes.</p> : null}
+          </section>
+        </div>
       </>}
 
       <section className="home-next" aria-labelledby="home-next-title">

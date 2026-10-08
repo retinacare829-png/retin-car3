@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { KeyRound, LogIn, Mail, ShieldAlert } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import logoUrl from "../../assets/retinacare.jpeg";
 
 interface AuthPageProps {
@@ -10,10 +10,19 @@ interface AuthPageProps {
 
 type AuthMode = "sign-in" | "reset-password";
 
+function signInError(caught: unknown): string {
+  const message = caught instanceof Error ? caught.message : "";
+  if (/invalid login credentials/i.test(message)) return "El correo o la contraseña no coinciden.";
+  if (/email not confirmed/i.test(message)) return "Confirmá tu correo antes de iniciar sesión.";
+  if (/fetch|network|failed to fetch/i.test(message)) return "No pudimos conectar. Revisá tu conexión e intentá de nuevo.";
+  return "No pudimos completar la solicitud. Intentá de nuevo.";
+}
+
 export function AuthPage({ clientConfigured, onSignIn, onResetPassword }: AuthPageProps) {
   const [mode, setMode] = useState<AuthMode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -28,98 +37,127 @@ export function AuthPage({ clientConfigured, onSignIn, onResetPassword }: AuthPa
 
     try {
       if (isResetMode) {
-        await onResetPassword(email);
-        setMessage("Si el correo existe, recibira instrucciones de recuperacion.");
+        await onResetPassword(email.trim());
+        setMessage("Si el correo está registrado, recibirás instrucciones para recuperar el acceso.");
       } else {
-        await onSignIn(email, password);
+        await onSignIn(email.trim(), password);
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo completar la solicitud.");
+      setError(signInError(caught));
     } finally {
       setSubmitting(false);
     }
   }
 
+  function changeMode() {
+    setMode(isResetMode ? "sign-in" : "reset-password");
+    setPassword("");
+    setShowPassword(false);
+    setError(null);
+    setMessage(null);
+  }
+
   return (
-    <section className="auth-layout" aria-labelledby="auth-title">
-      <div className="auth-copy">
-        <img className="auth-logo" src={logoUrl} alt="RetinaCare" />
-        <p className="eyebrow">Plataforma clínica · Version beta</p>
-        <h1 id="auth-title">El flujo retinal, claro de principio a fin</h1>
-        <p>
-          Acceda al espacio seguro de su clínica para gestionar pacientes, imágenes y revisión profesional.
-        </p>
-        <div className="disclaimer-panel">
-          <ShieldAlert aria-hidden="true" size={22} />
-          <p>Prototipo para validación de flujo de trabajo. No destinado a diagnóstico médico.</p>
+    <section className="login-layout" aria-labelledby="login-heading">
+      <div className="login-story">
+        <div className="login-photo-frame">
+          <img
+            className="login-photo"
+            src="/retinacare-eye.jpeg"
+            alt="Primer plano de un ojo junto a una imagen de retina"
+          />
+          <span className="login-photo-label">Una mirada más clara</span>
+        </div>
+        <div className="login-story-content">
+          <img className="login-brand" src={logoUrl} alt="RetinaCare" />
+          <p className="login-overline">Plataforma clínica</p>
+          <h1 id="login-heading">Cada imagen cuenta una historia.</h1>
+          <p>Organizá pacientes, capturas y revisiones en un solo lugar.</p>
+          <div className="login-story-steps" aria-label="Flujo clínico">
+            <span>01 Captura</span><span>02 Revisión</span><span>03 Seguimiento</span>
+          </div>
         </div>
       </div>
 
-      <form className="auth-panel" onSubmit={(event) => void handleSubmit(event)}>
-        <div>
-          <h2>{isResetMode ? "Recuperar contraseña" : "Iniciar sesión"}</h2>
-          <p>
+      <div className="login-access">
+        <div className="login-access-top"><span className="login-access-mark" aria-hidden="true"><LockKeyhole size={18} /></span><span>Acceso a RetinaCare</span></div>
+        <form className="login-card" onSubmit={(event) => void handleSubmit(event)}>
+          <p className="login-kicker">{isResetMode ? "Recuperar acceso" : "Bienvenido de nuevo"}</p>
+          <h2>{isResetMode ? "Restablecé tu contraseña" : "Entrá a tu clínica"}</h2>
+          <p className="login-card-intro">
             {isResetMode
-              ? "Ingrese el correo institucional para solicitar recuperacion."
-              : "Ingrese con una cuenta asignada a una clinica."}
+              ? "Te enviaremos un enlace para que puedas volver a entrar."
+              : "Usá la cuenta que te asignaron en tu clínica para continuar."}
           </p>
-        </div>
 
-        {!clientConfigured ? (
-          <div className="setup-warning" role="alert">
-            Configure `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` para habilitar Auth.
+          {!clientConfigured ? (
+            <div className="login-alert" role="alert">El acceso aún no está configurado. Contactá al equipo de soporte.</div>
+          ) : null}
+
+          <div className="login-field">
+            <label htmlFor="login-email">Correo electrónico</label>
+            <span className="login-input-wrap">
+              <Mail aria-hidden="true" size={18} />
+              <input
+                id="login-email"
+                name="email"
+                autoComplete="email"
+                disabled={!clientConfigured || submitting}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="nombre@clinica.com"
+                required
+                type="email"
+                value={email}
+              />
+            </span>
           </div>
-        ) : null}
 
-        <label>
-          Correo
-          <input
-            autoComplete="email"
-            disabled={!clientConfigured || submitting}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            type="email"
-            value={email}
-          />
-        </label>
+          {!isResetMode ? (
+            <div className="login-field">
+              <div className="login-field-head">
+                <label htmlFor="login-password">Contraseña</label>
+                <button className="login-text-button" disabled={submitting} onClick={changeMode} type="button">¿La olvidaste?</button>
+              </div>
+              <span className="login-input-wrap">
+                <LockKeyhole aria-hidden="true" size={18} />
+                <input
+                  id="login-password"
+                  name="password"
+                  autoComplete="current-password"
+                  disabled={!clientConfigured || submitting}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Ingresá tu contraseña"
+                  required
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                />
+                <button
+                  aria-controls="login-password"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-pressed={showPassword}
+                  className="login-visibility"
+                  disabled={submitting}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  type="button"
+                >
+                  {showPassword ? <EyeOff aria-hidden="true" size={19} /> : <Eye aria-hidden="true" size={19} />}
+                </button>
+              </span>
+            </div>
+          ) : null}
 
-        {!isResetMode ? (
-          <label>
-            Contrasena
-            <input
-              autoComplete="current-password"
-              disabled={!clientConfigured || submitting}
-              minLength={8}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              type="password"
-              value={password}
-            />
-          </label>
-        ) : null}
+          {error ? <div className="login-alert" role="alert">{error}</div> : null}
+          {message ? <div className="login-message" role="status">{message}</div> : null}
 
-        {error ? <div className="form-error">{error}</div> : null}
-        {message ? <div className="form-message">{message}</div> : null}
+          <button className="login-submit" disabled={!clientConfigured || submitting} type="submit">
+            <span>{submitting ? "Un momento..." : isResetMode ? "Enviar enlace" : "Iniciar sesión"}</span>
+            <ArrowRight aria-hidden="true" size={19} />
+          </button>
 
-        <button className="primary-button" disabled={!clientConfigured || submitting} type="submit">
-          {isResetMode ? <Mail aria-hidden="true" size={18} /> : <LogIn aria-hidden="true" size={18} />}
-          {submitting ? "Procesando..." : isResetMode ? "Enviar recuperacion" : "Entrar"}
-        </button>
-
-        <button
-          className="ghost-button"
-          disabled={submitting}
-          onClick={() => {
-            setMode(isResetMode ? "sign-in" : "reset-password");
-            setError(null);
-            setMessage(null);
-          }}
-          type="button"
-        >
-          <KeyRound aria-hidden="true" size={18} />
-          {isResetMode ? "Volver al inicio de sesion" : "Recuperar contrasena"}
-        </button>
-      </form>
+          {isResetMode ? <button className="login-back" disabled={submitting} onClick={changeMode} type="button">Volver a iniciar sesión</button> : null}
+        </form>
+        <div className="login-access-foot"><ShieldCheck aria-hidden="true" size={17} /><span>Acceso protegido. No uses datos reales durante esta beta.</span></div>
+      </div>
     </section>
   );
 }

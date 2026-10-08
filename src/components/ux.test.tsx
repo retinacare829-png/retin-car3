@@ -44,8 +44,37 @@ describe("UX de la demo clínica", () => {
   it("renderiza logo y acceso clínico en login", () => {
     render(<AuthPage clientConfigured onResetPassword={vi.fn()} onSignIn={vi.fn()} />);
     expect(screen.getByRole("img", { name: "RetinaCare" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /El flujo retinal/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled();
+    expect(screen.getByRole("heading", { name: /Cada imagen cuenta una historia/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
+    const password = screen.getByLabelText("Contraseña");
+    expect(password).toHaveAttribute("type", "password");
+    fireEvent.click(screen.getByRole("button", { name: "Mostrar contraseña" }));
+    expect(password).toHaveAttribute("type", "text");
+    fireEvent.click(screen.getByRole("button", { name: "Ocultar contraseña" }));
+    expect(password).toHaveAttribute("type", "password");
+  });
+
+  it("mantiene el correo al solicitar recuperación y no conserva la contraseña", async () => {
+    const onResetPassword = vi.fn().mockResolvedValue(undefined);
+    render(<AuthPage clientConfigured onResetPassword={onResetPassword} onSignIn={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Correo electrónico"), { target: { value: "demo@clinica.test" } });
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "clave-de-prueba" } });
+    fireEvent.click(screen.getByRole("button", { name: "¿La olvidaste?" }));
+    expect(screen.queryByLabelText("Contraseña")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Enviar enlace" }));
+    await waitFor(() => expect(onResetPassword).toHaveBeenCalledWith("demo@clinica.test"));
+    expect(screen.getByRole("status")).toHaveTextContent(/Si el correo está registrado/i);
+    fireEvent.click(screen.getByRole("button", { name: "Volver a iniciar sesión" }));
+    expect(screen.getByLabelText("Contraseña")).toHaveValue("");
+  });
+
+  it("envía el correo limpio sin modificar la contraseña de acceso", async () => {
+    const onSignIn = vi.fn().mockResolvedValue(undefined);
+    render(<AuthPage clientConfigured onResetPassword={vi.fn()} onSignIn={onSignIn} />);
+    fireEvent.change(screen.getByLabelText("Correo electrónico"), { target: { value: " demo@clinica.test " } });
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: " clave-con-espacios " } });
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar sesión" }));
+    await waitFor(() => expect(onSignIn).toHaveBeenCalledWith("demo@clinica.test", " clave-con-espacios "));
   });
 
   it("presenta layout, identidad y navegación activa", async () => {

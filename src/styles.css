@@ -1373,6 +1373,124 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width: 760px) { .home-pending-grid { grid-template-columns: 1fr; }.home-pending-grid p { align-items: center; } }
 @media (max-width: 600px) { .operational-home { gap: 16px; }.home-summary, .home-pending, .home-next { padding: 18px; }.home-metrics { gap: 8px; }.home-metrics article { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px; }.home-metrics strong { font-size: 1.5rem; }.home-metrics span { font-size: .75rem; }.home-action-grid { grid-template-columns: 1fr; }.home-section-heading > span { display: none; } }
 
+/* Fase 11: acceso clínico. Solo los tres tonos de marca y blanco neutro. */
+.login-layout {
+  --login-teal: #456e68;
+  --login-pink: #eea79e;
+  --login-green: #a4d0a1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(390px, .92fr);
+  min-height: 100vh;
+  color: var(--login-teal);
+  background: #fff;
+}
+.login-story { display: grid; grid-template-rows: minmax(280px, 49vh) 1fr; min-width: 0; min-height: 100vh; overflow: hidden; color: #fff; background: var(--login-teal); }
+.login-photo-frame { position: relative; min-height: 0; overflow: hidden; background: var(--login-green); }
+.login-photo { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; filter: grayscale(1); opacity: .76; transition: transform .7s ease; }
+.login-photo-frame:hover .login-photo { transform: scale(1.025); }
+.login-photo-frame::after { position: absolute; inset: 0; content: ""; pointer-events: none; background: linear-gradient(180deg, transparent 62%, var(--login-teal)); opacity: .45; }
+.login-photo-label { position: absolute; z-index: 1; right: clamp(24px, 5vw, 56px); bottom: 22px; padding: 8px 12px; border: 1px solid var(--login-green); border-radius: 999px; color: #fff; background: var(--login-teal); font-size: .78rem; font-weight: 700; letter-spacing: .02em; }
+.login-story-content { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; min-width: 0; max-width: 690px; padding: clamp(28px, 5vw, 66px); }
+.login-brand { display: block; width: 158px; max-width: 55%; height: auto; margin-bottom: clamp(22px, 3vw, 34px); padding: 5px; border-radius: 7px; background: #fff; }
+.login-overline { margin: 0 0 12px; color: #fff; font-size: .78rem; font-weight: 800; letter-spacing: .19em; text-transform: uppercase; }
+.login-story h1 { max-width: 620px; margin: 0 0 16px; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.3rem, 4vw, 4.25rem); font-weight: 400; line-height: 1.07; letter-spacing: -.035em; }
+.login-story-content > p:not(.login-overline) { max-width: 490px; margin: 0; color: #fff; font-size: clamp(.96rem, 1.3vw, 1.09rem); line-height: 1.55; }
+.login-story-steps { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: clamp(22px, 3vw, 36px); padding-top: 16px; border-top: 1px solid var(--login-green); color: #fff; font-size: .79rem; font-weight: 700; letter-spacing: .04em; }
+.login-access { display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; padding: clamp(24px, 5vw, 72px); background: #fff; }
+.login-access-top { display: flex; align-items: center; gap: 10px; width: min(100%, 430px); margin-bottom: clamp(38px, 7vh, 80px); color: var(--login-teal); font-size: .82rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.login-access-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; color: var(--login-teal); background: var(--login-green); }
+.login-card { display: grid; gap: 20px; width: min(100%, 430px); }
+.login-kicker { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--login-teal); font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.login-kicker::before { width: 24px; height: 3px; border-radius: 99px; background: var(--login-pink); content: ""; }
+.login-card h2 { margin: -9px 0 0; color: var(--login-teal); font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.2rem, 3vw, 3.15rem); font-weight: 400; line-height: 1.1; letter-spacing: -.03em; }
+.login-card-intro { margin: -8px 0 10px; color: var(--login-teal); font-size: .95rem; line-height: 1.55; }
+.login-field { display: grid; gap: 8px; }
+.login-field label { color: var(--login-teal); font-size: .9rem; font-weight: 800; }
+.login-field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.login-input-wrap { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 56px; padding: 0 15px; border: 1px solid var(--login-teal); border-radius: 11px; color: var(--login-teal); background: #fff; transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease; }
+.login-input-wrap:focus-within { border-color: var(--login-teal); box-shadow: 0 0 0 3px var(--login-green); transform: translateY(-1px); }
+.login-input-wrap > svg { flex: 0 0 auto; }
+.login-input-wrap input, .login-input-wrap input:focus { width: 100%; min-width: 0; min-height: 52px; padding: 0; border: 0; outline: 0; box-shadow: none; color: var(--login-teal); background: transparent; font-size: .96rem; }
+.login-input-wrap input::placeholder { color: var(--login-teal); opacity: 1; }
+.login-visibility { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; padding: 0; border: 0; border-radius: 8px; color: var(--login-teal); background: transparent; }
+.login-visibility:hover, .login-visibility[aria-pressed="true"] { background: var(--login-green); }
+.login-text-button, .login-back { padding: 0; border: 0; color: var(--login-teal); background: transparent; font-size: .83rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.login-text-button:hover, .login-back:hover { text-decoration-thickness: 2px; }
+.login-submit { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; min-height: 56px; margin-top: 4px; padding: 0 19px; border: 1px solid var(--login-teal); border-radius: 11px; color: #fff; background: var(--login-teal); font-weight: 800; transition: transform .18s ease, box-shadow .18s ease; }
+.login-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 0 var(--login-green); }
+.login-submit svg { transition: transform .18s ease; }
+.login-submit:hover:not(:disabled) svg { transform: translateX(3px); }
+.login-back { justify-self: center; margin-top: 2px; }
+.login-alert, .login-message { padding: 12px 14px; border: 2px solid var(--login-pink); border-radius: 9px; color: var(--login-teal); background: #fff; font-size: .87rem; line-height: 1.45; }
+.login-message { border-color: var(--login-green); }
+.login-access-foot { display: flex; align-items: center; gap: 8px; width: min(100%, 430px); margin-top: clamp(34px, 8vh, 80px); color: var(--login-teal); font-size: .77rem; line-height: 1.4; }
+.login-access-foot svg { flex: 0 0 auto; }
+.login-visibility:focus-visible, .login-text-button:focus-visible, .login-back:focus-visible, .login-submit:focus-visible { outline: 3px solid var(--login-pink); outline-offset: 3px; }
+@media (max-width: 900px) {
+  .login-layout { grid-template-columns: 1fr; }
+  .login-story { min-height: auto; grid-template-rows: 245px auto; }
+  .login-story-content { max-width: none; padding: 27px clamp(22px, 6vw, 50px) 30px; }
+  .login-brand { width: 136px; margin-bottom: 20px; }
+  .login-story h1 { max-width: 740px; font-size: clamp(2rem, 5vw, 3.4rem); }
+  .login-access { padding: 30px 22px 44px; }
+  .login-access-top { margin-bottom: 28px; }
+  .login-access-foot { margin-top: 30px; }
+}
+@media (max-width: 560px) {
+  .login-story { grid-template-rows: 128px auto; }
+  .login-photo-label { right: 18px; bottom: 14px; font-size: .7rem; }
+  .login-story-content { padding: 16px 21px 18px; }
+  .login-brand { width: 99px; margin-bottom: 10px; }
+  .login-overline { margin-bottom: 7px; font-size: .66rem; }
+  .login-story h1 { margin-bottom: 8px; font-size: 1.75rem; }
+  .login-story-content > p:not(.login-overline) { font-size: .82rem; }
+  .login-story-steps { display: none; }
+  .login-access { padding: 22px 20px 36px; }
+  .login-access-top { margin-bottom: 22px; }
+  .login-card { gap: 15px; }
+  .login-card h2 { font-size: 2.15rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-photo, .login-input-wrap, .login-submit, .login-submit svg { transition: none; }
+  .login-photo-frame:hover .login-photo, .login-input-wrap:focus-within, .login-submit:hover:not(:disabled), .login-submit:hover:not(:disabled) svg { transform: none; }
+}
+
+/* Inicio: lectura rápida y visualizaciones limitadas a la paleta de marca. */
+.operational-home { --home-teal: #456e68; --home-pink: #eea79e; --home-green: #a4d0a1; color: var(--home-teal); }
+.operational-home .home-heading h1, .operational-home .home-heading p,
+.operational-home .home-section-heading h2, .operational-home .home-section-heading .eyebrow { color: var(--home-teal); }
+.operational-home .home-heading h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.3rem, 4vw, 3.8rem); font-weight: 400; letter-spacing: -.035em; }
+.operational-home .home-heading .eyebrow { color: var(--home-teal); letter-spacing: .12em; }
+.operational-home .home-summary, .operational-home .home-pending,
+.operational-home .home-next, .operational-home .home-trend {
+  min-width: 0; padding: clamp(19px, 2.5vw, 27px); border: 1px solid var(--home-green);
+  border-radius: 16px; background: #fff; box-shadow: none;
+}
+.operational-home .home-summary { border-top: 5px solid var(--home-teal); }
+.operational-home .home-summary .home-section-heading > span { color: var(--home-teal); }
+.operational-home .home-metrics article { border: 1px solid var(--home-green); border-radius: 11px; background: #fff; }
+.operational-home .home-metrics article:nth-child(2) { border-top: 4px solid var(--home-pink); }
+.operational-home .home-metrics article:nth-child(3) { border-top: 4px solid var(--home-green); }
+.operational-home .home-metrics svg, .operational-home .home-metrics strong,
+.operational-home .home-metrics span { color: var(--home-teal); }
+.home-insights { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(290px, .75fr); gap: 16px; align-items: stretch; }
+.operational-home .home-trend .home-section-heading > svg { color: var(--home-teal); }
+.home-chart { width: 100%; color: var(--home-teal); }
+.home-chart > p { margin: 0; color: var(--home-teal); font-size: .78rem; font-weight: 700; }
+.home-chart-empty { display: grid; min-height: 210px; place-items: center; margin: 0; padding: 26px; border: 1px dashed var(--home-green); border-radius: 10px; color: var(--home-teal); text-align: center; line-height: 1.5; }
+.operational-home .home-pending-grid { grid-template-columns: 1fr; }
+.operational-home .home-pending-grid p { display: grid; grid-template-columns: 45px 1fr; align-items: center; border: 1px solid var(--home-green); border-left: 4px solid var(--home-pink); border-radius: 8px; background: #fff; }
+.operational-home .home-pending-grid p:nth-child(2) { border-left-color: var(--home-green); }
+.operational-home .home-pending-grid p:nth-child(3) { border-left-color: var(--home-teal); }
+.operational-home .home-pending-grid strong, .operational-home .home-pending-grid span,
+.operational-home .home-empty-note, .operational-home .home-scope-note { color: var(--home-teal); }
+.operational-home .home-action { border: 1px solid var(--home-green); border-radius: 10px; color: var(--home-teal); background: #fff; transition: border-color .18s ease, transform .18s ease; }
+.operational-home .home-action:hover { border-color: var(--home-teal); background: #fff; transform: translateY(-2px); }
+.operational-home .home-action > svg, .operational-home .home-action small { color: var(--home-teal); }
+.operational-home .home-action:focus-visible { outline: 3px solid var(--home-pink); outline-offset: 2px; }
+@media (max-width: 840px) { .home-insights { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .operational-home .home-action { transition: none; }.operational-home .home-action:hover { transform: none; } }
+
 /* Fase 6: reportes profesionales no diagnósticos */
 .reports-page { display: grid; gap: 20px; animation: dashboard-in .24s ease-out; }
 .reports-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
