@@ -1,11 +1,15 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { AuthPage } from "./components/AuthPage";
 import { LoadingState } from "./components/ui";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { publicEnv } from "./lib/env";
 import { sharedDemoUsesLocalSupabase } from "./lib/networkDiagnostics";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "./lib/supabase";
+import { createPatientPortalAdapter } from "./services/patientPortalService";
 
 const ClinicWorkspace = lazy(() => import("./components/ClinicWorkspace").then((module) => ({ default: module.ClinicWorkspace })));
+const PatientPortal = lazy(() => import("./components/PatientPortal").then((module) => ({ default: module.PatientPortal })));
 
 export function App() {
   const auth = useAuthSession();
@@ -29,8 +33,37 @@ export function App() {
           onSignIn={auth.signIn}
         />
       ) : null}
-      {!auth.loading && auth.user ? <Suspense fallback={<div className="app-loading"><LoadingState label="Abriendo espacio clínico" /></div>}><ClinicWorkspace onSignOut={auth.signOut} user={auth.user} /></Suspense> : null}
+      {!auth.loading && auth.user ? <AuthenticatedWorkspace onSignOut={auth.signOut} user={auth.user} /> : null}
       {auth.error ? <div className="global-error" role="alert">No fue posible iniciar RetinaCare. Intente nuevamente.</div> : null}
     </main>
   );
+}
+
+function AuthenticatedWorkspace({ user, onSignOut }: { user: User; onSignOut: () => Promise<void> }) {
+  const patientAdapter = useMemo(() => supabase ? createPatientPortalAdapter(supabase) : undefined, []);
+  const [destination, setDestination] = useState<"loading" | "patient" | "clinic">("loading");
+
+  useEffect(() => {
+    let mounted = true;
+    if (!patientAdapter) {
+      setDestination("clinic");
+      return () => { mounted = false; };
+    }
+
+    patientAdapter.getSnapshot()
+      .then(() => { if (mounted) setDestination("patient"); })
+      .catch(() => { if (mounted) setDestination("clinic"); });
+
+    return () => { mounted = false; };
+  }, [patientAdapter, user.id]);
+
+  if (destination === "loading") {
+    return <div className="app-loading"><LoadingState label="Determinando espacio de acceso" /></div>;
+  }
+
+  return <Suspense fallback={<div className="app-loading"><LoadingState label={destination === "patient" ? "Abriendo portal paciente" : "Abriendo espacio clínico"} /></div>}>
+    {destination === "patient"
+      ? <PatientPortal adapter={patientAdapter} onSignOut={onSignOut} user={user} />
+      : <ClinicWorkspace onSignOut={onSignOut} user={user} />}
+  </Suspense>;
 }

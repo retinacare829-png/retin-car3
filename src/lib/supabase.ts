@@ -558,6 +558,41 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      get_patient_portal_snapshot: {
+        Args: Record<string, never>;
+        Returns: {
+          contractVersion: number;
+          profile: {
+            patientId: string;
+            organizationId: string;
+            organizationName: string;
+            displayName: string;
+            firstNames: string;
+            lastNames: string;
+            dateOfBirth: string;
+            phone: string | null;
+            email: string | null;
+          };
+          screenings: Array<{
+            id: string;
+            recordCode: string;
+            createdAt: string;
+            status: ScreeningStatus;
+            statusLabel: string;
+            reportPublished: boolean;
+          }>;
+          reports: Array<{
+            id: string;
+            screeningId: string;
+            recordCode: string;
+            title: string;
+            summary: string;
+            nextStep: string | null;
+            publishedAt: string;
+            publishedBy: string | null;
+          }>;
+        } | null;
+      };
       register_clinic: {
         Args: { clinic_name: string };
         Returns: string;
