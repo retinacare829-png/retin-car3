@@ -99,11 +99,14 @@ Para validar subida, URL firmada y bloqueo público en un entorno desechable, co
 
 ## Proyecto hospedado
 
-1. Usar un proyecto demo, nunca producción clínica.
-2. Vincularlo mediante `npx supabase link`.
-3. Revisar `npx supabase db diff` antes de `npx supabase db push`.
-4. Crear cuentas QA ficticias y configurar sus correos en `.env`; no reutilizar el password local.
-5. Ejecutar primero el smoke sin mutaciones.
-6. Habilitar mutaciones de Storage solo con autorización y datos desechables.
+Para abrir la demo desde otros celulares o laptops, **no** publique Supabase local en la red. Su stack local usa `127.0.0.1:54321`: en otro equipo esa dirección apunta al propio dispositivo y fallan Auth, pacientes y Storage, aunque la página de Vite cargue. La [documentación oficial](https://supabase.com/docs/guides/local-development/cli-workflows) advierte que el stack local no está endurecido para tráfico externo.
 
-No se realizó `db push` desde esta fase.
+1. Cree un proyecto **separado de demostración** en Supabase Dashboard, bajo la organización que el responsable del proyecto elija. Use solamente datos e imágenes ficticios. Guarde su contraseña de base de datos fuera del repositorio.
+2. Desde este repositorio, instale o utilice Supabase CLI y ejecute `supabase login`, `supabase link --project-ref <ID_DEL_PROYECTO>` y `supabase migration list --linked`. Revise el historial y las migraciones pendientes antes de aplicar nada. En un proyecto nuevo y vacío, `supabase db push --linked` aplica las migraciones; [Supabase documenta esa diferencia](https://supabase.com/docs/guides/local-development/cli-workflows). **No use `supabase db reset --linked`**: reconstruye el esquema remoto y puede eliminar datos.
+3. El archivo `supabase/seed.sql` es **solo local**. No lo suba al proyecto hospedado ni copie sus contraseñas ficticias. Cree cuentas de prueba mediante Authentication → Users o una herramienta de aprovisionamiento servidor, y asigne membresías/roles antes de entrar a la app. La pantalla de RetinaCare tiene **inicio de sesión, no registro público de usuarios**. Desactive el registro libre en el proyecto demo si funcionará por invitación.
+4. Copie `.env.example` a `.env` y ponga `VITE_SUPABASE_URL=https://<ID_DEL_PROYECTO>.supabase.co` y la **publishable key** (o anon key) en `VITE_SUPABASE_ANON_KEY`; `VITE_APP_ENV=staging`. Reinicie Vite tras cambiar `.env`. Nunca ponga secret key ni service role en `VITE_*`.
+5. En Authentication → URL Configuration, establezca la URL real de la web como Site URL y agregue las URLs de retorno necesarias para recuperación de contraseña. Si la web solo se comparte temporalmente por LAN, agregue la URL exacta `http://<IP_DE_TU_PC>:5173` para esa prueba. [Guía de redirecciones](https://supabase.com/docs/guides/auth/redirect-urls).
+6. Para servir **solo la web** a otros equipos de la misma Wi‑Fi ejecute `npm run dev:lan` y abra `http://<IP_DE_TU_PC>:5173` (por ejemplo, `http://192.168.0.30:5173`). Autorice el puerto 5173 solo en la red privada de Windows si el firewall lo bloquea. El backend seguirá hospedado y protegido por Auth/RLS; no reenvíe 54321, 54322 ni 54323. Para acceso fuera de la Wi‑Fi, despliegue la web en un hosting HTTPS en vez de reenviar el servidor de desarrollo.
+7. Verifique con una cuenta demo desde otro dispositivo: inicio de sesión, listado de pacientes, creación de una ficha ficticia y aislamiento entre clínicas. Revise también `npm run supabase:qa:smoke` con credenciales QA independientes y sin mutaciones de Storage primero.
+
+El `git push` del código no crea el proyecto hospedado ni ejecuta las migraciones remotas. Esta guía prepara el despliegue, pero no afirma que el proyecto demo ya exista ni que `db push` se haya ejecutado.
