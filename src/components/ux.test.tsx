@@ -54,6 +54,10 @@ describe("UX de la demo clínica", () => {
     expect(screen.getAllByRole("img", { name: "RetinaCare" })[0]).toBeInTheDocument();
     expect(screen.getAllByText("Clínica RetinaCare Demo").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("button", { name: "Dashboard" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Resumen clínico" })).toBeInTheDocument();
+    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText("Revisiones pendientes")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Actividad clínica trazable" })).toBeInTheDocument());
     expect(screen.getByText("Conector de reportes pendiente")).toBeInTheDocument();
@@ -61,18 +65,21 @@ describe("UX de la demo clínica", () => {
 
   it("ofrece accesos rápidos y conserva el aviso de IA", () => {
     const onNavigate = vi.fn();
-    render(<OperationalHome organizationName="Clínica Demo" onNavigate={onNavigate} />);
+    render(<OperationalHome organizationId="org-demo" organizationName="Clínica Demo" role="clinic_admin" onNavigate={onNavigate} />);
     fireEvent.click(screen.getByRole("button", { name: /Crear screening/i }));
     expect(onNavigate).toHaveBeenCalledWith("screenings");
-    expect(screen.getByText("Módulo de Inteligencia Artificial no disponible en esta versión beta.")).toBeInTheDocument();
+    expect(screen.getByText("3", { selector: ".home-metrics strong" })).toBeInTheDocument();
+    expect(screen.getByText("Seguimientos programados")).toBeInTheDocument();
+    expect(screen.getByText(/Módulo de Inteligencia Artificial no disponible en esta versión beta/)).toBeInTheDocument();
   });
 
   it("no ofrece alta ni carga de imágenes al profesional", () => {
-    render(<OperationalHome organizationName="Clínica Demo" role="authorized_professional" onNavigate={vi.fn()} />);
+    render(<OperationalHome organizationId="org-demo" organizationName="Clínica Demo" role="authorized_professional" onNavigate={vi.fn()} />);
     expect(screen.queryByRole("button", { name: /Registrar paciente/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Crear screening/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Subir imágenes/i })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /Buscar paciente/i }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /Buscar paciente/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Revisar workflow/i })).toBeInTheDocument();
   });
 
   it("renderiza estados vacíos, carga y badges sin depender solo del color", () => {

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Bell, Building2, BarChart3, ChevronDown, ClipboardList, FileText, Home, LogOut, Menu, Search, Settings, Stethoscope, UsersRound, X } from "lucide-react";
+import { Bell, Building2, ChevronDown, ClipboardList, FileText, Home, LogOut, Menu, Search, Settings, Stethoscope, UsersRound, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { roleLabels } from "../domain/roles";
 import { useOrganizationContext } from "../hooks/useOrganizationContext";
@@ -14,7 +14,6 @@ import { clinicThemes, paletteFromLogo, type ClinicPalette } from "../domain/cli
 import { ClinicSettings } from "./ClinicSettings";
 
 const PatientManagement = lazy(() => import("./PatientManagement").then((module) => ({ default: module.PatientManagement })));
-const ExecutiveDashboard = lazy(() => import("./ExecutiveDashboard").then((module) => ({ default: module.ExecutiveDashboard })));
 const ReportsPage = lazy(() => import("./ReportsPage").then((module) => ({ default: module.ReportsPage })));
 
 interface ClinicWorkspaceProps { user: User; onSignOut: () => Promise<void>; }
@@ -24,7 +23,6 @@ const navigation = [
   { id: "patients" as const, label: "Pacientes", icon: UsersRound },
   { id: "screenings" as const, label: "Screenings", icon: Stethoscope },
   { id: "workflow" as const, label: "Workflow Clínico", icon: ClipboardList },
-  { id: "dashboard" as const, label: "Dashboard", icon: BarChart3 },
   { id: "reports" as const, label: "Reportes", icon: FileText, permission: "reports:generate" as const },
   { id: "settings" as const, label: "Configuración", icon: Settings, permission: "organization:manage" as const },
 ];
@@ -95,8 +93,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
           {error ? <ErrorNotice message="No se pudo cargar el contexto de la clínica. Verifique su conexión e intente nuevamente." /> : null}
           {!loading && !error && !activeOrganization ? <EmptyState icon={Building2} title="Sin organización activa" description="Su usuario necesita una membresía clínica activa para continuar." /> : null}
           {activeOrganization && organizations.length > 1 ? <label className="organization-selector compact-selector">Cambiar organización<select onChange={(event) => selectOrganization(event.target.value)} value={activeOrganization.organization.id}>{organizations.map((context) => <option key={context.organization.id} value={context.organization.id}>{context.organization.name} · {roleLabels[context.role]}</option>)}</select></label> : null}
-          {activeOrganization && activePage === "home" ? <OperationalHome organizationName={activeOrganization.organization.name} role={activeOrganization.role} onNavigate={navigate} /> : null}
-          {activeOrganization && activePage === "dashboard" && can(activeOrganization.role, "dashboard:view") ? <Suspense fallback={<LoadingState label="Cargando dashboard" />}><ExecutiveDashboard organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} onNavigate={navigate} /></Suspense> : null}
+          {activeOrganization && activePage === "home" ? <OperationalHome organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} onNavigate={navigate} /> : null}
           {activeOrganization && ["patients", "screenings", "workflow"].includes(activePage) ? <Suspense fallback={<LoadingState label="Cargando módulo clínico" />}><PatientManagement initialFocus={activePage as "patients" | "screenings" | "workflow"} organizationId={activeOrganization.organization.id} role={activeOrganization.role} user={user} /></Suspense> : null}
           {activeOrganization && activePage === "reports" ? <Suspense fallback={<LoadingState label="Cargando reportes" />}><ReportsPage adapter={reportsAdapter} organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} /></Suspense> : null}
           {activeOrganization && activePage === "settings" && can(activeOrganization.role, "organization:manage") ? <ClinicSettings context={activeOrganization} userEmail={user.email ?? "Usuario RetinaCare"} onRegisterClinic={registerClinic} onSaveBranding={saveBranding} /> : null}
