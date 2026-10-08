@@ -17,6 +17,7 @@ import {
 import type { Role } from "../domain/roles";
 import { usePatients } from "../hooks/usePatients";
 import { PatientForm, type PatientFormSubmission } from "./PatientForm";
+import { PatientPortalAccessPanel } from "./PatientPortalAccessPanel";
 import { ScreeningManagement } from "./ScreeningManagement";
 import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 
@@ -45,6 +46,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const patientsApi = usePatients(organizationId, role, user, filters.includeArchived, filters.query);
+  const { loadPatientPortalAccount } = patientsApi;
 
   const filteredPatients = useMemo(
     () => filterPatients(patientsApi.patients, filters).sort((a, b) => sortOrder === "name"
@@ -64,6 +66,11 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
 
   useEffect(() => { setPage(1); }, [filters, sortOrder]);
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
+  useEffect(() => {
+    if (role === "clinic_admin" && selectedPatient) {
+      void loadPatientPortalAccount(selectedPatient.id);
+    }
+  }, [loadPatientPortalAccount, role, selectedPatient]);
 
   async function handleSubmit(data: PatientFormSubmission) {
     if (editingPatient) {
@@ -269,7 +276,18 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
       ) : null}
 
       {selectedPatient ? (
-        <ScreeningManagement initialFocus={initialFocus} organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
+        <>
+          {role === "clinic_admin" ? (
+            <PatientPortalAccessPanel
+              account={patientsApi.patientPortalAccount}
+              disabled={patientsApi.saving || Boolean(selectedPatient.deletedAt)}
+              loading={patientsApi.patientPortalLoading}
+              onLink={(userId) => patientsApi.linkPatientPortalAccount(selectedPatient.id, userId)}
+              onRevoke={() => patientsApi.revokePatientPortalAccount(selectedPatient.id)}
+            />
+          ) : null}
+          <ScreeningManagement initialFocus={initialFocus} organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
+        </>
       ) : null}
     </section>
   );

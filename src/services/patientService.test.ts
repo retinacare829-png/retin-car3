@@ -39,6 +39,19 @@ const editableData = {
   notes: null,
 };
 
+const accountRow = {
+  id: "8e824437-0565-4025-91ef-1ff4abe31b22",
+  organization_id: context.organizationId,
+  patient_id: patientRow.id,
+  user_id: "90000000-0000-4000-8000-000000000005",
+  status: "active" as const,
+  created_by: context.actorUserId,
+  revoked_by: null,
+  created_at: "2026-10-08T00:00:00.000Z",
+  updated_at: "2026-10-08T00:00:00.000Z",
+  revoked_at: null,
+};
+
 describe("PatientService", () => {
   it("creates through the atomic RPC without accepting client codes", async () => {
     let rpcArgs: Record<string, unknown> | null = null;
@@ -80,6 +93,33 @@ describe("PatientService", () => {
     expect(updatePayload).not.toHaveProperty("internal_identifier");
     expect(updatePayload).not.toHaveProperty("medical_record_code");
   });
+
+  it("links a patient portal account only through the protected RPC", async () => {
+    let rpcName = "";
+    let rpcArgs: Record<string, unknown> | null = null;
+    const client = createClient({
+      rpc: (name, args) => {
+        rpcName = name;
+        rpcArgs = args;
+        return Promise.resolve({ data: accountRow, error: null });
+      },
+      row: patientRow,
+    });
+
+    const account = await new PatientService(client).linkPatientPortalAccount(
+      context,
+      patientRow.id,
+      accountRow.user_id,
+    );
+
+    expect(rpcName).toBe("link_patient_account");
+    expect(rpcArgs).toEqual({
+      target_organization_id: context.organizationId,
+      target_patient_id: patientRow.id,
+      target_user_id: accountRow.user_id,
+    });
+    expect(account.userId).toBe(accountRow.user_id);
+  });
 });
 
 function mapPatient(row: typeof patientRow) {
@@ -106,7 +146,7 @@ function mapPatient(row: typeof patientRow) {
 }
 
 function createClient(options: {
-  rpc?: (name: string, args: Record<string, unknown>) => Promise<{ data: typeof patientRow | null; error: null }>;
+  rpc?: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: null }>;
   row: typeof patientRow;
   update?: (payload: Record<string, unknown>) => void;
 }): TypedSupabaseClient {

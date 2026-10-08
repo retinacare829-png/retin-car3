@@ -1,7 +1,9 @@
 import { getChangedPatientFields, patientCreateSchema, patientUpdateSchema, type Patient, type PatientCodePreview, type PatientCreateData, type PatientUpdateData } from "../domain/patient";
+import type { PatientPortalAccount } from "../domain/patientPortal";
 import type { Database, TypedSupabaseClient } from "../lib/supabase";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
+type PatientPortalAccountRow = Database["public"]["Tables"]["patient_accounts"]["Row"];
 type PatientAction = "patient.created" | "patient.updated" | "patient.archived" | "patient.restored";
 
 export interface PatientListOptions {
@@ -57,6 +59,46 @@ export class PatientService {
       recordCode: preview.record_code,
       provisional: true,
     };
+  }
+
+  async getPatientPortalAccount(context: PatientMutationContext, patientId: string): Promise<PatientPortalAccount | null> {
+    const { data, error } = await this.client
+      .from("patient_accounts")
+      .select("*")
+      .eq("organization_id", context.organizationId)
+      .eq("patient_id", patientId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data ? mapPatientPortalAccountRow(data) : null;
+  }
+
+  async linkPatientPortalAccount(
+    context: PatientMutationContext,
+    patientId: string,
+    userId: string,
+  ): Promise<PatientPortalAccount> {
+    const { data, error } = await this.client.rpc("link_patient_account", {
+      target_organization_id: context.organizationId,
+      target_patient_id: patientId,
+      target_user_id: userId,
+    });
+
+    if (error) throw error;
+    return mapPatientPortalAccountRow(data);
+  }
+
+  async revokePatientPortalAccount(
+    context: PatientMutationContext,
+    patientId: string,
+  ): Promise<PatientPortalAccount> {
+    const { data, error } = await this.client.rpc("revoke_patient_account", {
+      target_organization_id: context.organizationId,
+      target_patient_id: patientId,
+    });
+
+    if (error) throw error;
+    return mapPatientPortalAccountRow(data);
   }
 
   async createPatient(context: PatientMutationContext, formData: PatientCreateData, requestId?: string): Promise<Patient> {
@@ -208,5 +250,20 @@ function mapPatientRow(row: PatientRow): Patient {
     deletedBy: row.deleted_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapPatientPortalAccountRow(row: PatientPortalAccountRow): PatientPortalAccount {
+  return {
+    id: row.id,
+    organizationId: row.organization_id,
+    patientId: row.patient_id,
+    userId: row.user_id,
+    status: row.status,
+    createdBy: row.created_by,
+    revokedBy: row.revoked_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    revokedAt: row.revoked_at,
   };
 }

@@ -62,3 +62,16 @@ export interface PatientPortalSnapshot {
   screenings: PatientPortalScreening[];
   reports: PatientPortalReport[];
 }
+
+export interface PatientPortalAccount {
+  id: string;
+  organizationId: string;
+  patientId: string;
+  userId: string;
+  status: "active" | "suspended" | "revoked";
+  createdBy: string;
+  revokedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  revokedAt: string | null;
+}
