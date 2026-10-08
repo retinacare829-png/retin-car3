@@ -26,6 +26,8 @@ describe("professional workflow validation", () => {
 
   it("validates follow ups and referrals", () => {
     expect(followUpSchema.safeParse({ assignedTo: "", followUpType: "REPETIR_ESTUDIO", followUpStatus: "REPETIR_ESTUDIO", dueDate: "2026-09-10", notes: "" }).success).toBe(true);
+    expect(followUpSchema.parse({ assignedTo: "", followUpType: "REPETIR_ESTUDIO", followUpStatus: "REPETIR_ESTUDIO", dueDate: "2026-09-10", notes: "" }).urgency).toBe("normal");
+    expect(followUpSchema.safeParse({ assignedTo: "", followUpType: "REPETIR_ESTUDIO", followUpStatus: "REPETIR_ESTUDIO", urgency: "critical", dueDate: "2026-09-10", notes: "" }).success).toBe(false);
     expect(referralSchema.safeParse({ referralReason: "Evaluacion manual", referralDestination: "Clinica demo", referralStatus: "SOLICITADA", requestedDate: "2026-08-28", notes: "" }).success).toBe(true);
   });
 });
@@ -56,7 +58,7 @@ describe("screening closure checklist", () => {
       followUps: [{
         id: "70000000-0000-4000-8000-000000000001", organizationId: screening.organizationId, patientId: screening.patientId,
         screeningId: screening.id, createdBy: "user", assignedTo: null, followUpType: "CONTROL_PROGRAMADO",
-        followUpStatus: "SIN_SEGUIMIENTO", dueDate: null, completedAt: null, notes: null, createdAt: screening.createdAt,
+        followUpStatus: "SIN_SEGUIMIENTO", urgency: "normal", dueDate: null, completedAt: null, notes: null, createdAt: screening.createdAt,
         updatedAt: screening.updatedAt, deletedAt: null, deletedBy: null,
       }], referrals: [],
     };

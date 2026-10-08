@@ -19,6 +19,7 @@ export const followUpStatusValues = [
   "SEGUIMIENTO_COMPLETADO",
   "CANCELADO",
 ] as const;
+export const followUpUrgencyValues = ["normal", "urgent"] as const;
 export const referralStatusValues = ["BORRADOR", "SOLICITADA", "EN_PROCESO", "COMPLETADA", "CANCELADA"] as const;
 
 export type ProfessionalReviewStatus = (typeof professionalReviewStatusValues)[number];
@@ -82,6 +83,7 @@ export const followUpSchema = z.object({
   assignedTo: optionalUuid,
   followUpType: z.enum(followUpTypeValues),
   followUpStatus: z.enum(followUpStatusValues),
+  urgency: z.enum(followUpUrgencyValues).default("normal"),
   dueDate: optionalDate,
   completedAt: z.string().datetime().nullable().optional().default(null),
   notes: optionalText(1200),

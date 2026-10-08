@@ -2,7 +2,7 @@ export interface DashboardMonth { key: string; label: string; total: number; }
 export interface DashboardStatus { status: string; label: string; total: number; }
 export interface DashboardActivity { id: string; title: string; occurredAt: string; }
 export interface DashboardAgendaItem { id: string; title: string; detail: string; occurredAt: string; priority: "normal" | "high"; }
-export interface DashboardAppointment { id: string; date: string; title: string; detail: string; status: string; }
+export interface DashboardAppointment { id: string; date: string; title: string; detail: string; status: string; urgency: "normal" | "urgent"; }
 
 export interface DashboardData {
   totals: { patients: number; screenings: number; pending: number; reviewed: number; followUps: number };

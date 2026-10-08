@@ -159,21 +159,22 @@ function ProfessionalReviewForm({ disabled, review, onSave }: { disabled: boolea
   </form>;
 }
 
-const defaultFollowUp = (): FollowUpInput => ({ assignedTo: "", followUpType: "CONTROL_PROGRAMADO", followUpStatus: "SIN_SEGUIMIENTO", dueDate: "", completedAt: null, notes: "" });
+const defaultFollowUp = (): FollowUpInput => ({ assignedTo: "", followUpType: "CONTROL_PROGRAMADO", followUpStatus: "SIN_SEGUIMIENTO", urgency: "normal", dueDate: "", completedAt: null, notes: "" });
 function FollowUpPanel({ disabled, followUps, onSave }: { disabled: boolean; followUps: FollowUp[]; onSave: (data: ReturnType<typeof followUpSchema.parse>, current?: FollowUp) => Promise<void> }) {
   const [editing, setEditing] = useState<FollowUp | undefined>(); const [form, setForm] = useState<FollowUpInput>(defaultFollowUp()); const [formError, setFormError] = useState<string | null>(null);
-  function edit(item: FollowUp) { setEditing(item); setForm({ assignedTo: item.assignedTo ?? "", followUpType: item.followUpType, followUpStatus: item.followUpStatus, dueDate: item.dueDate ?? "", completedAt: item.completedAt, notes: item.notes ?? "" }); }
+  function edit(item: FollowUp) { setEditing(item); setForm({ assignedTo: item.assignedTo ?? "", followUpType: item.followUpType, followUpStatus: item.followUpStatus, urgency: item.urgency, dueDate: item.dueDate ?? "", completedAt: item.completedAt, notes: item.notes ?? "" }); }
   async function submit(event: FormEvent) { event.preventDefault(); const candidate = { ...form, completedAt: form.followUpStatus === "SEGUIMIENTO_COMPLETADO" ? (editing?.completedAt ?? new Date().toISOString()) : null }; const parsed = followUpSchema.safeParse(candidate); if (!parsed.success) { setFormError(parsed.error.issues[0]?.message ?? "Revise los datos del seguimiento."); return; } setFormError(null); await onSave(parsed.data, editing); setEditing(undefined); setForm(defaultFollowUp()); }
   return <form className="workflow-card" onSubmit={(event) => void submit(event)}><div className="panel-title"><Save size={20} /><h3>Seguimiento</h3></div>
     <label>Tipo<select disabled={disabled} value={form.followUpType} onChange={(event) => setForm((c) => ({ ...c, followUpType: event.target.value as FollowUpInput["followUpType"] }))}>{followUpTypeValues.map((v) => <option key={v} value={v}>{followUpTypeLabels[v]}</option>)}</select></label>
     <label>Estado<select disabled={disabled} value={form.followUpStatus} onChange={(event) => setForm((c) => ({ ...c, followUpStatus: event.target.value as FollowUpInput["followUpStatus"] }))}>{followUpStatusValues.map((v) => <option key={v} value={v}>{followUpStatusLabels[v]}</option>)}</select></label>
-    <label>Fecha sugerida<input disabled={disabled} type="date" value={form.dueDate ?? ""} onChange={(event) => setForm((c) => ({ ...c, dueDate: event.target.value }))} /></label>
+    <label>Fecha de la cita o seguimiento<input disabled={disabled} type="date" value={form.dueDate ?? ""} onChange={(event) => setForm((c) => ({ ...c, dueDate: event.target.value }))} /></label>
+    <label>Prioridad indicada por el profesional<select disabled={disabled} value={form.urgency ?? "normal"} onChange={(event) => setForm((c) => ({ ...c, urgency: event.target.value as "normal" | "urgent" }))}><option value="normal">Normal</option><option value="urgent">Urgente</option></select><span className="field-help">Es una etiqueta manual para la agenda, no un diagnóstico automático.</span></label>
     <label>Responsable del seguimiento (opcional)<input aria-describedby="follow-up-assignee-help" disabled={disabled} placeholder="Identificador interno, si aplica" value={form.assignedTo ?? ""} onChange={(event) => setForm((c) => ({ ...c, assignedTo: event.target.value }))} /><span className="field-help" id="follow-up-assignee-help">Use el identificador interno de la persona responsable. Puede dejarlo vacío.</span></label>
     <label>Notas<textarea disabled={disabled} maxLength={1200} rows={3} value={form.notes ?? ""} onChange={(event) => setForm((c) => ({ ...c, notes: event.target.value }))} /></label>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />{editing ? "Actualizar" : "Registrar"} seguimiento</button>
     {formError ? <div className="form-error" role="alert">{formError}</div> : null}
     {followUps.length === 0 ? <EmptyState title="Sin seguimientos" description="Registre un seguimiento solo cuando el profesional lo indique." /> : null}
-    <ul className="workflow-records">{followUps.map((item) => <li key={item.id}><span><strong>{followUpTypeLabels[item.followUpType]}</strong>{followUpStatusLabels[item.followUpStatus]}{item.dueDate ? ` · ${item.dueDate}` : ""}</span><button className="ghost-button" disabled={disabled} onClick={() => edit(item)} type="button">Editar</button></li>)}</ul>
+    <ul className="workflow-records">{followUps.map((item) => <li key={item.id}><span><strong>{followUpTypeLabels[item.followUpType]}</strong>{followUpStatusLabels[item.followUpStatus]}{item.dueDate ? ` · ${item.dueDate}` : ""}{item.urgency === "urgent" ? " · Urgente" : ""}</span><button className="ghost-button" disabled={disabled} onClick={() => edit(item)} type="button">Editar</button></li>)}</ul>
   </form>;
 }
 

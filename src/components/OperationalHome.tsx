@@ -6,6 +6,7 @@ import type { Role } from "../domain/roles";
 import { useDashboard } from "../hooks/useDashboard";
 import { ErrorNotice, LoadingState } from "./ui";
 import { HomeScreeningChart, type HomeChartType } from "./HomeScreeningChart";
+import { CompactAppointmentCalendar } from "./CompactAppointmentCalendar";
 
 export type WorkspaceDestination = "home" | "patients" | "screenings" | "workflow" | "reports" | "settings";
 
@@ -54,7 +55,7 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
             </div></div>
             <HomeScreeningChart months={data.screeningsByMonth} type={chartType} />
           </section>
-          <section className="home-pending" aria-labelledby="home-pending-title">
+          <div className="home-aside"><section className="home-pending" aria-labelledby="home-pending-title">
             <div className="home-section-heading"><div><p className="eyebrow">Prioridades</p><h2 id="home-pending-title">Por atender</h2></div></div>
             <div className="home-pending-grid">
               <p><strong>{data.today.pendingReviews}</strong><span>Revisiones pendientes</span></p>
@@ -62,7 +63,7 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
               <p><strong>{data.today.scheduledFollowUps}</strong><span>Seguimientos para hoy</span></p>
             </div>
             {data.today.pendingReviews === 0 && data.today.pendingScreenings === 0 && data.today.scheduledFollowUps === 0 ? <p className="home-empty-note">No hay tareas pendientes.</p> : null}
-          </section>
+          </section><CompactAppointmentCalendar appointments={data.appointments} /></div>
         </div>
       </>}
 

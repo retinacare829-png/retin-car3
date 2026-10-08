@@ -82,7 +82,7 @@ export class ClinicalWorkflowService {
     const { data: row, error } = await this.client.from("follow_ups").insert({
       organization_id: context.organizationId, patient_id: context.patientId, screening_id: context.screeningId,
       created_by: context.actorUserId, assigned_to: data.assignedTo, follow_up_type: data.followUpType,
-      follow_up_status: data.followUpStatus, due_date: data.dueDate, completed_at: data.completedAt, notes: data.notes,
+      follow_up_status: data.followUpStatus, urgency: data.urgency, due_date: data.dueDate, completed_at: data.completedAt, notes: data.notes,
     }).select("*").single();
     if (error) throw error;
     const saved = mapFollowUp(row);
@@ -95,11 +95,11 @@ export class ClinicalWorkflowService {
     const data = followUpSchema.parse(input);
     const { data: row, error } = await this.client.from("follow_ups").update({
       assigned_to: data.assignedTo, follow_up_type: data.followUpType, follow_up_status: data.followUpStatus,
-      due_date: data.dueDate, completed_at: data.completedAt, notes: data.notes,
+      urgency: data.urgency, due_date: data.dueDate, completed_at: data.completedAt, notes: data.notes,
     }).eq("id", followUp.id).eq("organization_id", context.organizationId).select("*").single();
     if (error) throw error;
     const saved = mapFollowUp(row);
-    await this.audit(context, "follow_up.updated", "follow_up", saved.id, ["followUpType", "followUpStatus", "dueDate", "assignedTo", "notes"], { follow_up_status: saved.followUpStatus });
+    await this.audit(context, "follow_up.updated", "follow_up", saved.id, ["followUpType", "followUpStatus", "urgency", "dueDate", "assignedTo", "notes"], { follow_up_status: saved.followUpStatus, urgency: saved.urgency });
     if (followUp.followUpStatus !== "SEGUIMIENTO_COMPLETADO" && saved.followUpStatus === "SEGUIMIENTO_COMPLETADO") {
       await this.timeline(context, "follow_up.updated", "Seguimiento completado", { follow_up_status: saved.followUpStatus });
     }
@@ -163,7 +163,7 @@ function mapReview(row: ReviewRow): ProfessionalReview {
   return { id: row.id, organizationId: row.organization_id, patientId: row.patient_id, screeningId: row.screening_id, reviewerUserId: row.reviewer_user_id, reviewStatus: row.review_status, reviewedAt: row.reviewed_at, structuredObservations: structuredObservationsSchema.parse(row.structured_observations), notes: row.notes, createdAt: row.created_at, updatedAt: row.updated_at, deletedAt: row.deleted_at, deletedBy: row.deleted_by };
 }
 function mapFollowUp(row: FollowUpRow): FollowUp {
-  return { id: row.id, organizationId: row.organization_id, patientId: row.patient_id, screeningId: row.screening_id, createdBy: row.created_by, assignedTo: row.assigned_to, followUpType: row.follow_up_type, followUpStatus: row.follow_up_status, dueDate: row.due_date, completedAt: row.completed_at, notes: row.notes, createdAt: row.created_at, updatedAt: row.updated_at, deletedAt: row.deleted_at, deletedBy: row.deleted_by };
+  return { id: row.id, organizationId: row.organization_id, patientId: row.patient_id, screeningId: row.screening_id, createdBy: row.created_by, assignedTo: row.assigned_to, followUpType: row.follow_up_type, followUpStatus: row.follow_up_status, urgency: row.urgency, dueDate: row.due_date, completedAt: row.completed_at, notes: row.notes, createdAt: row.created_at, updatedAt: row.updated_at, deletedAt: row.deleted_at, deletedBy: row.deleted_by };
 }
 function mapReferral(row: ReferralRow): Referral {
   return { id: row.id, organizationId: row.organization_id, patientId: row.patient_id, screeningId: row.screening_id, createdBy: row.created_by, referralReason: row.referral_reason, referralDestination: row.referral_destination, referralStatus: row.referral_status, requestedDate: row.requested_date, completedDate: row.completed_date, notes: row.notes, createdAt: row.created_at, updatedAt: row.updated_at, deletedAt: row.deleted_at, deletedBy: row.deleted_by };

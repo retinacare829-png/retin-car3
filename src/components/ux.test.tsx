@@ -5,6 +5,7 @@ import { AuthPage } from "./AuthPage";
 import { ClinicWorkspace } from "./ClinicWorkspace";
 import { OperationalHome } from "./OperationalHome";
 import { ExecutiveDashboard } from "./ExecutiveDashboard";
+import { CompactAppointmentCalendar } from "./CompactAppointmentCalendar";
 import { EmptyState, LoadingState, StatusBadge } from "./ui";
 
 // Este test cubre el estado desconectado de reportes; no debe depender del .env local.
@@ -32,6 +33,7 @@ vi.mock("../hooks/useDashboard", () => ({
       statusDistribution: [{ status: "REVISADO", label: "Revisado", total: 5 }],
       recentActivity: [{ id: "event-1", title: "Screening creado", occurredAt: "2026-08-28T14:00:00Z" }],
       agenda: [{ id: "follow-1", title: "Control programado", detail: "Próximo seguimiento", occurredAt: "2026-08-28T16:00:00Z", priority: "high" }],
+      appointments: [],
     },
   }),
 }));
@@ -86,7 +88,8 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByRole("button", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
     expect(screen.queryByRole("button", { name: "Dashboard" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Resumen clínico" })).toBeInTheDocument();
-    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Citas y seguimientos" })).toBeInTheDocument();
+    expect(screen.getByText("12", { selector: ".home-metrics strong" })).toBeInTheDocument();
     expect(screen.getByText("Revisiones pendientes")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Cómo crear una nueva visita" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
@@ -154,6 +157,16 @@ describe("UX de la demo clínica", () => {
     fireEvent.click(bars);
     expect(bars).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("img", { name: "Distribución mensual de screenings: ago, 8" })).not.toBeInTheDocument();
+  });
+
+  it("muestra una agenda compacta con prioridad manual y navegación mensual", () => {
+    const date = new Date(); date.setDate(date.getDate() + 1);
+    const dueDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    render(<CompactAppointmentCalendar appointments={[{ id: "follow-1", date: dueDate, title: "Control programado", detail: "Paciente demo", status: "CONTROL_PROGRAMADO", urgency: "urgent" }]} />);
+    expect(screen.getByText("Paciente demo")).toBeInTheDocument();
+    expect(screen.getByText("Urgente")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Mes siguiente" }));
+    expect(screen.getByRole("group", { name: /Calendario de/i })).toBeInTheDocument();
   });
 
   it("no ofrece alta ni carga de imágenes al profesional", () => {

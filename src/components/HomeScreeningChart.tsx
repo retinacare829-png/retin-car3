@@ -5,6 +5,7 @@ import { scaleBand } from "@tanstack/charts/scales/band";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 import { scalePoint } from "@tanstack/charts/scales/point";
 import { tooltip } from "@tanstack/charts/tooltip";
+import { pie, polar, radialArc } from "@tanstack/charts/polar";
 import type { DashboardMonth } from "../domain/dashboard";
 
 interface HomeScreeningChartProps {
@@ -36,22 +37,26 @@ export function HomeScreeningChart({ months, type }: HomeScreeningChartProps) {
   }), [months, type]);
 
   const total = months.reduce((sum, month) => sum + month.total, 0);
+  const pieMonths = useMemo(() => months.filter((month) => month.total > 0), [months]);
+  const pieDefinition = useMemo(() => defineChart({
+    marks: [polar({
+      inset: 8,
+      marks: [radialArc(pie(pieMonths, { value: "total" }), { key: "key", color: "key", innerRadius: ({ radius }) => radius * 0.52, cornerRadius: 3 })],
+      scales: { angle: null, radius: null },
+    })],
+    scales: { x: null, y: null },
+    color: { domain: pieMonths.map((month) => month.key), range: pieMonths.map((_, index) => chartColors[index % chartColors.length] ?? chartColors[0] ?? "#456e68") },
+    tooltip,
+    svgAnimation: true,
+  }), [pieMonths]);
   if (total === 0) {
     return <p className="home-chart-empty">Aún no hay screenings registrados. La evolución mensual aparecerá aquí.</p>;
   }
 
-  const pieMonths = months.filter((month) => month.total > 0);
-  let accumulated = 0;
-  const pieSegments = pieMonths.map((month, index) => {
-    const start = accumulated;
-    accumulated += month.total / total * 360;
-    return `${chartColors[index % chartColors.length]} ${start}deg ${accumulated}deg`;
-  });
-
   return (
     <div className="home-chart">
       {type === "pie" ? <div className="home-pie-chart">
-        <div className="home-pie-graphic" role="img" aria-label={`Distribución mensual de screenings: ${pieMonths.map((month) => `${month.label}, ${month.total}`).join("; ")}`} style={{ background: `conic-gradient(${pieSegments.join(", ")})` }} />
+        <div className="home-pie-graphic" role="img" aria-label={`Distribución mensual de screenings: ${pieMonths.map((month) => `${month.label}, ${month.total}`).join("; ")}`}><Chart ariaLabel="Gráfico circular" definition={pieDefinition} height={190} initialWidth={190} /></div>
         <ul className="home-pie-legend" aria-label="Screenings por mes">{pieMonths.map((month, index) => <li key={month.key}><span aria-hidden="true" style={{ backgroundColor: chartColors[index % chartColors.length] }} /><span>{month.label}</span><strong>{month.total}</strong></li>)}</ul>
       </div> : <Chart
         ariaLabel={`Screenings creados por mes durante los últimos seis meses, gráfico de ${type === "line" ? "líneas" : "barras"}`}

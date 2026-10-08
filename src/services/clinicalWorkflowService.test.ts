@@ -26,12 +26,13 @@ describe("ClinicalWorkflowService", () => {
       id: "70000000-0000-4000-8000-000000000001", organization_id: "10000000-0000-4000-8000-000000000001",
       patient_id: "20000000-0000-4000-8000-000000000001", screening_id: "30000000-0000-4000-8000-000000000001",
       created_by: "40000000-0000-4000-8000-000000000001", assigned_to: null, follow_up_type: "CONTROL_PROGRAMADO",
-      follow_up_status: "CONTROL_PROGRAMADO", due_date: "2026-09-10", completed_at: null, notes: "Nota privada",
+      follow_up_status: "CONTROL_PROGRAMADO", urgency: "urgent", due_date: "2026-09-10", completed_at: null, notes: "Nota privada",
       created_at: "2026-08-28T00:00:00Z", updated_at: "2026-08-28T00:00:00Z", deleted_at: null, deleted_by: null,
     });
     const service = new ClinicalWorkflowService(client);
-    await service.createFollowUp(context, { assignedTo: null, followUpType: "CONTROL_PROGRAMADO", followUpStatus: "CONTROL_PROGRAMADO", dueDate: "2026-09-10", completedAt: null, notes: null });
+    await service.createFollowUp(context, { assignedTo: null, followUpType: "CONTROL_PROGRAMADO", followUpStatus: "CONTROL_PROGRAMADO", urgency: "urgent", dueDate: "2026-09-10", completedAt: null, notes: null });
     expect(inserted.map((entry) => entry.table)).toEqual(["follow_ups", "audit_logs", "patient_timeline_events"]);
+    expect(inserted[0]?.payload.urgency).toBe("urgent");
     expect(inserted.find((entry) => entry.table === "audit_logs")?.payload.metadata).not.toHaveProperty("notes");
   });
 

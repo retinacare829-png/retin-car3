@@ -451,19 +451,19 @@ export interface Database {
         Row: {
           id: string; organization_id: string; patient_id: string; screening_id: string; created_by: string;
           assigned_to: string | null; follow_up_type: FollowUpType; follow_up_status: FollowUpStatus;
-          due_date: string | null; completed_at: string | null; notes: string | null; created_at: string;
+          urgency: "normal" | "urgent"; due_date: string | null; completed_at: string | null; notes: string | null; created_at: string;
           updated_at: string; deleted_at: string | null; deleted_by: string | null;
         };
         Insert: {
           id?: string; organization_id: string; patient_id: string; screening_id: string; created_by: string;
           assigned_to?: string | null; follow_up_type: FollowUpType; follow_up_status?: FollowUpStatus;
-          due_date?: string | null; completed_at?: string | null; notes?: string | null; created_at?: string;
+          urgency?: "normal" | "urgent"; due_date?: string | null; completed_at?: string | null; notes?: string | null; created_at?: string;
           updated_at?: string; deleted_at?: string | null; deleted_by?: string | null;
         };
         Update: {
           id?: string; organization_id?: string; patient_id?: string; screening_id?: string; created_by?: string;
           assigned_to?: string | null; follow_up_type?: FollowUpType; follow_up_status?: FollowUpStatus;
-          due_date?: string | null; completed_at?: string | null; notes?: string | null; created_at?: string;
+          urgency?: "normal" | "urgent"; due_date?: string | null; completed_at?: string | null; notes?: string | null; created_at?: string;
           updated_at?: string; deleted_at?: string | null; deleted_by?: string | null;
         };
         Relationships: [];
