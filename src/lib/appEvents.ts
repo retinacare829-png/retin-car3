@@ -1,4 +1,4 @@
-export type DataArea = "patients" | "screenings" | "workflow" | "dashboard";
+export type DataArea = "patients" | "screenings" | "workflow" | "dashboard" | "reports";
 
 const DATA_CHANGED_EVENT = "retinacare:data-changed";
 const TOAST_EVENT = "retinacare:toast";

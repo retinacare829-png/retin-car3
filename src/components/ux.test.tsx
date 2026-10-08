@@ -6,6 +6,7 @@ import { ClinicWorkspace } from "./ClinicWorkspace";
 import { OperationalHome } from "./OperationalHome";
 import { ExecutiveDashboard } from "./ExecutiveDashboard";
 import { EmptyState, LoadingState, StatusBadge } from "./ui";
+import { waitFor } from "@testing-library/react";
 
 const selectOrganization = vi.fn();
 
@@ -33,6 +34,15 @@ vi.mock("../hooks/useDashboard", () => ({
   }),
 }));
 
+vi.mock("../hooks/useReports", () => ({
+  useReports: () => ({
+    loading: false,
+    error: null,
+    reload: vi.fn(),
+    data: { patients: [], screenings: [], reviews: [], followUps: [], images: [] },
+  }),
+}));
+
 const demoUser = { id: "user-demo", email: "demo@retinacare.test" } as User;
 
 describe("UX de la demo clínica", () => {
@@ -45,15 +55,15 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled();
   });
 
-  it("presenta layout, identidad y navegación activa", () => {
+  it("presenta layout, identidad y navegación activa", async () => {
     render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
     expect(screen.getByRole("navigation", { name: "Navegación principal" })).toBeInTheDocument();
     expect(screen.getAllByRole("img", { name: "RetinaCare" })[0]).toBeInTheDocument();
     expect(screen.getByText("Clínica RetinaCare Demo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
     fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
-    expect(screen.getByRole("heading", { name: "Reportes" })).toBeInTheDocument();
-    expect(screen.getByText("Reportes no disponibles")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Reportes" })).toBeInTheDocument());
+    expect(screen.getByText("No hay pacientes para estos filtros")).toBeInTheDocument();
   });
 
   it("ofrece accesos rápidos y conserva el aviso de IA", () => {
