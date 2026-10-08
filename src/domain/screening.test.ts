@@ -21,6 +21,7 @@ const screening: Screening = {
   updatedBy: null,
   closedAt: null,
   closedBy: null,
+  patientPublishedAt: null,
   deletedAt: null,
   deletedBy: null,
   createdAt: "2026-01-01T00:00:00.000Z",

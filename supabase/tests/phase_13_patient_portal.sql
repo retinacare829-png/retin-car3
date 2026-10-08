@@ -102,7 +102,7 @@ select pg_temp.assert_true(
 set local role postgres;
 insert into public.screenings (
   id, organization_id, patient_id, status, created_by,
-  patient_published_at, patient_published_by
+  patient_published_at, patient_published_by, patient_report_summary
 ) values (
   '33000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000002',
@@ -110,16 +110,18 @@ insert into public.screenings (
   'REVISADO',
   '90000000-0000-4000-8000-000000000004',
   now(),
-  '90000000-0000-4000-8000-000000000004'
+  '90000000-0000-4000-8000-000000000004',
+  'Resumen aprobado de prueba'
 );
 insert into public.screenings (
-  id, organization_id, patient_id, status, created_by
+  id, organization_id, patient_id, status, created_by, general_observations
 ) values (
   '33000000-0000-4000-8000-000000000002',
   '10000000-0000-4000-8000-000000000002',
   '20000000-0000-4000-8000-000000000003',
   'REVISADO',
-  '90000000-0000-4000-8000-000000000004'
+  '90000000-0000-4000-8000-000000000004',
+  'Texto aprobado por el profesional'
 );
 insert into public.screenings (
   id, organization_id, patient_id, status, created_by
@@ -129,6 +131,16 @@ insert into public.screenings (
   '20000000-0000-4000-8000-000000000003',
   'PENDIENTE_REVISION',
   '90000000-0000-4000-8000-000000000004'
+);
+
+insert into public.professional_reviews (
+  organization_id, patient_id, screening_id, reviewer_user_id, review_status, reviewed_at
+) values (
+  '10000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000003',
+  '33000000-0000-4000-8000-000000000001',
+  '90000000-0000-4000-8000-000000000004',
+  'REVISION_COMPLETADA', now()
 );
 
 set local role authenticated;
@@ -142,8 +154,13 @@ select pg_temp.assert_true(
 select pg_temp.assert_true(
   (public.get_patient_portal_snapshot() -> 'screenings' -> 0 ->> 'id') = '33000000-0000-4000-8000-000000000001'
   and (public.get_patient_portal_snapshot() -> 'screenings' -> 0 ->> 'status') = 'REVISADO'
-  and (public.get_patient_portal_snapshot() -> 'reports' -> 0 ->> 'screeningId') = '33000000-0000-4000-8000-000000000001',
-  'el RPC debe devolver únicamente el screening aprobado/publicado'
+  and (public.get_patient_portal_snapshot() -> 'screenings' -> 0 ->> 'statusLabel') = 'Revisado'
+  and (public.get_patient_portal_snapshot() -> 'profile' ->> 'organizationName') = 'Centro Demo Diabetes'
+  and (public.get_patient_portal_snapshot() -> 'reports' -> 0 ->> 'screeningId') = '33000000-0000-4000-8000-000000000001'
+  and (public.get_patient_portal_snapshot() -> 'reports' -> 0 ? 'summary')
+  and not (public.get_patient_portal_snapshot() -> 'reports' -> 0 ? 'professionalReview')
+  and not (public.get_patient_portal_snapshot() -> 'reports' -> 0 ? 'images'),
+  'el RPC debe devolver solo el contrato publicado sin notas internas ni imagenes'
 );
 
 set local role postgres;
@@ -158,6 +175,29 @@ select pg_temp.assert_true(
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000004', true);
 
+do $$
+begin
+  begin
+    perform public.publish_screening_to_patient('33000000-0000-4000-8000-000000000002');
+    raise exception 'QA_ASSERTION_FAILED: se publico sin revision profesional';
+  exception when check_violation then null;
+  end;
+end;
+$$;
+
+set local role postgres;
+insert into public.professional_reviews (
+  organization_id, patient_id, screening_id, reviewer_user_id, review_status, reviewed_at
+) values (
+  '10000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000003',
+  '33000000-0000-4000-8000-000000000002',
+  '90000000-0000-4000-8000-000000000004',
+  'REVISION_COMPLETADA', now()
+);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000004', true);
+
 select published.id
 from public.publish_screening_to_patient('33000000-0000-4000-8000-000000000002') published
 \gset published_
@@ -166,6 +206,22 @@ select pg_temp.assert_true(
   (select patient_published_at is not null from public.screenings where id = :'published_id'),
   'la publicación debe quedar separada del estado cerrado'
 );
+
+update public.screenings
+set general_observations = 'Cambio posterior no aprobado'
+where id = :'published_id';
+
+select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000005', true);
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from jsonb_array_elements(public.get_patient_portal_snapshot() -> 'reports') report
+    where report ->> 'screeningId' = :'published_id'
+      and report ->> 'summary' = 'Texto aprobado por el profesional'
+  ),
+  'el resumen publicado debe permanecer congelado tras editar observaciones internas'
+);
+select set_config('request.jwt.claim.sub', '90000000-0000-4000-8000-000000000004', true);
 
 do $$
 begin

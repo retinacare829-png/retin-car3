@@ -1,83 +1,54 @@
-# Contrato de datos: portal de paciente
+# Portal de paciente — contrato de la fase 13
 
-## Vinculación y autorización
+## Identidad y permisos
 
-- La cuenta se vincula explícitamente por `auth.users.id` mediante `public.patient_accounts`.
-- El vínculo contiene `organization_id`, `patient_id`, `user_id` y `status`.
-- No se usa email para autorización y no existe auto-vinculación.
-- Solo `clinic_admin` puede ejecutar `link_patient_account(organization_id, patient_id, user_id)` o `revoke_patient_account(organization_id, patient_id)`.
-- Una cuenta de paciente no se agrega a `organization_members`; por ello no hereda la lectura de toda la clínica.
+La cuenta de Auth se vincula a un paciente y una clínica mediante `public.patient_accounts`. No se infiere el vínculo del correo ni se agrega al paciente a `organization_members`, que representa al personal de la clínica. Solo un administrador clínico puede vincular o revocar la cuenta. Una cuenta revocada o suspendida no recibe datos del portal.
 
-## Publicación clínica
+El navegador llama a `public.get_patient_portal_snapshot()` sin parámetros. La función resuelve al paciente con `auth.uid()` y devuelve un JSON versionado con `profile`, `screenings` y `reports`. No acepta `patient_id`, `organization_id` ni rol enviados por el cliente. Sin vínculo activo, responde con SQLSTATE `42501`.
 
-- Un screening solo aparece en el portal cuando `patient_published_at` no es nulo.
-- La publicación es independiente de `status = 'CERRADO'`.
-- Solo `clinic_admin` o `authorized_professional` puede ejecutar `publish_screening_to_patient(screening_id)`.
-- La publicación debe partir de `REVISADO` o `SEGUIMIENTO_REQUERIDO`; un screening `CERRADO` solo permanece visible si fue publicado antes de cerrarse. Los estados preliminares nunca se exponen.
+## Publicación
 
-## RPC de lectura
+`publish_screening_to_patient(screening_id)` es una acción auditada, independiente del cierre del screening. Solo un administrador o profesional autorizado puede ejecutarla desde un screening `REVISADO` o `SEGUIMIENTO_REQUERIDO`, y únicamente cuando existe una revisión profesional completada. Cerrar un screening no lo publica. Un screening cerrado solo sigue visible si fue publicado previamente.
 
-`get_patient_portal_snapshot()` no recibe `patient_id`, `organization_id` ni email. Resuelve la cuenta desde `auth.uid()` y devuelve un objeto JSON con `profile`, `screenings` y `reports`:
+El snapshot muestra únicamente screenings publicados y un resumen de cada informe publicado. Al aprobar, el texto de `general_observations` se copia a `patient_report_summary` y queda congelado; cambios clínicos posteriores no alteran lo que ve el paciente. El profesional debe revisar ese texto antes de publicar. Si está vacío, el portal presenta un aviso genérico de consultar a la clínica. No se entregan notas internas de revisiones, seguimientos o referencias, imágenes, rutas de Storage ni bytes. Mostrar imágenes al paciente requiere una fase posterior con autorización específica.
+
+## Forma de respuesta
 
 ```ts
 {
   contractVersion: 1;
   profile: {
-    id: string;
-    internalIdentifier: string;
+    patientId: string;
+    organizationId: string;
+    organizationName: string;
+    displayName: string;
     firstNames: string;
     lastNames: string;
     dateOfBirth: string;
-    sex: "female" | "male" | "other" | "unknown";
     phone: string | null;
+    email: string | null;
   };
   screenings: Array<{
     id: string;
     recordCode: string;
-    status: "REVISADO" | "SEGUIMIENTO_REQUERIDO" | "CERRADO";
-    publishedAt: string;
     createdAt: string;
-    closedAt: string | null;
+    status: string;
+    statusLabel: string;
+    reportPublished: true;
   }>;
   reports: Array<{
+    id: string;
     screeningId: string;
     recordCode: string;
-    status: "REVISADO" | "SEGUIMIENTO_REQUERIDO" | "CERRADO";
+    title: string;
+    summary: string;
+    nextStep: null;
     publishedAt: string;
-    generalObservations: string | null;
-    professionalReview: {
-      status: string;
-      reviewedAt: string | null;
-      structuredObservations: Record<string, boolean>;
-      notes: string | null;
-    } | null;
-    followUps: Array<{
-      id: string;
-      type: string;
-      status: string;
-      dueDate: string | null;
-      completedAt: string | null;
-      notes: string | null;
-    }>;
-    referrals: Array<{
-      id: string;
-      reason: string;
-      destination: string;
-      status: string;
-      requestedDate: string;
-      completedDate: string | null;
-      notes: string | null;
-    }>;
-    images: Array<{
-      id: string;
-      laterality: "OD" | "OI";
-      capturedAt: string;
-      mimeType: "image/jpeg" | "image/png" | "image/webp";
-    }>;
+    publishedBy: string | null;
   }>;
 }
 ```
 
-El RPC es la única superficie de lectura del portal. El paciente no tiene `SELECT` directo sobre las tablas clínicas; los reportes incluyen metadatos de imagen, pero no rutas de Storage ni bytes. Las tablas y objetos internos de imágenes y reportes clínicos no se exponen directamente al paciente.
+El paciente no tiene `SELECT` directo sobre pacientes, screenings, revisiones ni Storage. Las vistas del frontend no son una barrera de seguridad: el aislamiento se verifica en la base de datos.
 
-Sin vínculo activo, `get_patient_portal_snapshot()` falla con SQLSTATE `42501` y no devuelve `null`. La publicación recibe únicamente `screening_id`; el `organization_id`, paciente y actor se resuelven desde el registro y `auth.uid()`.
+El workflow clínico incluye la acción explícita de compartir el informe, con vista previa del resumen y confirmación. La vinculación inicial de una cuenta de paciente todavía requiere soporte autorizado; usar solo datos ficticios en la demo y no presentar el portal como autoservicio clínico completo.

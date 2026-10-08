@@ -25,6 +25,8 @@ import type { Patient } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import { betaAiUnavailableMessage, retinalImageLateralityLabels, type ScreeningDetail } from "../domain/screening";
 import { useClinicalWorkflow } from "../hooks/useClinicalWorkflow";
+import { supabase } from "../lib/supabase";
+import { friendlyError, notify } from "../lib/appEvents";
 import { getStatusTone } from "../domain/statusTone";
 import { EmptyState, LoadingState, StatusBadge } from "./ui";
 
@@ -46,6 +48,30 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
   const workflow = useClinicalWorkflow(organizationId, patient.id, screening.id, role, user);
   const checklist = useMemo(() => buildClosureChecklist(screening, workflow.detail), [screening, workflow.detail]);
   const closed = screening.status === "CERRADO";
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const reviewApproved = ["REVISION_COMPLETADA", "SEGUIMIENTO_REQUERIDO"].includes(workflow.detail.professionalReview?.reviewStatus ?? "");
+  const canPublish = workflow.canReview && reviewApproved && ["REVISADO", "SEGUIMIENTO_REQUERIDO"].includes(screening.status);
+  const reportSummary = screening.generalObservations?.trim() || "Tu clínica compartió este informe. Consulta al profesional para conocer sus conclusiones.";
+
+  async function publishForPatient() {
+    if (!canPublish || screening.patientPublishedAt || !supabase) return;
+    if (!globalThis.confirm(`¿Compartir este informe con el paciente? Se mostrará este resumen y quedará registrado: ${reportSummary}`)) return;
+    setPublishing(true);
+    setPublishError(null);
+    try {
+      const { error } = await supabase.rpc("publish_screening_to_patient", { target_screening_id: screening.id });
+      if (error) throw error;
+      await onScreeningChanged();
+      notify("Informe compartido con el paciente.");
+    } catch (caught) {
+      const message = friendlyError(caught, "No se pudo compartir el informe con el paciente.");
+      setPublishError(message);
+      notify(message, "error");
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   async function closeScreening() {
     if (!checklist.canClose || closed) return;
@@ -84,6 +110,17 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
         <ProfessionalReviewForm disabled={workflow.saving || !workflow.canReview || closed} review={workflow.detail.professionalReview} onSave={workflow.saveReview} />
         <FollowUpPanel disabled={workflow.saving || !workflow.canWriteFollowUps || closed} followUps={workflow.detail.followUps} onSave={workflow.saveFollowUp} />
         <ReferralPanel disabled={workflow.saving || !workflow.canWriteReferrals || closed} referrals={workflow.detail.referrals} onSave={workflow.saveReferral} />
+        <section className="workflow-card" aria-labelledby="patient-publication-title">
+          <div className="panel-title"><ExternalLink aria-hidden="true" size={20} /><h3 id="patient-publication-title">Portal del paciente</h3></div>
+          <p>El informe permanece privado hasta que un profesional complete la revisión y se confirme su publicación.</p>
+          <p><strong>Resumen que verá el paciente:</strong> {reportSummary}</p>
+          {screening.patientPublishedAt ? <p className="form-message">Compartido el {new Date(screening.patientPublishedAt).toLocaleDateString()}.</p> : null}
+          {publishError ? <div className="form-error" role="alert">{publishError}</div> : null}
+          <button className="primary-button" disabled={publishing || workflow.loading || !canPublish || Boolean(screening.patientPublishedAt)} onClick={() => void publishForPatient()} type="button">
+            <ExternalLink aria-hidden="true" size={18} />{screening.patientPublishedAt ? "Informe compartido" : publishing ? "Compartiendo…" : "Aprobar y compartir con paciente"}
+          </button>
+          {!canPublish && !screening.patientPublishedAt ? <p className="permission-note">Requiere revisión profesional completada y screening revisado.</p> : null}
+        </section>
         <section className="workflow-card closure-card">
           <div className="panel-title"><ClipboardCheck aria-hidden="true" size={20} /><h3>Checklist de cierre</h3></div>
           <p className="field-help">El cierre congela el workflow clínico y conserva su trazabilidad. Complete todos los puntos antes de cerrar.</p>

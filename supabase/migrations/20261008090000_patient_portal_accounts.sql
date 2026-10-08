@@ -11,9 +11,10 @@ create type public.patient_account_status as enum (
 alter table public.screenings
   add column patient_published_at timestamptz,
   add column patient_published_by uuid references auth.users(id) on delete set null,
+  add column patient_report_summary text,
   add constraint screenings_patient_publication_consistency check (
-    (patient_published_at is null and patient_published_by is null)
-    or (patient_published_at is not null and patient_published_by is not null)
+    (patient_published_at is null and patient_published_by is null and patient_report_summary is null)
+    or (patient_published_at is not null and patient_published_by is not null and patient_report_summary is not null)
   );
 
 create index screenings_patient_published_idx
@@ -292,7 +293,8 @@ set search_path = ''
 as $$
 begin
   if new.patient_published_at is distinct from old.patient_published_at
-    or new.patient_published_by is distinct from old.patient_published_by then
+    or new.patient_published_by is distinct from old.patient_published_by
+    or new.patient_report_summary is distinct from old.patient_report_summary then
     if coalesce(
       pg_catalog.current_setting('retinacare.patient_portal_publish', true),
       'false'
@@ -302,7 +304,7 @@ begin
         message = 'La publicación del portal debe ejecutarse mediante el RPC auditado.';
     end if;
 
-    if new.patient_published_at is null or new.patient_published_by is null then
+    if new.patient_published_at is null or new.patient_published_by is null or new.patient_report_summary is null then
       raise exception using
         errcode = '42501',
         message = 'La publicación del portal no puede eliminarse.';
@@ -353,6 +355,20 @@ begin
       message = 'El screening debe estar aprobado antes de publicarse al paciente.';
   end if;
 
+  if not exists (
+    select 1 from public.professional_reviews review
+    where review.screening_id = current_screening.id
+      and review.organization_id = current_screening.organization_id
+      and review.patient_id = current_screening.patient_id
+      and review.deleted_at is null
+      and review.review_status in ('REVISION_COMPLETADA', 'SEGUIMIENTO_REQUERIDO')
+      and review.reviewed_at is not null
+  ) then
+    raise exception using
+      errcode = 'check_violation',
+      message = 'Debe existir una revisión profesional aprobada antes de publicar.';
+  end if;
+
   if current_screening.patient_published_at is not null then
     return current_screening;
   end if;
@@ -362,6 +378,10 @@ begin
   update public.screenings
   set patient_published_at = pg_catalog.now(),
       patient_published_by = actor_id,
+      patient_report_summary = coalesce(
+        nullif(pg_catalog.btrim(current_screening.general_observations), ''),
+        'Tu clínica compartió este informe. Consulta al profesional para conocer sus conclusiones.'
+      ),
       updated_by = actor_id
   where id = target_screening_id
   returning * into published_screening;
@@ -441,6 +461,12 @@ begin
         'id', screening.id,
         'recordCode', screening.medical_record_code,
         'status', screening.status,
+        'statusLabel', case screening.status
+          when 'REVISADO' then 'Revisado'
+          when 'SEGUIMIENTO_REQUERIDO' then 'Seguimiento requerido'
+          when 'CERRADO' then 'Cerrado'
+        end,
+        'reportPublished', true,
         'publishedAt', screening.patient_published_at,
         'createdAt', screening.created_at,
         'closedAt', screening.closed_at
@@ -458,85 +484,17 @@ begin
   select coalesce(
     jsonb_agg(
       jsonb_build_object(
+        'id', screening.id,
         'screeningId', screening.id,
         'recordCode', screening.medical_record_code,
-        'status', screening.status,
+        'title', 'Informe de screening',
+        'summary', screening.patient_report_summary,
+        'nextStep', null,
         'publishedAt', screening.patient_published_at,
-        'generalObservations', screening.general_observations,
-        'professionalReview', (
-          select jsonb_build_object(
-            'status', review.review_status,
-            'reviewedAt', review.reviewed_at,
-            'structuredObservations', review.structured_observations,
-            'notes', review.notes
-          )
-          from public.professional_reviews review
-          where review.screening_id = screening.id
-            and review.patient_id = patient.id
-            and review.organization_id = account.organization_id
-            and review.deleted_at is null
-          order by review.created_at desc
-          limit 1
-        ),
-        'followUps', coalesce(
-          (
-            select jsonb_agg(
-              jsonb_build_object(
-                'id', follow_up.id,
-                'type', follow_up.follow_up_type,
-                'status', follow_up.follow_up_status,
-                'dueDate', follow_up.due_date,
-                'completedAt', follow_up.completed_at,
-                'notes', follow_up.notes
-              ) order by follow_up.created_at
-            )
-            from public.follow_ups follow_up
-            where follow_up.screening_id = screening.id
-              and follow_up.patient_id = patient.id
-              and follow_up.organization_id = account.organization_id
-              and follow_up.deleted_at is null
-          ),
-          '[]'::jsonb
-        ),
-        'referrals', coalesce(
-          (
-            select jsonb_agg(
-              jsonb_build_object(
-                'id', referral.id,
-                'reason', referral.referral_reason,
-                'destination', referral.referral_destination,
-                'status', referral.referral_status,
-                'requestedDate', referral.requested_date,
-                'completedDate', referral.completed_date,
-                'notes', referral.notes
-              ) order by referral.requested_date desc, referral.created_at desc
-            )
-            from public.referrals referral
-            where referral.screening_id = screening.id
-              and referral.patient_id = patient.id
-              and referral.organization_id = account.organization_id
-              and referral.deleted_at is null
-          ),
-          '[]'::jsonb
-        ),
-        'images', coalesce(
-          (
-            select jsonb_agg(
-              jsonb_build_object(
-                'id', image.id,
-                'laterality', image.laterality,
-                'capturedAt', image.captured_at,
-                    'mimeType', image.mime_type
-              ) order by image.laterality
-            )
-            from public.retinal_images image
-            where image.screening_id = screening.id
-              and image.patient_id = patient.id
-              and image.organization_id = account.organization_id
-              and image.status = 'ACTIVA'
-              and image.deleted_at is null
-          ),
-          '[]'::jsonb
+        'publishedBy', (
+          select profile.display_name
+          from public.profiles profile
+          where profile.id = screening.patient_published_by
         )
       ) order by screening.patient_published_at desc, screening.created_at desc
     ),
@@ -552,13 +510,23 @@ begin
   select jsonb_build_object(
     'contractVersion', 1,
     'profile', jsonb_build_object(
-      'id', patient.id,
-      'internalIdentifier', patient.internal_identifier,
+      'patientId', patient.id,
+      'organizationId', account.organization_id,
+      'organizationName', (
+        select organization.name
+        from public.organizations organization
+        where organization.id = account.organization_id
+      ),
+      'displayName', patient.first_names,
       'firstNames', patient.first_names,
       'lastNames', patient.last_names,
       'dateOfBirth', patient.date_of_birth,
-      'sex', patient.sex,
-      'phone', patient.phone
+      'phone', patient.phone,
+      'email', (
+        select auth_user.email
+        from auth.users auth_user
+        where auth_user.id = account.user_id
+      )
     ),
     'screenings', screening_summary,
     'reports', report_payload
@@ -575,3 +543,5 @@ comment on table public.patient_accounts is
   'Explicit auth.users to patient link for the patient portal; never inferred from email or organization membership.';
 comment on column public.screenings.patient_published_at is
   'Explicit professional approval timestamp for patient portal visibility; independent from screening closure.';
+comment on column public.screenings.patient_report_summary is
+  'Frozen patient-facing summary captured at explicit publication; later staff edits do not change the published text.';

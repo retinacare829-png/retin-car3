@@ -464,6 +464,7 @@ function mapScreeningRow(row: ScreeningRow): Screening {
     updatedBy: row.updated_by,
     closedAt: row.closed_at,
     closedBy: row.closed_by,
+    patientPublishedAt: row.patient_published_at,
     deletedAt: row.deleted_at,
     deletedBy: row.deleted_by,
     createdAt: row.created_at,

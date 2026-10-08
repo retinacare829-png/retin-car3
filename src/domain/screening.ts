@@ -125,6 +125,7 @@ export interface Screening extends Omit<ScreeningFormData, "patientId"> {
   updatedBy: string | null;
   closedAt: string | null;
   closedBy: string | null;
+  patientPublishedAt: string | null;
   deletedAt: string | null;
   deletedBy: string | null;
   createdAt: string;

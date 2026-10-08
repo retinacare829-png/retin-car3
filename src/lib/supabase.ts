@@ -272,6 +272,7 @@ export interface Database {
           deleted_by: string | null;
           patient_published_at: string | null;
           patient_published_by: string | null;
+          patient_report_summary: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -291,6 +292,7 @@ export interface Database {
           deleted_by?: string | null;
           patient_published_at?: string | null;
           patient_published_by?: string | null;
+          patient_report_summary?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -310,6 +312,7 @@ export interface Database {
           deleted_by?: string | null;
           patient_published_at?: string | null;
           patient_published_by?: string | null;
+          patient_report_summary?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -660,10 +663,6 @@ export interface Database {
       publish_screening_to_patient: {
         Args: { target_screening_id: string };
         Returns: Database["public"]["Tables"]["screenings"]["Row"];
-      };
-      get_patient_portal_snapshot: {
-        Args: Record<string, never>;
-        Returns: Json;
       };
       can_generate_professional_reports: {
         Args: {
