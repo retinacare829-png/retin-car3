@@ -1,10 +1,11 @@
-import { ArrowRight, BarChart3, ClipboardList, ImagePlus, Search, Stethoscope, UserRoundPlus, UsersRound } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, BarChart3, ClipboardList, ImagePlus, LineChart, PieChart, Search, Stethoscope, UserRoundPlus, UsersRound } from "lucide-react";
 import { betaAiUnavailableMessage } from "../domain/screening";
 import { can } from "../domain/permissions";
 import type { Role } from "../domain/roles";
 import { useDashboard } from "../hooks/useDashboard";
 import { ErrorNotice, LoadingState } from "./ui";
-import { HomeScreeningChart } from "./HomeScreeningChart";
+import { HomeScreeningChart, type HomeChartType } from "./HomeScreeningChart";
 
 export type WorkspaceDestination = "home" | "patients" | "screenings" | "workflow" | "reports" | "settings";
 
@@ -17,6 +18,7 @@ interface OperationalHomeProps {
 
 export function OperationalHome({ organizationId, organizationName, role, onNavigate }: OperationalHomeProps) {
   const { data, error, loading } = useDashboard(organizationId);
+  const [chartType, setChartType] = useState<HomeChartType>("bar");
   const actions = [
     { title: "Buscar paciente", description: "Consultar su ficha y sus screenings.", icon: Search, destination: "patients" as const, visible: can(role, "patients:read") },
     { title: "Registrar paciente", description: "Crear una nueva ficha clínica.", icon: UserRoundPlus, destination: "patients" as const, visible: can(role, "patients:write") },
@@ -43,8 +45,14 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
 
         <div className="home-insights">
           <section className="home-trend" aria-labelledby="home-trend-title">
-            <div className="home-section-heading"><div><p className="eyebrow">Actividad</p><h2 id="home-trend-title">Screenings por mes</h2></div><BarChart3 aria-hidden="true" size={19} /></div>
-            <HomeScreeningChart months={data.screeningsByMonth} />
+            <div className="home-section-heading"><div><p className="eyebrow">Actividad</p><h2 id="home-trend-title">Screenings por mes</h2></div><div className="home-chart-switcher" role="group" aria-label="Tipo de gráfico">
+              {([
+                { type: "bar", label: "Gráfico de barras", icon: BarChart3 },
+                { type: "line", label: "Gráfico de líneas", icon: LineChart },
+                { type: "pie", label: "Gráfico de pastel", icon: PieChart },
+              ] as const).map(({ type, label, icon: Icon }) => <button aria-label={label} aria-pressed={chartType === type} key={type} onClick={() => setChartType(type)} title={label} type="button"><Icon aria-hidden="true" size={18} /></button>)}
+            </div></div>
+            <HomeScreeningChart months={data.screeningsByMonth} type={chartType} />
           </section>
           <section className="home-pending" aria-labelledby="home-pending-title">
             <div className="home-section-heading"><div><p className="eyebrow">Prioridades</p><h2 id="home-pending-title">Por atender</h2></div></div>

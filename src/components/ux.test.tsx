@@ -100,6 +100,7 @@ describe("UX de la demo clínica", () => {
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(toggle);
     expect(screen.getByRole("navigation", { name: "Navegación principal" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Acceso rápido:/ })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cerrar navegación" })).toHaveAttribute("aria-expanded", "true");
     fireEvent.click(screen.getByRole("button", { name: "Pacientes" }));
     expect(screen.getByRole("button", { name: "Abrir navegación" })).toHaveAttribute("aria-expanded", "false");
@@ -135,6 +136,24 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByText("3", { selector: ".home-metrics strong" })).toBeInTheDocument();
     expect(screen.getByText("Seguimientos para hoy")).toBeInTheDocument();
     expect(screen.getByText(/Módulo de Inteligencia Artificial no disponible en esta versión beta/)).toBeInTheDocument();
+  });
+
+  it("cambia el gráfico mensual entre barras, líneas y pastel desde sus botones", () => {
+    render(<OperationalHome organizationId="org-demo" organizationName="Clínica Demo" role="clinic_admin" onNavigate={vi.fn()} />);
+    const bars = screen.getByRole("button", { name: "Gráfico de barras" });
+    const lines = screen.getByRole("button", { name: "Gráfico de líneas" });
+    const pie = screen.getByRole("button", { name: "Gráfico de pastel" });
+    expect(bars).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(lines);
+    expect(lines).toHaveAttribute("aria-pressed", "true");
+    expect(bars).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(pie);
+    expect(pie).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("img", { name: "Distribución mensual de screenings: ago, 8" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Screenings por mes" })).toHaveTextContent("ago8");
+    fireEvent.click(bars);
+    expect(bars).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("img", { name: "Distribución mensual de screenings: ago, 8" })).not.toBeInTheDocument();
   });
 
   it("no ofrece alta ni carga de imágenes al profesional", () => {

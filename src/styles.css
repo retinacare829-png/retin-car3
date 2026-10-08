@@ -1603,9 +1603,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .operational-home .home-metrics svg, .operational-home .home-metrics strong,
 .operational-home .home-metrics span { color: var(--home-teal); }
 .home-insights { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(290px, .75fr); gap: 16px; align-items: stretch; }
-.operational-home .home-trend .home-section-heading > svg { color: var(--home-teal); }
+.home-chart-switcher { display: flex; align-items: center; gap: 5px; padding: 4px; border: 1px solid var(--home-green); border-radius: 10px; }
+.home-chart-switcher button { display: grid; width: 38px; height: 38px; place-items: center; border: 0; border-radius: 7px; color: var(--home-teal); background: transparent; cursor: pointer; }
+.home-chart-switcher button:hover, .home-chart-switcher button[aria-pressed="true"] { color: #fff; background: var(--home-teal); }
+.home-chart-switcher button:focus-visible { outline: 3px solid var(--home-pink); outline-offset: 2px; }
 .home-chart { width: 100%; color: var(--home-teal); }
 .home-chart > p { margin: 0; color: var(--home-teal); font-size: .78rem; font-weight: 700; }
+.home-pie-chart { display: flex; min-height: 210px; align-items: center; justify-content: center; gap: clamp(22px, 4vw, 48px); padding: 14px 0; }
+.home-pie-graphic { width: min(190px, 46%); aspect-ratio: 1; flex: 0 0 auto; border-radius: 50%; }
+.home-pie-legend { display: grid; min-width: 135px; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.home-pie-legend li { display: grid; grid-template-columns: 11px minmax(0, 1fr) auto; align-items: center; gap: 9px; font-size: .82rem; }
+.home-pie-legend li > span:first-child { width: 11px; height: 11px; border-radius: 3px; }
+@media (max-width: 480px) { .home-pie-chart { gap: 16px; }.home-pie-graphic { width: min(145px, 42%); }.home-pie-legend { min-width: 110px; } }
 .home-chart-empty { display: grid; min-height: 210px; place-items: center; margin: 0; padding: 26px; border: 1px dashed var(--home-green); border-radius: 10px; color: var(--home-teal); text-align: center; line-height: 1.5; }
 .operational-home .home-pending-grid { grid-template-columns: 1fr; }
 .operational-home .home-pending-grid p { display: grid; grid-template-columns: 45px 1fr; align-items: center; border: 1px solid var(--home-green); border-left: 4px solid var(--home-pink); border-radius: 8px; background: #fff; }
@@ -1714,9 +1723,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .radial-clinic-logo { position: absolute; z-index: 1; top: 50%; left: -45px; display: grid; width: 230px; height: 230px; place-items: center; padding: 30px 30px 30px 60px; border: 7px solid color-mix(in srgb, var(--rc-accent) 70%, white); border-radius: 50%; color: var(--rc-primary-dark); background: #fff; transform: translateY(-50%); box-shadow: 0 12px 30px color-mix(in srgb, var(--rc-primary-dark) 30%, transparent); }
 .radial-clinic-logo img { width: 100%; max-height: 100%; object-fit: contain; }
 .radial-clinic-name { position: absolute; z-index: 2; top: calc(50% + 132px); left: 20px; width: 170px; color: #fff; font-size: .88rem; font-weight: 800; line-height: 1.35; text-align: center; overflow-wrap: anywhere; }
-.radial-quick-actions { position: absolute; z-index: 2; top: 50%; left: 205px; display: grid; gap: 30px; transform: translateY(-50%); }
-.radial-quick-action { display: grid; width: 52px; height: 52px; place-items: center; border: 2px solid var(--rc-accent); border-radius: 50%; color: var(--rc-primary-dark); background: #fff; cursor: pointer; box-shadow: 0 5px 16px color-mix(in srgb, var(--rc-primary-dark) 28%, transparent); transition: transform .2s ease, background .2s ease; transition-delay: calc(var(--radial-index) * 45ms); }
-.radial-quick-action:hover, .radial-quick-action:focus-visible { background: var(--rc-primary-soft); transform: translateX(5px); }
 .radial-sidebar nav { position: absolute; z-index: 2; top: 50%; left: 318px; display: grid; width: 205px; gap: 10px; transform: translateY(-50%); }
 .radial-nav-entry { position: relative; min-width: 0; transition: transform .2s ease; transition-delay: calc(var(--radial-index) * 35ms); }
 .radial-nav-entry:nth-child(1), .radial-nav-entry:nth-child(6) { transform: translateX(-15px); }
@@ -1736,14 +1742,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .radial-sidebar-shape { top: -170px; left: -160px; width: 490px; height: 385px; }
   .radial-clinic-logo { top: 26px; left: 22px; width: 100px; height: 100px; padding: 13px; border-width: 4px; transform: none; }
   .radial-clinic-name { top: 145px; left: 24px; width: calc(100% - 48px); text-align: left; }
-  .radial-quick-actions { display: none; }
   .radial-sidebar nav { position: relative; top: auto; left: auto; width: auto; gap: 8px; margin: 230px 20px 90px; transform: none; }
   .radial-nav-entry, .radial-nav-entry:nth-child(1), .radial-nav-entry:nth-child(2), .radial-nav-entry:nth-child(5), .radial-nav-entry:nth-child(6) { transform: none; }
   .radial-nav-item { min-height: 48px; }
   .radial-nav-item { border-color: color-mix(in srgb, var(--rc-accent) 40%, transparent); background: color-mix(in srgb, var(--rc-primary) 35%, transparent); }
 }
 
-@media (prefers-reduced-motion: reduce) { .radial-sidebar, .radial-quick-action, .radial-nav-item, .radial-nav-entry { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .radial-sidebar, .radial-nav-item, .radial-nav-entry { transition: none; } }
 
 @media print {
   .radial-sidebar, .radial-menu-toggle, .radial-scrim { display: none !important; }
