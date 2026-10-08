@@ -498,6 +498,83 @@ textarea {
   background: #effaf6;
 }
 
+.patient-portal-access {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #c7dfdb;
+  border-radius: 10px;
+  background: #f7fcfb;
+}
+
+.patient-portal-access-heading,
+.patient-portal-access-linked {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.patient-portal-access-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-size: 1.08rem;
+}
+
+.patient-portal-access-linked {
+  align-items: center;
+  justify-content: flex-start;
+  padding: 13px 14px;
+  border: 1px solid #b8ddd2;
+  border-radius: 9px;
+  color: #245a50;
+  background: #effaf6;
+}
+
+.patient-portal-access-linked > div {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+}
+
+.patient-portal-access-linked small,
+.patient-portal-access-form small {
+  color: #58716d;
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
+.patient-portal-access-id {
+  color: #315b56;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .82rem;
+}
+
+.patient-portal-access-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: end;
+}
+
+.patient-portal-access-form small {
+  grid-column: 1 / -1;
+}
+
+.patient-portal-access-state,
+.patient-portal-access-error {
+  margin: 0;
+  color: #58716d;
+  font-size: .86rem;
+  line-height: 1.45;
+}
+
+.patient-portal-access-error { color: #9a3f36; }
+.ghost-button.danger { color: #7a261d; }
+
 .form-heading h2 {
   margin-bottom: 6px;
   font-size: 1.25rem;
@@ -1074,6 +1151,15 @@ textarea {
   .patient-generated-fields {
     grid-template-columns: 1fr;
   }
+
+  .patient-portal-access-heading,
+  .patient-portal-access-linked {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .patient-portal-access-form { grid-template-columns: 1fr; }
+  .patient-portal-access-form small { grid-column: auto; }
 
   .row-actions {
     justify-content: flex-start;

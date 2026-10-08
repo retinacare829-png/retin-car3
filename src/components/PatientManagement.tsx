@@ -18,6 +18,7 @@ import type { Role } from "../domain/roles";
 import { can } from "../domain/permissions";
 import { usePatients } from "../hooks/usePatients";
 import { PatientForm, type PatientFormSubmission } from "./PatientForm";
+import { PatientPortalAccessPanel } from "./PatientPortalAccessPanel";
 import { ScreeningManagement } from "./ScreeningManagement";
 import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 
@@ -47,6 +48,7 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const patientsApi = usePatients(organizationId, role, user, filters.includeArchived, filters.query);
+  const { loadPatientPortalAccount } = patientsApi;
 
   const filteredPatients = useMemo(
     () => filterPatients(patientsApi.patients, filters).sort((a, b) => sortOrder === "name"
@@ -67,6 +69,11 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
   useEffect(() => { setPage(1); }, [filters, sortOrder]);
   useEffect(() => { setFilters((current) => current.query === initialQuery ? current : { ...current, query: initialQuery }); }, [initialQuery]);
   useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
+  useEffect(() => {
+    if (role === "clinic_admin" && selectedPatient) {
+      void loadPatientPortalAccount(selectedPatient.id);
+    }
+  }, [loadPatientPortalAccount, role, selectedPatient]);
 
   async function handleSubmit(data: PatientFormSubmission) {
     if (editingPatient) {
@@ -277,6 +284,15 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
             <div><span className="eyebrow">Paciente seleccionado</span><strong>{selectedPatient.lastNames}, {selectedPatient.firstNames}</strong><p>Desde aquí puede registrar una nueva visita o continuar con sus screenings.</p></div>
             {can(role, "screenings:create") ? <button className="secondary-button" onClick={() => document.getElementById("new-screening-form")?.scrollIntoView({ behavior: "smooth", block: "start" })} type="button"><Images aria-hidden="true" size={17} />Nueva visita</button> : null}
           </div>
+          {role === "clinic_admin" ? (
+            <PatientPortalAccessPanel
+              account={patientsApi.patientPortalAccount}
+              disabled={patientsApi.saving || Boolean(selectedPatient.deletedAt)}
+              loading={patientsApi.patientPortalLoading}
+              onLink={(userId) => patientsApi.linkPatientPortalAccount(selectedPatient.id, userId)}
+              onRevoke={() => patientsApi.revokePatientPortalAccount(selectedPatient.id)}
+            />
+          ) : null}
           <ScreeningManagement initialFocus={initialFocus} organizationId={organizationId} patient={selectedPatient} role={role} user={user} />
         </>
       ) : null}
