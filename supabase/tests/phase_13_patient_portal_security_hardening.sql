@@ -65,6 +65,73 @@ values (
   '90000000-0000-4000-8000-000000000002'
 );
 
+-- A legacy suspended staff membership may coexist only while the patient
+-- account is active; reactivating that membership must be rejected.
+insert into public.patient_accounts (organization_id, patient_id, user_id, status, created_by)
+values (
+  '10000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000002',
+  '90000000-0000-4000-8000-000000000005',
+  'active',
+  '90000000-0000-4000-8000-000000000002'
+);
+
+do $$
+begin
+  begin
+    update public.organization_members
+    set status = 'active'
+    where organization_id = '10000000-0000-4000-8000-000000000001'
+      and user_id = '90000000-0000-4000-8000-000000000005'
+      and status = 'suspended';
+    raise exception 'QA_ASSERTION_FAILED: una membresía suspendida pudo reactivarse junto a una cuenta paciente';
+  exception when check_violation then null;
+  end;
+end;
+$$;
+
+-- A revoked patient account may exist beside staff, but revoked -> active
+-- must be rejected when the user already has a clinical membership.
+insert into public.patient_accounts (
+  organization_id, patient_id, user_id, status, created_by, revoked_at, revoked_by
+)
+values (
+  '10000000-0000-4000-8000-000000000002',
+  '20000000-0000-4000-8000-000000000003',
+  '90000000-0000-4000-8000-000000000003',
+  'revoked',
+  '90000000-0000-4000-8000-000000000002',
+  now(),
+  '90000000-0000-4000-8000-000000000002'
+);
+
+do $$
+begin
+  begin
+    update public.patient_accounts
+    set status = 'active'
+    where organization_id = '10000000-0000-4000-8000-000000000002'
+      and patient_id = '20000000-0000-4000-8000-000000000003';
+    raise exception 'QA_ASSERTION_FAILED: una cuenta paciente revocada pudo reactivarse junto a personal clínico';
+  exception when check_violation then null;
+  end;
+end;
+$$;
+
+select pg_temp.assert_hardening_true(
+  (
+    select pg_get_triggerdef(trg.oid) ilike '%UPDATE OF organization_id, user_id, role, status%'
+    from pg_trigger trg
+    join pg_class rel on rel.oid = trg.tgrelid
+    join pg_namespace nsp on nsp.oid = rel.relnamespace
+    where nsp.nspname = 'public'
+      and rel.relname = 'organization_members'
+      and trg.tgname = 'organization_members_enforce_coordinator_admin'
+      and not trg.tgisinternal
+  ),
+  'la protección de clinic_admin debe cubrir también UPDATE status'
+);
+
 select pg_temp.assert_hardening_true(
   not exists (
     select 1

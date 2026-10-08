@@ -48,7 +48,7 @@ set search_path = public
 as $$
 begin
   if tg_table_name = 'patient_accounts' then
-    if exists (
+    if new.status in ('active', 'suspended') and exists (
       select 1
       from public.organization_members member
       where member.user_id = new.user_id
@@ -79,12 +79,12 @@ revoke all on function public.prevent_patient_clinical_membership() from public,
 
 drop trigger if exists patient_accounts_prevent_clinical_membership on public.patient_accounts;
 create trigger patient_accounts_prevent_clinical_membership
-before insert or update of user_id on public.patient_accounts
+before insert or update of user_id, status on public.patient_accounts
 for each row execute function public.prevent_patient_clinical_membership();
 
 drop trigger if exists organization_members_prevent_patient_membership on public.organization_members;
 create trigger organization_members_prevent_patient_membership
-before insert or update of user_id on public.organization_members
+before insert or update of organization_id, user_id, role, status on public.organization_members
 for each row execute function public.prevent_patient_clinical_membership();
 
 create or replace function public.prevent_non_coordinator_admin_membership()
@@ -117,7 +117,7 @@ revoke all on function public.prevent_non_coordinator_admin_membership() from pu
 
 drop trigger if exists organization_members_enforce_coordinator_admin on public.organization_members;
 create trigger organization_members_enforce_coordinator_admin
-before insert or update of organization_id, user_id, role on public.organization_members
+before insert or update of organization_id, user_id, role, status on public.organization_members
 for each row execute function public.prevent_non_coordinator_admin_membership();
 
 drop policy if exists "clinic admins can update their organizations" on public.organizations;
