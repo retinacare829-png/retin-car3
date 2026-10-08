@@ -1,8 +1,58 @@
 import { describe, expect, it, vi } from "vitest";
 import type { TypedSupabaseClient } from "../lib/supabase";
+import { screeningFormSchema } from "../domain/screening";
 import { ScreeningService } from "./screeningService";
 
 describe("ScreeningService Supabase integration", () => {
+  it("crea un screening con el formulario ya normalizado y sin revisor", async () => {
+    const form = screeningFormSchema.parse({
+      patientId,
+      status: "CAPTURA_PENDIENTE",
+      generalObservations: "Prueba ficticia",
+      assignedReviewerId: "",
+    });
+    const row = {
+      id: screeningId,
+      organization_id: organizationId,
+      patient_id: patientId,
+      medical_record_code: "004",
+      status: form.status,
+      general_observations: form.generalObservations,
+      assigned_reviewer_id: null,
+      created_by: actorUserId,
+      updated_by: null,
+      closed_at: null,
+      closed_by: null,
+      patient_published_at: null,
+      deleted_at: null,
+      deleted_by: null,
+      created_at: "2026-10-08T00:00:00Z",
+      updated_at: "2026-10-08T00:00:00Z",
+    };
+    const insertScreening = vi.fn(() => ({ select: () => ({ single: () => ({ data: row, error: null }) }) }));
+    const insertAudit = vi.fn(() => ({ error: null }));
+    const insertTimeline = vi.fn(() => ({ error: null }));
+    const client = {
+      from(table: string) {
+        if (table === "screenings") return { insert: insertScreening };
+        if (table === "audit_logs") return { insert: insertAudit };
+        if (table === "patient_timeline_events") return { insert: insertTimeline };
+        throw new Error(`Tabla inesperada: ${table}`);
+      },
+    } as unknown as TypedSupabaseClient;
+
+    const created = await new ScreeningService(client).createScreening({ organizationId, actorUserId }, form);
+
+    expect(created.recordCode).toBe("004");
+    expect(insertScreening).toHaveBeenCalledWith(expect.objectContaining({
+      patient_id: patientId,
+      assigned_reviewer_id: null,
+      general_observations: "Prueba ficticia",
+    }));
+    expect(insertAudit).toHaveBeenCalledOnce();
+    expect(insertTimeline).toHaveBeenCalledOnce();
+  });
+
   it("rechaza un archivo demasiado grande sin contactar Storage", async () => {
     const upload = vi.fn();
     const storageFrom = vi.fn(() => ({ upload }));

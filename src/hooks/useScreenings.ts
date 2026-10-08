@@ -21,6 +21,7 @@ export interface UseScreeningsResult {
   loading: boolean;
   saving: boolean;
   error: string | null;
+  errorKind: "load" | "save" | null;
   canReadScreenings: boolean;
   canCreateScreenings: boolean;
   canUpdateScreenings: boolean;
@@ -54,6 +55,7 @@ export function useScreenings(
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<"load" | "save" | null>(null);
 
   const canReadScreenings = role ? can(role, "screenings:read") : false;
   const canCreateScreenings = role ? can(role, "screenings:create") : false;
@@ -72,6 +74,7 @@ export function useScreenings(
 
     setLoading(true);
     setError(null);
+    setErrorKind(null);
 
     try {
       const [nextScreenings, nextTimeline] = await Promise.all([
@@ -82,6 +85,7 @@ export function useScreenings(
       setTimeline(nextTimeline);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudieron cargar los screenings.");
+      setErrorKind("load");
     } finally {
       setLoading(false);
     }
@@ -99,11 +103,12 @@ export function useScreenings(
 
     setSaving(true);
     setError(null);
+    setErrorKind(null);
     try {
       await operation();
       await reload();
     } catch (caught) {
-      const message = friendlyError(caught, "No se pudo guardar el cambio."); setError(message); notify(message, "error");
+      const message = friendlyError(caught, "No se pudo guardar el cambio."); setError(message); setErrorKind("save"); notify(message, "error");
       throw caught;
     } finally {
       setSaving(false);
@@ -116,6 +121,7 @@ export function useScreenings(
     loading,
     saving,
     error,
+    errorKind,
     canReadScreenings,
     canCreateScreenings,
     canUpdateScreenings,

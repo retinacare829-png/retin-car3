@@ -105,14 +105,18 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
       return;
     }
 
-    if (editingScreening) {
-      await screeningsApi.updateScreening(editingScreening, parsed.data);
-      setEditingScreening(null);
-      return;
-    }
+    try {
+      if (editingScreening) {
+        await screeningsApi.updateScreening(editingScreening, parsed.data);
+        setEditingScreening(null);
+        return;
+      }
 
-    await screeningsApi.createScreening(parsed.data);
-    setForm(defaultScreeningForm(patient.id));
+      await screeningsApi.createScreening(parsed.data);
+      setForm(defaultScreeningForm(patient.id));
+    } catch {
+      // El hook muestra el error y conserva los datos para que se pueda reintentar.
+    }
   }
 
   return (
@@ -127,7 +131,7 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
         </div>
       </div>
 
-      {screeningsApi.error ? <ErrorNotice message="No se pudo cargar la información del screening. Intente nuevamente." onRetry={() => void screeningsApi.reload()} /> : null}
+      {screeningsApi.error ? <ErrorNotice message={screeningsApi.errorKind === "load" ? "No se pudo cargar la información del screening. Intente nuevamente." : screeningsApi.error} onRetry={screeningsApi.errorKind === "load" ? () => void screeningsApi.reload() : undefined} /> : null}
 
       <div className="screening-layout">
         <form className="screening-form" id="new-screening-form" onSubmit={(event) => void handleSubmit(event)}>

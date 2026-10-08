@@ -59,6 +59,7 @@ const optionalText = (maxLength: number) =>
     .string()
     .trim()
     .max(maxLength)
+    .nullable()
     .optional()
     .transform((value) => (value ? value : null));
 
@@ -69,6 +70,7 @@ export const screeningFormSchema = z.object({
   assignedReviewerId: z
     .string()
     .trim()
+    .nullable()
     .optional()
     .transform((value) => (value ? value : null)),
 });

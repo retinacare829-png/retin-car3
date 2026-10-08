@@ -41,6 +41,18 @@ describe("screening validation", () => {
     expect(parsed.success ? parsed.data.generalObservations : "unexpected").toBeNull();
   });
 
+  it("permite volver a validar datos normalizados con campos opcionales vacíos", () => {
+    const normalized = screeningFormSchema.parse({
+      patientId: screening.patientId,
+      status: "CAPTURA_PENDIENTE",
+      generalObservations: "",
+      assignedReviewerId: "",
+    });
+
+    expect(screeningFormSchema.parse(normalized)).toEqual(normalized);
+    expect(normalized).toMatchObject({ generalObservations: null, assignedReviewerId: null });
+  });
+
   it("rejects clinical diagnosis-like states", () => {
     const parsed = screeningFormSchema.safeParse({
       patientId: screening.patientId,
