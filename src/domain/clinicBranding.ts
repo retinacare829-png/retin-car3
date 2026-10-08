@@ -1,16 +1,16 @@
 export const clinicThemes = {
-  retina: { label: "RetinaCare", primary: "#087a70", dark: "#075e57", soft: "#e8f6f3", sidebar: "#123e3a", accent: "#9ee3d8" },
+  retina: { label: "RetinaCare", primary: "#456e68", dark: "#456e68", soft: "#a4d0a1", sidebar: "#456e68", accent: "#eea79e" },
   ocean: { label: "Océano", primary: "#14679e", dark: "#105479", soft: "#e7f4fb", sidebar: "#143a52", accent: "#8ed8f3" },
   violet: { label: "Violeta", primary: "#684db2", dark: "#543c93", soft: "#f0ebfb", sidebar: "#342853", accent: "#cfb8ff" },
   sunset: { label: "Atardecer", primary: "#a45139", dark: "#873f2c", soft: "#fff1eb", sidebar: "#59362c", accent: "#ffcab2" },
 } as const;
 
-export type ClinicTheme = keyof typeof clinicThemes;
+export type ClinicTheme = keyof typeof clinicThemes | "logo";
 
 export interface ClinicPalette { primary: string; dark: string; soft: string; sidebar: string; accent: string; }
 
 export function isClinicTheme(value: string): value is ClinicTheme {
-  return Object.hasOwn(clinicThemes, value);
+  return value === "logo" || Object.hasOwn(clinicThemes, value);
 }
 
 export const CLINIC_LOGO_MAX_BYTES = 1024 * 1024;

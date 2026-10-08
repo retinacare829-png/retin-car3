@@ -4,6 +4,7 @@ import { isClinicTheme, paletteFromPixels, validateClinicLogo, validateLogoDimen
 describe("identidad visual por clínica", () => {
   it("solo acepta paletas definidas", () => {
     expect(isClinicTheme("ocean")).toBe(true);
+    expect(isClinicTheme("logo")).toBe(true);
     expect(isClinicTheme("javascript:alert(1)")).toBe(false);
   });
 
@@ -30,6 +31,6 @@ describe("identidad visual por clínica", () => {
   });
 
   it("vuelve al tema RetinaCare si el logo no contiene colores utilizables", () => {
-    expect(paletteFromPixels(new Uint8ClampedArray(400).fill(255)).primary).toBe("#087a70");
+    expect(paletteFromPixels(new Uint8ClampedArray(400).fill(255)).primary).toBe("#456e68");
   });
 });

@@ -31,7 +31,9 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
   const { activeOrganization, error, loading, organizations, selectOrganization, registerClinic, saveBranding, logoRevision } = useOrganizationContext(user);
   const [clinicLogoUrl, setClinicLogoUrl] = useState<string | null>(null);
   const [logoPalette, setLogoPalette] = useState<ClinicPalette | null>(null);
-  const palette = logoPalette ?? clinicThemes.retina;
+  const palette = activeOrganization?.organization.brandTheme === "logo" && logoPalette
+    ? logoPalette
+    : clinicThemes.retina;
   const themeStyle = {
     "--rc-primary": palette.primary, "--rc-primary-dark": palette.dark,
     "--rc-primary-soft": palette.soft, "--rc-sidebar-bg": palette.sidebar,
@@ -96,7 +98,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
           {activeOrganization && activePage === "home" ? <OperationalHome organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} onNavigate={navigate} /> : null}
           {activeOrganization && ["patients", "screenings", "workflow"].includes(activePage) ? <Suspense fallback={<LoadingState label="Cargando módulo clínico" />}><PatientManagement initialFocus={activePage as "patients" | "screenings" | "workflow"} organizationId={activeOrganization.organization.id} role={activeOrganization.role} user={user} /></Suspense> : null}
           {activeOrganization && activePage === "reports" ? <Suspense fallback={<LoadingState label="Cargando reportes" />}><ReportsPage adapter={reportsAdapter} organizationId={activeOrganization.organization.id} organizationName={activeOrganization.organization.name} role={activeOrganization.role} /></Suspense> : null}
-          {activeOrganization && activePage === "settings" && can(activeOrganization.role, "organization:manage") ? <ClinicSettings context={activeOrganization} userEmail={user.email ?? "Usuario RetinaCare"} onRegisterClinic={registerClinic} onSaveBranding={saveBranding} /> : null}
+          {activeOrganization && activePage === "settings" && can(activeOrganization.role, "organization:manage") ? <ClinicSettings context={activeOrganization} savedLogoPalette={logoPalette} userEmail={user.email ?? "Usuario RetinaCare"} onRegisterClinic={registerClinic} onSaveBranding={saveBranding} /> : null}
         </main>
       </div>
     </div>

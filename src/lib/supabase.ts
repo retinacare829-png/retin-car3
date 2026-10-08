@@ -55,7 +55,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
           created_by: string | null;
-          brand_theme: "retina" | "ocean" | "violet" | "sunset";
+          brand_theme: "retina" | "logo" | "ocean" | "violet" | "sunset";
           logo_path: string | null;
         };
         Insert: {
@@ -70,7 +70,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
-          brand_theme?: "retina" | "ocean" | "violet" | "sunset";
+          brand_theme?: "retina" | "logo" | "ocean" | "violet" | "sunset";
           logo_path?: string | null;
         };
         Update: {
@@ -85,7 +85,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           created_by?: string | null;
-          brand_theme?: "retina" | "ocean" | "violet" | "sunset";
+          brand_theme?: "retina" | "logo" | "ocean" | "violet" | "sunset";
           logo_path?: string | null;
         };
         Relationships: [];

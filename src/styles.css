@@ -1291,7 +1291,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .clinic-settings-side, .clinic-settings-form { display: grid; gap: 16px; }
 .clinic-settings-form label { display: grid; gap: 8px; font-weight: 700; }
 .clinic-settings-form input[type="text"], .clinic-settings-form input:not([type]) { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--rc-border); border-radius: 8px; }
-.clinic-settings-form input[type="file"] { width: 100%; max-width: 100%; font-size: .85rem; }
 .clinic-logo-preview { display: flex; align-items: center; gap: 16px; padding: 10px; border: 1px solid var(--rc-border); border-radius: 9px; background: #fff; }
 .clinic-logo-preview img { display: block; width: 120px; height: 88px; padding: 5px; flex: 0 0 auto; object-fit: contain; border: 1px solid var(--rc-border); border-radius: 7px; }
 .clinic-logo-preview > div { display: grid; gap: 9px; }
@@ -1301,6 +1300,49 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .clinic-settings-error { color: #84271f; background: #fff0ee; }
 .clinic-settings-success { color: #175847; background: #e9f7ef; }
 @media (max-width: 920px) { .clinic-settings-grid { grid-template-columns: 1fr; } }
+/* Identidad visual: carpeta interactiva y elección explícita de paleta. */
+.clinic-folder-dropzone { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; min-height: 158px; padding: 20px; border: 2px dashed var(--rc-primary); border-radius: 15px; color: var(--rc-primary-dark); background: #fff; transition: background .18s ease, border-style .18s ease; }
+.clinic-folder-dropzone.is-dragging { border-style: solid; background: var(--rc-primary-soft); }
+.clinic-folder-art { position: relative; display: grid; width: 92px; height: 88px; flex: 0 0 auto; place-items: center; color: var(--rc-primary); }
+.clinic-folder-art > span { position: absolute; top: 10px; left: 22px; width: 37px; height: 48px; border: 1px solid var(--rc-primary); border-radius: 4px; background: #fff; transform: rotate(-13deg); transition: transform .2s ease; }
+.clinic-folder-art > span:nth-child(2) { left: 33px; background: var(--rc-accent); transform: rotate(10deg); }
+.clinic-folder-art > svg { position: relative; z-index: 1; margin-top: 22px; filter: drop-shadow(0 3px 0 var(--rc-primary-soft)); }
+.clinic-folder-dropzone:hover .clinic-folder-art > span:first-child, .clinic-folder-dropzone.is-dragging .clinic-folder-art > span:first-child { transform: translate(-9px, -9px) rotate(-22deg); }
+.clinic-folder-dropzone:hover .clinic-folder-art > span:nth-child(2), .clinic-folder-dropzone.is-dragging .clinic-folder-art > span:nth-child(2) { transform: translate(8px, -11px) rotate(18deg); }
+.clinic-folder-copy { display: grid; gap: 5px; flex: 1 1 190px; }
+.clinic-folder-copy strong { font-size: 1rem; }
+.clinic-folder-copy small { color: var(--rc-primary-dark); font-weight: 600; line-height: 1.45; }
+.clinic-folder-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--rc-primary); border-radius: 9px; color: #fff; background: var(--rc-primary); font-weight: 800; }
+.clinic-folder-button:hover:not(:disabled) { background: var(--rc-primary-dark); }
+.clinic-folder-button:focus-visible, .clinic-palette-option:focus-within { outline: 3px solid var(--rc-accent); outline-offset: 3px; }
+.clinic-palette-picker { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.clinic-palette-picker legend { margin-bottom: 5px; padding: 0; color: var(--rc-primary-dark); font-size: 1rem; font-weight: 800; }
+.clinic-palette-picker > p { margin: 0 0 4px; color: var(--rc-primary-dark); font-size: .87rem; }
+.clinic-settings-form .clinic-palette-option { display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: start; gap: 7px 12px; padding: 14px; border: 1px solid var(--rc-primary); border-radius: 12px; color: var(--rc-primary-dark); background: #fff; cursor: pointer; }
+.clinic-settings-form .clinic-palette-option.is-selected { border-width: 2px; background: var(--rc-primary-soft); }
+.clinic-settings-form .clinic-palette-option.is-unavailable { opacity: .65; cursor: not-allowed; }
+.clinic-palette-option input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--rc-primary); }
+.clinic-palette-option > span:nth-child(2) { display: grid; gap: 3px; }
+.clinic-palette-option strong { font-size: .95rem; }
+.clinic-palette-option small { color: var(--rc-primary-dark); font-size: .78rem; font-weight: 600; }
+.clinic-palette-swatches { display: flex; flex-wrap: wrap; gap: 7px 12px; grid-column: 2; }
+.clinic-palette-color { display: inline-flex; align-items: center; gap: 5px; }
+.clinic-palette-color i { display: block; width: 26px; height: 26px; flex: 0 0 auto; border: 1px solid var(--rc-primary); border-radius: 50%; }
+.clinic-palette-color small { max-width: 145px; overflow-wrap: anywhere; font-size: .68rem; }
+.clinic-settings-form > .primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; }
+.clinic-settings .clinic-settings-error { color: var(--rc-primary-dark); background: var(--rc-accent); }
+.clinic-settings .clinic-settings-success { color: var(--rc-primary-dark); background: var(--rc-primary-soft); }
+@media (max-width: 660px) {
+  .clinic-folder-dropzone { gap: 10px; padding: 14px; }
+  .clinic-folder-art { width: 62px; height: 65px; }
+  .clinic-folder-art > span { transform: scale(.75) rotate(-13deg); transform-origin: top left; }
+  .clinic-folder-art > span:nth-child(2) { transform: scale(.75) rotate(10deg); }
+  .clinic-folder-art > svg { width: 40px; height: 40px; margin-top: 17px; }
+  .clinic-drop-instruction { display: none; }
+  .clinic-folder-button { width: 100%; }
+  .clinic-palette-color small { font-size: .63rem; }
+}
+@media (prefers-reduced-motion: reduce) { .clinic-folder-dropzone, .clinic-folder-art > span { transition: none; } }
 .topbar-search { display: flex; min-width: 190px; max-width: 360px; flex: 1; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--rc-border); border-radius: 9px; color: var(--rc-muted); background: #f8fbfa; }
 .topbar-search input { min-height: 40px; border: 0; padding: 0; background: transparent; }
 .topbar-search input:focus { outline: 0; }
