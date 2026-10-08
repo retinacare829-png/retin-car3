@@ -150,6 +150,45 @@ export interface Database {
         };
         Relationships: [];
       };
+      patient_accounts: {
+        Row: {
+          id: string;
+          organization_id: string;
+          patient_id: string;
+          user_id: string;
+          status: "active" | "suspended" | "revoked";
+          created_by: string;
+          revoked_by: string | null;
+          created_at: string;
+          updated_at: string;
+          revoked_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          patient_id: string;
+          user_id: string;
+          status?: "active" | "suspended" | "revoked";
+          created_by: string;
+          revoked_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          revoked_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          patient_id?: string;
+          user_id?: string;
+          status?: "active" | "suspended" | "revoked";
+          created_by?: string;
+          revoked_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          revoked_at?: string | null;
+        };
+        Relationships: [];
+      };
       patients: {
         Row: {
           id: string;
@@ -231,6 +270,8 @@ export interface Database {
           closed_by: string | null;
           deleted_at: string | null;
           deleted_by: string | null;
+          patient_published_at: string | null;
+          patient_published_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -248,6 +289,8 @@ export interface Database {
           closed_by?: string | null;
           deleted_at?: string | null;
           deleted_by?: string | null;
+          patient_published_at?: string | null;
+          patient_published_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -265,6 +308,8 @@ export interface Database {
           closed_by?: string | null;
           deleted_at?: string | null;
           deleted_by?: string | null;
+          patient_published_at?: string | null;
+          patient_published_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -562,6 +607,29 @@ export interface Database {
           provisional: boolean;
         }>;
       };
+      link_patient_account: {
+        Args: {
+          target_organization_id: string;
+          target_patient_id: string;
+          target_user_id: string;
+        };
+        Returns: Database["public"]["Tables"]["patient_accounts"]["Row"];
+      };
+      revoke_patient_account: {
+        Args: {
+          target_organization_id: string;
+          target_patient_id: string;
+        };
+        Returns: Database["public"]["Tables"]["patient_accounts"]["Row"];
+      };
+      publish_screening_to_patient: {
+        Args: { target_screening_id: string };
+        Returns: Database["public"]["Tables"]["screenings"]["Row"];
+      };
+      get_patient_portal_snapshot: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
       can_generate_professional_reports: {
         Args: {
           target_organization_id: string;
@@ -572,6 +640,7 @@ export interface Database {
     Enums: {
       organization_role: "clinic_admin" | "technical_staff" | "authorized_professional";
       organization_member_status: "active" | "invited" | "suspended";
+      patient_account_status: "active" | "suspended" | "revoked";
       patient_sex: "female" | "male" | "other" | "unknown";
       diabetes_type: "type_1" | "type_2" | "gestational" | "other" | "unknown";
       audit_action: AuditAction;
