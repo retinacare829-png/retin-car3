@@ -1718,11 +1718,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .radial-quick-action { display: grid; width: 52px; height: 52px; place-items: center; border: 2px solid var(--rc-accent); border-radius: 50%; color: var(--rc-primary-dark); background: #fff; cursor: pointer; box-shadow: 0 5px 16px color-mix(in srgb, var(--rc-primary-dark) 28%, transparent); transition: transform .2s ease, background .2s ease; transition-delay: calc(var(--radial-index) * 45ms); }
 .radial-quick-action:hover, .radial-quick-action:focus-visible { background: var(--rc-primary-soft); transform: translateX(5px); }
 .radial-sidebar nav { position: absolute; z-index: 2; top: 50%; left: 318px; display: grid; width: 205px; gap: 10px; transform: translateY(-50%); }
-.radial-nav-item { display: flex; min-height: 44px; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid transparent; border-radius: 12px; color: #fff; background: transparent; font-size: .9rem; font-weight: 700; text-align: left; cursor: pointer; transition: background .2s ease, transform .2s ease; transition-delay: calc(var(--radial-index) * 35ms); }
-.radial-nav-item:nth-child(1), .radial-nav-item:nth-child(6) { transform: translateX(-15px); }
-.radial-nav-item:nth-child(2), .radial-nav-item:nth-child(5) { transform: translateX(-7px); }
+.radial-nav-entry { position: relative; min-width: 0; transition: transform .2s ease; transition-delay: calc(var(--radial-index) * 35ms); }
+.radial-nav-entry:nth-child(1), .radial-nav-entry:nth-child(6) { transform: translateX(-15px); }
+.radial-nav-entry:nth-child(2), .radial-nav-entry:nth-child(5) { transform: translateX(-7px); }
+.radial-nav-item { display: flex; width: 100%; min-height: 44px; align-items: center; gap: 10px; padding: 9px 39px 9px 12px; border: 1px solid transparent; border-radius: 12px; color: #fff; background: transparent; font-size: .9rem; font-weight: 700; text-align: left; cursor: pointer; transition: background .2s ease; }
 .radial-nav-item:hover, .radial-nav-item:focus-visible { background: color-mix(in srgb, var(--rc-primary) 45%, transparent); }
 .radial-nav-item.active { border-color: var(--rc-accent); color: var(--rc-primary-dark); background: #fff; }
+.radial-nav-help { position: absolute; top: 4px; right: 4px; display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 9px; color: #fff; background: transparent; cursor: pointer; }
+.radial-nav-entry.active .radial-nav-help { color: var(--rc-primary-dark); }
+.radial-nav-help:hover, .radial-nav-help:focus-visible, .radial-nav-help[aria-expanded="true"] { color: var(--rc-primary-dark); background: var(--rc-primary-soft); }
+.radial-nav-description { margin: 4px 0 2px; padding: 9px 11px; border: 1px solid var(--rc-accent); border-radius: 9px; color: var(--rc-primary-dark); background: #fff; font-size: .78rem; line-height: 1.35; }
 .radial-menu-toggle { position: fixed; z-index: 52; bottom: 22px; left: 22px; display: grid; width: 54px; height: 54px; place-items: center; border: 2px solid var(--rc-accent); border-radius: 50%; color: var(--rc-primary-dark); background: #fff; cursor: pointer; box-shadow: 0 5px 20px color-mix(in srgb, var(--rc-primary-dark) 30%, transparent); }
 .radial-menu-toggle:hover { background: var(--rc-primary-soft); }
 
@@ -1733,11 +1738,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .radial-clinic-name { top: 145px; left: 24px; width: calc(100% - 48px); text-align: left; }
   .radial-quick-actions { display: none; }
   .radial-sidebar nav { position: relative; top: auto; left: auto; width: auto; gap: 8px; margin: 230px 20px 90px; transform: none; }
-  .radial-nav-item, .radial-nav-item:nth-child(1), .radial-nav-item:nth-child(2), .radial-nav-item:nth-child(5), .radial-nav-item:nth-child(6) { min-height: 48px; transform: none; }
+  .radial-nav-entry, .radial-nav-entry:nth-child(1), .radial-nav-entry:nth-child(2), .radial-nav-entry:nth-child(5), .radial-nav-entry:nth-child(6) { transform: none; }
+  .radial-nav-item { min-height: 48px; }
   .radial-nav-item { border-color: color-mix(in srgb, var(--rc-accent) 40%, transparent); background: color-mix(in srgb, var(--rc-primary) 35%, transparent); }
 }
 
-@media (prefers-reduced-motion: reduce) { .radial-sidebar, .radial-quick-action, .radial-nav-item { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .radial-sidebar, .radial-quick-action, .radial-nav-item, .radial-nav-entry { transition: none; } }
 
 @media print {
   .radial-sidebar, .radial-menu-toggle, .radial-scrim { display: none !important; }

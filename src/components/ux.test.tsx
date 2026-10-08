@@ -108,6 +108,18 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByRole("button", { name: "Abrir navegación" })).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("explica cada sección al tocar la ayuda del menú", () => {
+    render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
+    fireEvent.click(screen.getByRole("button", { name: "Abrir navegación" }));
+    const help = screen.getByRole("button", { name: "¿Para qué sirve Workflow Clínico?" });
+    expect(help).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(help);
+    expect(help).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("El profesional revisa las imágenes");
+    fireEvent.click(help);
+    expect(help).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("explica el estado de controles que todavía no tienen bandeja conectada", () => {
     render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
     fireEvent.click(screen.getByRole("button", { name: "Notificaciones" }));

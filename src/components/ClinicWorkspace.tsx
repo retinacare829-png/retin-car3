@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Bell, Building2, ClipboardList, FileText, Home, LogOut, Menu, Search, Settings, Stethoscope, UsersRound, X } from "lucide-react";
+import { Bell, Building2, CircleHelp, ClipboardList, FileText, Home, LogOut, Menu, Search, Settings, Stethoscope, UsersRound, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { roleLabels } from "../domain/roles";
 import { useOrganizationContext } from "../hooks/useOrganizationContext";
@@ -19,12 +19,12 @@ const ReportsPage = lazy(() => import("./ReportsPage").then((module) => ({ defau
 interface ClinicWorkspaceProps { user: User; onSignOut: () => Promise<void>; }
 
 const navigation = [
-  { id: "home" as const, label: "Inicio", icon: Home },
-  { id: "patients" as const, label: "Pacientes", icon: UsersRound },
-  { id: "screenings" as const, label: "Screenings", icon: Stethoscope },
-  { id: "workflow" as const, label: "Workflow Clínico", icon: ClipboardList },
-  { id: "reports" as const, label: "Reportes", icon: FileText, permission: "reports:generate" as const },
-  { id: "settings" as const, label: "Configuración", icon: Settings, permission: "organization:manage" as const },
+  { id: "home" as const, label: "Inicio", description: "Resumen de la clínica y accesos a las tareas más frecuentes.", icon: Home },
+  { id: "patients" as const, label: "Pacientes", description: "Buscá o registrá pacientes y consultá sus visitas.", icon: UsersRound },
+  { id: "screenings" as const, label: "Screenings", description: "Creá una nueva visita, cargá imágenes de ambos ojos y revisá su calidad.", icon: Stethoscope },
+  { id: "workflow" as const, label: "Workflow Clínico", description: "El profesional revisa las imágenes, deja su decisión y completa el seguimiento.", icon: ClipboardList },
+  { id: "reports" as const, label: "Reportes", description: "Consultá e imprimí la actividad de la clínica; no es un diagnóstico de IA.", icon: FileText, permission: "reports:generate" as const },
+  { id: "settings" as const, label: "Configuración", description: "Administrá la identidad visual y los datos de tu clínica.", icon: Settings, permission: "organization:manage" as const },
 ];
 
 export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
@@ -46,6 +46,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
   );
   const [activePage, setActivePage] = useState<WorkspaceDestination>("home");
   const [radialOpen, setRadialOpen] = useState(false);
+  const [helpPage, setHelpPage] = useState<WorkspaceDestination | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
   const allowedNavigation = navigation.filter((item) => !item.permission || (activeOrganization && can(activeOrganization.role, item.permission)));
@@ -81,7 +82,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
     }
     return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [activeOrganization?.organization.logoPath, logoRevision]);
-  const navigate = (page: WorkspaceDestination) => { setActivePage(page); setRadialOpen(false); };
+  const navigate = (page: WorkspaceDestination) => { setActivePage(page); setRadialOpen(false); setHelpPage(null); };
   return (
     <div className="clinical-app-shell radial-workspace" style={themeStyle}>
       <ToastViewport />
@@ -92,7 +93,7 @@ export function ClinicWorkspace({ user, onSignOut }: ClinicWorkspaceProps) {
         <div className="radial-clinic-logo">{clinicLogoUrl ? <img src={clinicLogoUrl} alt={`Logo de ${activeOrganization?.organization.name ?? "la clínica"}`} /> : <Building2 aria-hidden="true" size={68} />}</div>
         <div className="radial-clinic-name">{activeOrganization?.organization.name ?? "Clínica"}</div>
         <div className="radial-quick-actions" aria-label="Accesos rápidos">{allowedNavigation.slice(0, 3).map(({ id, label, icon: Icon }, index) => <button aria-label={`Acceso rápido: ${label}`} className="radial-quick-action" key={id} onClick={() => navigate(id)} style={{ "--radial-index": index } as CSSProperties} tabIndex={radialOpen ? 0 : -1} title={label} type="button"><Icon aria-hidden="true" size={23} /></button>)}</div>
-        <nav aria-label="Navegación principal">{allowedNavigation.map(({ id, label, icon: Icon }, index) => <button aria-current={activePage === id ? "page" : undefined} className={activePage === id ? "radial-nav-item active" : "radial-nav-item"} key={id} onClick={() => navigate(id)} style={{ "--radial-index": index } as CSSProperties} tabIndex={radialOpen ? 0 : -1} type="button"><Icon aria-hidden="true" size={18} /><span>{label}</span></button>)}</nav>
+        <nav aria-label="Navegación principal">{allowedNavigation.map(({ id, label, description, icon: Icon }, index) => <div className={activePage === id ? "radial-nav-entry active" : "radial-nav-entry"} key={id} style={{ "--radial-index": index } as CSSProperties}><button aria-current={activePage === id ? "page" : undefined} className={activePage === id ? "radial-nav-item active" : "radial-nav-item"} onClick={() => navigate(id)} tabIndex={radialOpen ? 0 : -1} title={description} type="button"><Icon aria-hidden="true" size={18} /><span>{label}</span></button><button aria-expanded={helpPage === id} aria-label={`¿Para qué sirve ${label}?`} className="radial-nav-help" onClick={() => setHelpPage((current) => current === id ? null : id)} tabIndex={radialOpen ? 0 : -1} type="button"><CircleHelp aria-hidden="true" size={17} /></button>{helpPage === id ? <p className="radial-nav-description" role="status">{description}</p> : null}</div>)}</nav>
       </aside>
       <button className="radial-menu-toggle" aria-controls="radial-navigation" aria-expanded={radialOpen} aria-label={radialOpen ? "Cerrar navegación" : "Abrir navegación"} onClick={() => setRadialOpen((current) => !current)} type="button">{radialOpen ? <X aria-hidden="true" size={24} /> : <Menu aria-hidden="true" size={24} />}</button>
 
