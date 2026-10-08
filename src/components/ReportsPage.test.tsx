@@ -22,10 +22,12 @@ describe("ReportsPage", () => {
 
     await waitFor(() => expect(screen.getByText("López, Mariana")).toBeInTheDocument());
     expect(screen.getByRole("tab", { name: /Por paciente/i })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText(/Agrupa la actividad por paciente/)).toBeInTheDocument();
     expect(screen.getByText("Revisado")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: /Por screening/i }));
     expect(screen.getByRole("heading", { name: "Estado de cada screening" })).toBeInTheDocument();
+    expect(screen.getByText(/Muestra cada visita, su calidad/)).toBeInTheDocument();
     expect(screen.getByText("Adecuada")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Ver detalle" }));
     expect(screen.getAllByText("Disponible")).toHaveLength(2);
@@ -33,6 +35,7 @@ describe("ReportsPage", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Operación" }));
     expect(screen.getByRole("heading", { name: "Indicadores de trabajo" })).toBeInTheDocument();
+    expect(screen.getByText(/no interpreta imágenes ni emite diagnósticos/)).toBeInTheDocument();
     expect(screen.getByText("Pendientes de revisión")).toBeInTheDocument();
   });
 

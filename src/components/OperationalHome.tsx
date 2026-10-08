@@ -64,6 +64,17 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
           {actions.map(({ title, description, icon: Icon, destination }) => <button className="home-action" key={title} onClick={() => onNavigate(destination)} type="button"><Icon aria-hidden="true" size={20} /><span><strong>{title}</strong><small>{description}</small></span><ArrowRight aria-hidden="true" size={17} /></button>)}
         </div>
       </section>
+      <section className="home-flow-guide" aria-labelledby="home-flow-guide-title">
+        <div className="home-section-heading"><div><p className="eyebrow">Guía rápida</p><h2 id="home-flow-guide-title">Cómo crear una nueva visita</h2></div><Stethoscope aria-hidden="true" size={19} /></div>
+        <p>Un screening registra una visita y sus imágenes. La conclusión clínica siempre la registra un profesional autorizado; esta guía no genera diagnósticos.</p>
+        <ol>
+          <li><strong>Seleccione o registre al paciente.</strong> Abra su ficha clínica.</li>
+          <li><strong>Pulse “Nueva visita”.</strong> Cree el screening y guarde el estado inicial.</li>
+          <li><strong>Cargue OD y OI.</strong> Revise la calidad de cada imagen.</li>
+          <li><strong>Continúe al workflow.</strong> Complete la revisión profesional y el seguimiento que corresponda.</li>
+        </ol>
+        {can(role, "screenings:create") ? <button className="secondary-button" onClick={() => onNavigate("screenings")} type="button"><Stethoscope aria-hidden="true" size={17} />Abrir screenings</button> : <p className="home-guide-note">Su rol puede consultar el flujo; la creación de screenings corresponde a personal autorizado.</p>}
+      </section>
       <p className="home-scope-note">{betaAiUnavailableMessage} La revisión clínica corresponde al profesional autorizado.</p>
     </section>
   );

@@ -88,6 +88,7 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByRole("heading", { name: "Resumen clínico" })).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("Revisiones pendientes")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cómo crear una nueva visita" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Reportes" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Actividad clínica trazable" })).toBeInTheDocument());
     expect(screen.getByText("Conector de reportes pendiente")).toBeInTheDocument();
@@ -105,6 +106,13 @@ describe("UX de la demo clínica", () => {
     fireEvent.click(screen.getByRole("button", { name: "Abrir navegación" }));
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.getByRole("button", { name: "Abrir navegación" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("explica el estado de controles que todavía no tienen bandeja conectada", () => {
+    render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
+    fireEvent.click(screen.getByRole("button", { name: "Notificaciones" }));
+    expect(screen.getByRole("status")).toHaveTextContent("No hay notificaciones nuevas en esta beta.");
+    expect(screen.getByRole("button", { name: "Notificaciones" })).toHaveAttribute("aria-expanded", "true");
   });
 
   it("ofrece accesos rápidos y conserva el aviso de IA", () => {
