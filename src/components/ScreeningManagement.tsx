@@ -15,7 +15,6 @@ import type { User } from "@supabase/supabase-js";
 import type { Patient } from "../domain/patient";
 import type { Role } from "../domain/roles";
 import {
-  betaAiUnavailableMessage,
   imageQualityReasonLabels,
   imageQualityReasonValues,
   imageQualityStatusLabels,
@@ -38,6 +37,7 @@ import { useReducedMotion } from "../hooks/useReducedMotion";
 import { validateRetinalImageFile } from "../domain/supabaseIntegration";
 import { getStatusTone } from "../domain/statusTone";
 import { ClinicalWorkflow } from "./ClinicalWorkflow";
+import { RetinalAnalysisPanel } from "./RetinalAnalysisPanel";
 import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 import "./ImageCaptureControl.css";
 
@@ -364,10 +364,12 @@ function ScreeningWorkspace({ activeScreening, screeningsApi }: ScreeningWorkspa
         />
       ) : null}
 
-      <div className="ai-placeholder" role="status">
-        <strong>{betaAiUnavailableMessage}</strong>
-        <code>NOT_AVAILABLE</code>
-      </div>
+      {screeningsApi.canDownloadImages ? <RetinalAnalysisPanel
+        key={`${activeScreening.organizationId}:${activeScreening.id}:${selectedImage?.id ?? activeLaterality}:${selectedImage?.updatedAt ?? ""}:${selectedImage?.storagePath ?? ""}`}
+        image={selectedImage}
+        qualityStatus={selectedQuality?.qualityStatus ?? "PENDIENTE"}
+        getImageUrl={screeningsApi.createSignedImageUrl}
+      /> : null}
     </div>
   );
 }

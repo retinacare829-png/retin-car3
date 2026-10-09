@@ -87,7 +87,7 @@ export function ReportsPage({ organizationId, organizationName, role, adapter }:
 
       <aside className="reports-disclaimer" role="note">
         <FileText aria-hidden="true" size={20} />
-        <div><strong>Reporte profesional no diagnóstico</strong><p>Resume actividad, estados operativos y registros de revisión manual. No constituye diagnóstico médico automatizado, no sustituye al oftalmólogo y la IA no está activa en esta beta.</p></div>
+        <div><strong>Reporte profesional no diagnóstico</strong><p>Resume actividad, estados operativos y registros de revisión manual. No constituye diagnóstico médico automatizado ni sustituye al oftalmólogo. Las puntuaciones de la CNN experimental no se incorporan automáticamente a estos reportes.</p></div>
       </aside>
 
       <section className="reports-controls" aria-label="Controles del reporte">

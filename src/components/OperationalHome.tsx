@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, BarChart3, ClipboardList, ImagePlus, LineChart, PieChart, Search, Stethoscope, UserRoundPlus } from "lucide-react";
-import { betaAiUnavailableMessage } from "../domain/screening";
+import { experimentalAiMessage } from "../domain/retinalModel";
 import { can } from "../domain/permissions";
 import type { Role } from "../domain/roles";
 import { useDashboard } from "../hooks/useDashboard";
@@ -86,7 +86,7 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
         </ol>
         {can(role, "screenings:create") ? <button className="secondary-button" onClick={() => onNavigate("screenings")} type="button"><Stethoscope aria-hidden="true" size={17} />Abrir screenings</button> : <p className="home-guide-note">Su rol puede consultar el flujo; la creación de screenings corresponde a personal autorizado.</p>}
       </section>
-      <p className="home-scope-note">{betaAiUnavailableMessage} La revisión clínica corresponde al profesional autorizado.</p>
+      <p className="home-scope-note">{experimentalAiMessage}</p>
     </section>
   );
 }

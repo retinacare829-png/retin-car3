@@ -23,7 +23,7 @@ import {
 } from "../domain/clinicalWorkflow";
 import type { Patient } from "../domain/patient";
 import type { Role } from "../domain/roles";
-import { betaAiUnavailableMessage, retinalImageLateralityLabels, type ScreeningDetail } from "../domain/screening";
+import { retinalImageLateralityLabels, type ScreeningDetail } from "../domain/screening";
 import { useClinicalWorkflow } from "../hooks/useClinicalWorkflow";
 import { supabase } from "../lib/supabase";
 import { friendlyError, notify } from "../lib/appEvents";
@@ -100,7 +100,7 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
         })}
       </div>
 
-      <div className="ai-placeholder" role="status"><strong>{betaAiUnavailableMessage}</strong><code>NOT_AVAILABLE</code></div>
+      <p className="field-help">La CNN experimental se consulta junto a las imágenes del screening. Sus sugerencias no completan esta revisión ni publican reportes al paciente.</p>
       <aside className="workflow-guide" role="note"><strong>¿Qué sigue en este flujo?</strong><span>Primero confirme las imágenes OD/OI y su calidad. Luego complete la revisión profesional; solo después podrá compartir un resumen con el paciente o cerrar el screening.</span></aside>
       {workflow.error ? <div className="form-error" role="alert">{workflow.error}</div> : null}
       {workflow.loading ? <LoadingState label="Cargando workflow clínico" /> : null}

@@ -139,7 +139,7 @@ describe("UX de la demo clínica", () => {
     expect(onNavigate).toHaveBeenCalledWith("screenings");
     expect(screen.getByText("3", { selector: ".home-metrics strong" })).toBeInTheDocument();
     expect(screen.getByText("Seguimientos para hoy")).toBeInTheDocument();
-    expect(screen.getByText(/Módulo de Inteligencia Artificial no disponible en esta versión beta/)).toBeInTheDocument();
+    expect(screen.getByText(/CNN experimental disponible en Screenings/)).toBeInTheDocument();
   });
 
   it("cambia el gráfico mensual entre barras, líneas y pastel desde sus botones", () => {

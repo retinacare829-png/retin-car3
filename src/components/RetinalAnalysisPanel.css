@@ -1,0 +1,109 @@
+.screening-workspace > .retinal-analysis-panel { grid-column: 1 / -1; }
+
+.retinal-analysis-panel {
+  container-type: inline-size;
+  min-width: 0;
+  padding: var(--rc-space-6);
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  background: var(--rc-surface);
+  color: var(--rc-text);
+  overflow-wrap: anywhere;
+}
+
+.retinal-analysis-panel .retinal-analysis-intro { min-width: 0; max-width: 70ch; }
+.retinal-analysis-panel .retinal-analysis-result { min-width: 0; }
+
+.retinal-analysis-panel .retinal-analysis-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--rc-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--rc-space-4);
+}
+
+.retinal-analysis-panel h3 { margin-bottom: 0; }
+.retinal-analysis-panel .retinal-analysis-disclaimer,
+.retinal-analysis-panel .retinal-analysis-context,
+.retinal-analysis-panel .retinal-analysis-score-help {
+  color: var(--rc-muted);
+  font-size: .8125rem;
+  line-height: 1.65;
+}
+
+.retinal-analysis-panel .retinal-analysis-disclaimer {
+  padding: var(--rc-space-3) var(--rc-space-4);
+  border-left: 3px solid var(--rc-warning);
+  border-radius: var(--rc-radius-sm);
+  background: var(--rc-bg);
+}
+
+.retinal-analysis-panel .retinal-analysis-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--rc-space-3);
+}
+
+.retinal-analysis-panel .retinal-analysis-actions small {
+  flex: 1 1 180px;
+  color: var(--rc-muted);
+}
+
+.retinal-analysis-panel .retinal-analysis-progress,
+.retinal-analysis-panel .retinal-analysis-error {
+  margin: var(--rc-space-3) 0 0;
+  font-size: .8125rem;
+}
+
+.retinal-analysis-panel .retinal-analysis-progress { color: var(--rc-primary-dark); }
+.retinal-analysis-panel .retinal-analysis-progress:empty { margin: 0; }
+.retinal-analysis-panel .retinal-analysis-error { color: var(--rc-danger); }
+.retinal-analysis-panel .retinal-analysis-result {
+  margin-top: var(--rc-space-6);
+  padding-top: var(--rc-space-4);
+  border-top: 1px solid var(--rc-border);
+}
+
+.retinal-analysis-panel .retinal-analysis-result-label { margin-bottom: var(--rc-space-1); font-size: .8125rem; }
+.retinal-analysis-panel .retinal-analysis-category { display: block; color: var(--rc-primary-dark); font-size: 1.125rem; }
+.retinal-analysis-panel .retinal-analysis-score-help { margin: var(--rc-space-3) 0 var(--rc-space-4); }
+.retinal-analysis-panel .retinal-analysis-scores { display: grid; gap: var(--rc-space-3); margin: 0; padding: 0; list-style: none; }
+.retinal-analysis-panel .retinal-analysis-score-heading { display: flex; justify-content: space-between; gap: var(--rc-space-3); font-size: .8125rem; }
+.retinal-analysis-panel .retinal-analysis-score-value { font-variant-numeric: tabular-nums; flex-shrink: 0; color: var(--rc-muted); }
+.retinal-analysis-panel meter { display: block; width: 100%; height: 12px; margin-top: var(--rc-space-1); accent-color: var(--rc-primary); }
+.retinal-analysis-panel meter::-webkit-meter-bar { border: 0; border-radius: var(--rc-radius-sm); background: var(--rc-primary-soft); }
+.retinal-analysis-panel meter::-webkit-meter-optimum-value { background: var(--rc-primary); }
+.retinal-analysis-panel meter::-moz-meter-bar { background: var(--rc-primary); }
+.retinal-analysis-panel .retinal-analysis-metadata { display: block; margin-top: var(--rc-space-4); color: var(--rc-muted); }
+
+@container (min-width: 700px) {
+  .retinal-analysis-panel .retinal-analysis-body--with-result {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--rc-space-6);
+  }
+
+  .retinal-analysis-panel .retinal-analysis-body--with-result .retinal-analysis-result {
+    margin-top: 0;
+    padding-top: 0;
+    padding-left: var(--rc-space-6);
+    border-top: 0;
+    border-left: 1px solid var(--rc-border);
+  }
+}
+
+@media (max-width: 640px) {
+  .retinal-analysis-panel { padding: var(--rc-space-4); }
+  .retinal-analysis-panel .retinal-analysis-actions { align-items: stretch; flex-direction: column; }
+  .retinal-analysis-panel .retinal-analysis-actions small { flex-basis: auto; }
+  .retinal-analysis-panel .retinal-analysis-actions button { width: 100%; min-height: 48px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retinal-analysis-panel *,
+  .retinal-analysis-panel *::before,
+  .retinal-analysis-panel *::after { animation: none !important; transition: none !important; }
+}
