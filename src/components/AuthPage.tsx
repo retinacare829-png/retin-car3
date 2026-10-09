@@ -59,15 +59,17 @@ export function AuthPage({ clientConfigured, onSignIn, onResetPassword }: AuthPa
   return (
     <section className="login-layout" aria-labelledby="login-heading">
       <div className="login-story">
-        <a className="login-brand-link" href="#login-email" aria-label="Ir al inicio de sesión"><img className="login-brand" src="/brand/logo-light.svg" alt="RetinaCare" /></a>
-        <span className="login-edition">Plataforma clínica · Beta</span>
+        <div className="login-photo-frame" aria-hidden="true">
+          <img className="login-photo" src="/retinacare-eye.jpeg" alt="" />
+        </div>
         <div className="login-story-content">
+          <a className="login-brand-link" href="#login-email" aria-label="Ir al inicio de sesión"><img className="login-brand" src="/brand/logo-light.svg" alt="RetinaCare" /></a>
+          <span className="login-edition">Plataforma clínica · Beta</span>
           <p className="login-overline">Ver antes. Cuidar mejor.</p>
           <h1 id="login-heading">Cada imagen cuenta una historia.</h1>
           <p>Organizá pacientes, capturas y revisiones en un solo lugar.</p>
+          <div className="login-story-steps" aria-label="Flujo clínico"><span><i>01</i> Captura</span><span><i>02</i> Revisión</span><span><i>03</i> Seguimiento</span></div>
         </div>
-        <div className="login-retina-art" aria-hidden="true"><img src="/brand/retina.svg" alt="" /><span className="login-art-caption">Una mirada más clara</span></div>
-        <div className="login-story-steps" aria-label="Flujo clínico"><span><i>01</i> Captura</span><span><i>02</i> Revisión</span><span><i>03</i> Seguimiento</span></div>
       </div>
 
       <div className="login-access">

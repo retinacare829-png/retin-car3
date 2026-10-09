@@ -55,8 +55,10 @@ describe("UX de la demo clínica", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("renderiza logo y acceso clínico en login", () => {
-    render(<AuthPage clientConfigured onResetPassword={vi.fn()} onSignIn={vi.fn()} />);
+    const { container } = render(<AuthPage clientConfigured onResetPassword={vi.fn()} onSignIn={vi.fn()} />);
     expect(screen.getByRole("img", { name: "RetinaCare" })).toBeInTheDocument();
+    expect(container.querySelector(".login-photo")).toHaveAttribute("src", "/retinacare-eye.jpeg");
+    expect(container.querySelector(".login-retina-art")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /Cada imagen cuenta una historia/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Iniciar sesión" })).toBeEnabled();
     const password = screen.getByLabelText("Contraseña");
