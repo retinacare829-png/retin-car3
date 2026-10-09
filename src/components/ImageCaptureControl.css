@@ -1,12 +1,59 @@
-.image-capture-row small {
-  display: block;
-  margin-top: 4px;
-  color: #53635f;
+.image-capture-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: start;
+  gap: 12px 8px;
+  padding: 16px 0;
+  border-top: 1px solid var(--rc-border);
 }
 
-.image-upload-error {
-  grid-column: 1 / -1;
-  margin: 0;
-  color: #9d2f36;
-  font-size: 0.88rem;
+.capture-eye-marker {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px dashed var(--rc-border);
+  border-radius: var(--rc-radius-sm);
+  color: var(--rc-muted);
+  font-size: .75rem;
+  font-weight: 500;
 }
+
+.has-image .capture-eye-marker {
+  border-style: solid;
+  border-color: var(--rc-primary);
+  background: var(--rc-primary-soft);
+  color: var(--rc-primary-dark);
+}
+
+.capture-file-info { min-width: 0; }
+.capture-file-info strong { display: block; color: var(--rc-text); font-size: .8125rem; font-weight: 500; line-height: 1.5; }
+.capture-file-info > span { display: block; margin-top: 4px; color: var(--rc-muted); font-size: .75rem; line-height: 1.5; overflow-wrap: anywhere; }
+.image-capture-row small { display: block; margin-top: 8px; color: var(--rc-muted); font-size: .6875rem; line-height: 1.5; }
+
+.image-capture-row .file-button {
+  position: relative;
+  display: inline-flex;
+  grid-column: 2;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  overflow: hidden;
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius-sm);
+  background: var(--rc-surface);
+  color: var(--rc-primary-dark);
+  font-size: .75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.image-capture-row .file-button:hover { border-color: var(--rc-primary); background: var(--rc-primary-soft); }
+.image-capture-row .file-button:focus-within { outline: 2px solid var(--rc-primary); outline-offset: 3px; }
+.image-capture-row .file-button:has(input:disabled) { opacity: .5; cursor: not-allowed; }
+.image-capture-row .file-button input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.image-capture-row > .icon-button { grid-column: 3; grid-row: 1; width: 36px; min-width: 36px; height: 36px; padding: 6px; }
+.image-upload-error { grid-column: 1 / -1; margin: 0; color: var(--rc-danger); font-size: .8125rem; line-height: 1.6; overflow-wrap: anywhere; }

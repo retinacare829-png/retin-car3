@@ -52,8 +52,9 @@ export function PatientPortalAccessPanel({ account, disabled, loading, onLink, o
         </div>
         <span className="status-badge status-neutral">Solo administrador</span>
       </div>
+      <p className="patient-portal-access-description">Vincule la cuenta del paciente para darle acceso a sus resultados aprobados.</p>
 
-      {loading ? <p className="patient-portal-access-state">Consultando vínculo de cuenta…</p> : null}
+      {loading ? <p className="patient-portal-access-state" role="status">Consultando vínculo de cuenta…</p> : null}
 
       {!loading && account?.status === "active" ? (
         <div className="patient-portal-access-linked" role="status">
@@ -81,6 +82,8 @@ export function PatientPortalAccessPanel({ account, disabled, loading, onLink, o
             UUID de usuario Auth
             <input
               autoComplete="off"
+              aria-describedby="patient-portal-access-help"
+              aria-invalid={Boolean(error)}
               disabled={disabled}
               onChange={(event) => setUserId(event.target.value)}
               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -91,7 +94,7 @@ export function PatientPortalAccessPanel({ account, disabled, loading, onLink, o
           <button className="secondary-button" disabled={disabled || !userId.trim()} type="submit">
             <Link2 aria-hidden="true" size={17} /> Vincular cuenta
           </button>
-          <small>La cuenta debe existir previamente en Supabase Auth. Esta pantalla no crea usuarios ni usa contraseñas o correos para autorizar.</small>
+          <small id="patient-portal-access-help">La cuenta debe existir previamente en Supabase Auth. Esta pantalla no crea usuarios ni usa contraseñas o correos para autorizar.</small>
         </form>
       ) : null}
 

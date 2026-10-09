@@ -7,6 +7,7 @@ import { scalePoint } from "@tanstack/charts/scales/point";
 import { tooltip } from "@tanstack/charts/tooltip";
 import { pie, polar, radialArc } from "@tanstack/charts/polar";
 import type { DashboardMonth } from "../domain/dashboard";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 interface HomeScreeningChartProps {
   months: DashboardMonth[];
@@ -15,9 +16,18 @@ interface HomeScreeningChartProps {
 
 export type HomeChartType = "bar" | "line" | "pie";
 
-const chartColors = ["#456e68", "#eea79e", "#a4d0a1"];
+const chartColors = ["#456e68", "#a3cfa0", "#eda69d", "#2b4741", "#e8c56a", "#5f706d"];
+const chartTooltip = {
+  use: tooltip,
+  className: "rc-chart-tooltip",
+  content: (points: readonly { datum: DashboardMonth }[]) => ({
+    title: points[0]?.datum.label ?? "Actividad",
+    rows: points.map(({ datum }) => ({ label: "Screenings", value: String(datum.total), color: chartColors[0] })),
+  }),
+};
 
 export function HomeScreeningChart({ months, type }: HomeScreeningChartProps) {
+  const reducedMotion = useReducedMotion();
   const definition = useMemo(() => defineChart({
     marks: type === "line"
       ? [lineY(months, { x: "label", y: "total", stroke: chartColors[0], strokeWidth: 3, points: true })]
@@ -28,13 +38,13 @@ export function HomeScreeningChart({ months, type }: HomeScreeningChartProps) {
     },
     theme: {
       foreground: chartColors[0],
-      muted: chartColors[0],
-      grid: chartColors[2],
+      muted: "#5f706d",
+      grid: "#edf1f0",
       palette: chartColors,
     },
-    tooltip,
-    svgAnimation: true,
-  }), [months, type]);
+    tooltip: chartTooltip,
+    svgAnimation: !reducedMotion,
+  }), [months, type, reducedMotion]);
 
   const total = months.reduce((sum, month) => sum + month.total, 0);
   const pieMonths = useMemo(() => months.filter((month) => month.total > 0), [months]);
@@ -46,9 +56,10 @@ export function HomeScreeningChart({ months, type }: HomeScreeningChartProps) {
     })],
     scales: { x: null, y: null },
     color: { domain: pieMonths.map((month) => month.key), range: pieMonths.map((_, index) => chartColors[index % chartColors.length] ?? chartColors[0] ?? "#456e68") },
-    tooltip,
-    svgAnimation: true,
-  }), [pieMonths]);
+    theme: { foreground: "#16241f", muted: "#5f706d", background: "#fff", palette: chartColors },
+    tooltip: chartTooltip,
+    svgAnimation: !reducedMotion,
+  }), [pieMonths, reducedMotion]);
   if (total === 0) {
     return <p className="home-chart-empty">Aún no hay screenings registrados. La evolución mensual aparecerá aquí.</p>;
   }
@@ -65,6 +76,7 @@ export function HomeScreeningChart({ months, type }: HomeScreeningChartProps) {
         initialWidth={580}
       />}
       <p>{total} screenings en los últimos seis meses</p>
+      {type !== "pie" ? <ul className="sr-only" aria-label="Datos del gráfico">{months.map((month) => <li key={month.key}>{month.label}: {month.total} screenings</li>)}</ul> : null}
     </div>
   );
 }

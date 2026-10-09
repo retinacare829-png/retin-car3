@@ -4,14 +4,14 @@
   "description": "Prototipo beta para validacion de flujo clinico. No realiza diagnostico automatizado.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7faf9",
-  "theme_color": "#12615a",
+  "background_color": "#f7f9f8",
+  "theme_color": "#2b4741",
   "lang": "es-NI",
   "icons": [
     {
-      "src": "/assets/retinacare.jpeg",
-      "sizes": "436x178",
-      "type": "image/jpeg",
+      "src": "/brand/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

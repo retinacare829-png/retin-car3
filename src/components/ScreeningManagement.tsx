@@ -34,6 +34,7 @@ import {
   type ScreeningFormInput,
 } from "../domain/screening";
 import { useScreenings } from "../hooks/useScreenings";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import { validateRetinalImageFile } from "../domain/supabaseIntegration";
 import { getStatusTone } from "../domain/statusTone";
 import { ClinicalWorkflow } from "./ClinicalWorkflow";
@@ -56,6 +57,7 @@ const defaultScreeningForm = (patientId: string): ScreeningFormInput => ({
 });
 
 export function ScreeningManagement({ organizationId, patient, role, user, initialFocus = "screenings" }: ScreeningManagementProps) {
+  const reducedMotion = useReducedMotion();
   const screeningsApi = useScreenings(organizationId, role, user, patient.id);
   const [editingScreening, setEditingScreening] = useState<Screening | null>(null);
   const [activeScreeningId, setActiveScreeningId] = useState<string | null>(null);
@@ -78,8 +80,9 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
   useEffect(() => {
     if (initialFocus === "patients" || (initialFocus === "workflow" && !activeScreeningId)) return;
     const targetId = initialFocus === "workflow" ? "clinical-workflow-title" : "screenings-title";
-    globalThis.requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  }, [activeScreeningId, initialFocus]);
+    const frame = globalThis.requestAnimationFrame(() => document.getElementById(targetId)?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }));
+    return () => globalThis.cancelAnimationFrame(frame);
+  }, [activeScreeningId, initialFocus, reducedMotion]);
 
   useEffect(() => {
     if (!editingScreening) {
@@ -191,6 +194,10 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
         </form>
 
         <div className="screening-list-panel">
+          <div className="clinical-panel-heading">
+            <div><p className="eyebrow">Historial de visitas</p><h3>Expedientes del paciente</h3></div>
+            <span className="clinical-count">{screeningsApi.screenings.length} {screeningsApi.screenings.length === 1 ? "visita" : "visitas"}</span>
+          </div>
           {screeningsApi.loading ? <LoadingState label="Cargando screenings" /> : null}
           {!screeningsApi.loading && screeningsApi.screenings.length === 0 ? (
             <EmptyState icon={FileImage} title="Sin screenings" description="Cree el primer screening de este paciente para comenzar la captura OD/OI." />
@@ -204,6 +211,7 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
               >
                 <button
                   className="screening-summary-button"
+                  aria-pressed={screening.id === activeScreeningId}
                   onClick={() => setActiveScreeningId(screening.id)}
                   type="button"
                 >
@@ -214,6 +222,7 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
                 <div className="screening-row-actions">
                   <button
                     className="icon-button"
+                    aria-label={`Editar screening ${screening.recordCode}`}
                     disabled={!screeningsApi.canUpdateScreenings || screeningsApi.saving || screening.status === "CERRADO"}
                     onClick={() => {
                       setEditingScreening(screening);
@@ -226,6 +235,7 @@ export function ScreeningManagement({ organizationId, patient, role, user, initi
                   </button>
                   <button
                     className="icon-button danger"
+                    aria-label={`Archivar screening ${screening.recordCode}`}
                     disabled={!screeningsApi.canDeleteImages || screeningsApi.saving || screening.status === "CERRADO"}
                     onClick={() => { if (globalThis.confirm("¿Archivar este screening? Las imágenes y el historial permanecerán trazables.")) void screeningsApi.deleteScreening(screening); }}
                     title="Archivar screening"
@@ -303,11 +313,16 @@ function ScreeningWorkspace({ activeScreening, screeningsApi }: ScreeningWorkspa
 
   return (
     <div className="screening-workspace">
+      <div className="clinical-panel-heading screening-workspace-heading">
+        <div><p className="eyebrow">Captura y calidad</p><h3>Expediente {activeScreening.recordCode}</h3><p>Revise cada ojo y registre la calidad de la imagen seleccionada.</p></div>
+        <StatusBadge label={screeningStatusLabels[activeScreening.status]} tone={getStatusTone(activeScreening.status)} />
+      </div>
       <div className="image-capture-panel">
         <div className="panel-title">
           <FileImage aria-hidden="true" size={20} />
           <h3>Imagenes retinales</h3>
         </div>
+        <p className="field-help">Cargue una imagen por ojo. Puede reemplazar la captura antes del cierre.</p>
         {retinalImageLateralityValues.map((laterality) => {
           const image = activeScreening.images.find((item) => item.laterality === laterality && item.status === "ACTIVA");
           return (
@@ -398,15 +413,16 @@ export function ImageCaptureControl({
   }
 
   return (
-    <div className="image-capture-row">
-      <div>
+    <div className={`image-capture-row${image ? " has-image" : ""}`} aria-busy={uploading}>
+      <span className="capture-eye-marker" aria-hidden="true">{laterality}</span>
+      <div className="capture-file-info">
         <strong>{retinalImageLateralityLabels[laterality]}</strong>
         <span>{image ? image.originalFileName : "Sin imagen"}</span>
         <small id={hintId}>JPG, PNG o WEBP · máximo 15 MB</small>
       </div>
       <label className="file-button">
         <Upload aria-hidden="true" size={18} />
-        {image ? "Reemplazar" : "Cargar"}
+        {uploading ? "Cargando…" : image ? "Reemplazar" : "Cargar"}
         <input
           accept="image/png,image/jpeg,image/webp"
           aria-label={`Cargar imagen ${laterality}`}
@@ -425,6 +441,7 @@ export function ImageCaptureControl({
       </label>
       <button
         className="icon-button danger"
+        aria-label={`Eliminar imagen ${laterality}`}
         disabled={!image || !canDelete || saving || uploading}
         onClick={() => {
           if (image && globalThis.confirm(`¿Retirar la imagen ${laterality}? Esta acción quedará registrada.`)) {
@@ -464,11 +481,16 @@ function ImageViewer({
 
   return (
     <div className="image-viewer-panel">
+      <div className="clinical-panel-heading viewer-heading">
+        <div><p className="eyebrow">Visor retinal</p><h3>{retinalImageLateralityLabels[activeLaterality]}</h3></div>
+        <span className="clinical-count">{qualityLabel}</span>
+      </div>
       <div className="viewer-toolbar">
-        <div className="segmented-control" aria-label="Seleccionar lateralidad">
+        <div className="segmented-control" role="group" aria-label="Seleccionar lateralidad">
           {retinalImageLateralityValues.map((laterality) => (
             <button
               className={laterality === activeLaterality ? "active" : ""}
+              aria-pressed={laterality === activeLaterality}
               key={laterality}
               onClick={() => onLateralityChange(laterality)}
               type="button"
@@ -477,7 +499,7 @@ function ImageViewer({
             </button>
           ))}
         </div>
-        <div className="zoom-controls">
+        <div className="zoom-controls" role="group" aria-label="Controles de imagen">
           <button aria-label="Reducir zoom" className="icon-button" onClick={() => setZoom((current) => Math.max(1, current - 0.25))} type="button">
             <Minus aria-hidden="true" size={18} />
           </button>
@@ -485,10 +507,10 @@ function ImageViewer({
           <button aria-label="Aumentar zoom" className="icon-button" onClick={() => setZoom((current) => Math.min(3, current + 0.25))} type="button">
             <Plus aria-hidden="true" size={18} />
           </button>
-          <button className="icon-button" onClick={() => setZoom(1)} title="Restablecer zoom" type="button">
+          <button aria-label="Restablecer zoom" className="icon-button" onClick={() => setZoom(1)} title="Restablecer zoom" type="button">
             <Maximize2 aria-hidden="true" size={18} />
           </button>
-          <button className="icon-button" disabled={!imageUrl} onClick={onDownload} title="Descargar imagen" type="button">
+          <button aria-label="Descargar imagen" className="icon-button" disabled={!imageUrl} onClick={onDownload} title="Descargar imagen" type="button">
             <Download aria-hidden="true" size={18} />
           </button>
         </div>
@@ -502,7 +524,8 @@ function ImageViewer({
             style={{ transform: `scale(${zoom})` }}
           />
         ) : null}
-        {!imageUrl && !imageUrlError ? <EmptyState icon={FileImage} title={`Sin imagen ${activeLaterality}`} description="Cargue una imagen retinal autorizada para revisar su calidad." /> : null}
+        {!imageUrl && !imageUrlError && image ? <LoadingState label="Abriendo imagen retinal" /> : null}
+        {!imageUrl && !imageUrlError && !image ? <EmptyState icon={FileImage} title={`Sin imagen ${activeLaterality}`} description="Cargue una imagen retinal autorizada para revisar su calidad." /> : null}
         {imageUrlError ? <span role="alert">No fue posible abrir la imagen. Intente nuevamente.</span> : null}
       </div>
 
@@ -557,6 +580,7 @@ function QualityReviewForm({ image, disabled, initialStatus, initialReasons, onS
         <Eye aria-hidden="true" size={20} />
         <h3>Calidad de imagen</h3>
       </div>
+      <p className="field-help">Evaluación de la captura {retinalImageLateralityLabels[image.laterality]}.</p>
       <label>
         Estado
         <select
@@ -578,7 +602,8 @@ function QualityReviewForm({ image, disabled, initialStatus, initialReasons, onS
         </select>
       </label>
 
-      <div className="quality-reasons" aria-label="Motivos de calidad inadecuada">
+      <fieldset className="quality-reasons clinical-fieldset" aria-label="Motivos de calidad inadecuada">
+        <legend>Motivos de calidad inadecuada</legend>
         {imageQualityReasonValues.map((reason) => (
           <label className="checkbox-field" key={reason}>
             <input
@@ -594,7 +619,7 @@ function QualityReviewForm({ image, disabled, initialStatus, initialReasons, onS
             {imageQualityReasonLabels[reason]}
           </label>
         ))}
-      </div>
+      </fieldset>
 
       {suggestion ? <div className="form-message">{suggestion}</div> : null}
 
@@ -611,13 +636,13 @@ function PatientTimeline({ events }: { events: ReturnType<typeof useScreenings>[
 
   return (
     <section className="timeline-panel" aria-labelledby="timeline-title">
-      <h3 id="timeline-title">Timeline del paciente</h3>
+      <div className="clinical-panel-heading"><div><p className="eyebrow">Trazabilidad</p><h3 id="timeline-title">Timeline del paciente</h3></div></div>
       {sortedEvents.length === 0 ? <EmptyState title="Sin eventos en el timeline" description="Las acciones del paciente y sus screenings aparecerán aquí." /> : null}
       <ol>
         {sortedEvents.map((event) => (
           <li key={event.id}>
             <strong>{event.title}</strong>
-            <span>{new Date(event.createdAt).toLocaleString()}</span>
+            <time dateTime={event.createdAt}>{new Date(event.createdAt).toLocaleString()}</time>
           </li>
         ))}
       </ol>

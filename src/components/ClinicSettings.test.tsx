@@ -19,6 +19,12 @@ function setupObjectUrls() {
 }
 
 describe("configuración de clínica", () => {
+  it("conserva el logo guardado en la vista previa sin volver a subirlo", () => {
+    render(<ClinicSettings context={context} savedLogoPalette={null} savedLogoUrl="blob:logo-guardado" userEmail="admin@example.test" onRegisterClinic={vi.fn()} onSaveBranding={vi.fn()} />);
+    const preview = screen.getByLabelText("Vista previa de la paleta seleccionada");
+    expect(preview.querySelector('.clinic-preview-organization img')).toHaveAttribute("src", "blob:logo-guardado");
+    expect(screen.getByRole("button", { name: "Guardar identidad visual" })).toBeDisabled();
+  });
   it("permite subir logo sin cambiar los colores predeterminados", async () => {
     setupObjectUrls();
     const onSaveBranding = vi.fn().mockResolvedValue(undefined);

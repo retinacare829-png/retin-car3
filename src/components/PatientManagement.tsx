@@ -17,6 +17,7 @@ import {
 import type { Role } from "../domain/roles";
 import { can } from "../domain/permissions";
 import { usePatients } from "../hooks/usePatients";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 import { PatientForm, type PatientFormSubmission } from "./PatientForm";
 import { PatientPortalAccessPanel } from "./PatientPortalAccessPanel";
 import { ScreeningManagement } from "./ScreeningManagement";
@@ -39,6 +40,7 @@ function isPatientCreateData(data: PatientFormSubmission): data is PatientCreate
 }
 
 export function PatientManagement({ organizationId, role, user, initialFocus = "patients", initialQuery = "" }: PatientManagementProps) {
+  const reducedMotion = useReducedMotion();
   const [filters, setFilters] = useState<PatientFilters>({ ...defaultPatientFilters, query: initialQuery });
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
@@ -106,7 +108,14 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
         {patientsApi.canWritePatients ? <button
           className="primary-button"
           disabled={patientsApi.saving}
-          onClick={() => { setEditingPatient(null); setCreationConfirmation(null); setCreationRequestId(createRequestId()); }}
+          onClick={() => {
+            setEditingPatient(null); setCreationConfirmation(null); setCreationRequestId(createRequestId());
+            globalThis.requestAnimationFrame(() => {
+              const form = document.getElementById("patient-registration-form");
+              form?.querySelector<HTMLInputElement>("input:not([readonly]):not([disabled])")?.focus({ preventScroll: true });
+              form?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+            });
+          }}
           type="button"
         >
           <UserRoundPlus aria-hidden="true" size={18} />
@@ -125,6 +134,10 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
         /> : null}
 
         <div className="patient-list-panel">
+          <div className="clinical-panel-heading">
+            <div><p className="eyebrow">Directorio clínico</p><h2>Fichas registradas</h2></div>
+            <span className="clinical-count">{filteredPatients.length} {filteredPatients.length === 1 ? "paciente" : "pacientes"}</span>
+          </div>
           <div className="filters-row">
             <label className="search-field">
               Buscar
@@ -201,29 +214,39 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
           ) : null}
 
           <div className="patient-table" role="table" aria-label="Pacientes registrados">
+            <div className="patient-table-heading" role="row">
+              <span role="columnheader">Paciente</span>
+              <span role="columnheader">Datos clínicos</span>
+              <span role="columnheader">Ficha</span>
+              <span role="columnheader">Acciones</span>
+            </div>
             {visiblePatients.map((patient) => (
-              <article className={patient.deletedAt ? "patient-row archived" : "patient-row"} key={patient.id}>
-                <div>
+              <article className={`patient-row${patient.deletedAt ? " archived" : ""}${patient.id === selectedPatientId ? " selected" : ""}`} key={patient.id} role="row">
+                <div className="patient-identity" role="cell">
+                  <span className="clinical-avatar" aria-hidden="true">{patient.firstNames.slice(0, 1)}{patient.lastNames.slice(0, 1)}</span>
+                  <div>
                   <strong>
                     {patient.lastNames}, {patient.firstNames}
                   </strong>
                   <span>
                     Identificador: {patient.internalIdentifier}
                   </span>
+                  </div>
                 </div>
-                <div>
+                <div className="patient-clinical-data" role="cell">
                   <span>{patientSexLabels[patient.sex]}</span>
                   <span>{diabetesTypeLabels[patient.diabetesType]}</span>
                 </div>
-                <div>
+                <div className="patient-record-data" role="cell">
                   <span>Nacimiento: {patient.dateOfBirth}</span>
                   <StatusBadge label={patient.deletedAt ? "Archivado" : "Activo"} tone={patient.deletedAt ? "neutral" : "complete"} />
                 </div>
-                <div className="row-actions">
+                <div className="row-actions" role="cell">
                   <button
                     className="icon-button"
                     aria-label={`Ver screenings de ${patient.firstNames} ${patient.lastNames}`}
                     disabled={Boolean(patient.deletedAt)}
+                    aria-pressed={patient.id === selectedPatientId}
                     onClick={() => setSelectedPatientId(patient.id)}
                     title="Ver screenings"
                     type="button"
@@ -281,8 +304,9 @@ export function PatientManagement({ organizationId, role, user, initialFocus = "
       {selectedPatient ? (
         <>
           <div className="selected-patient-cta" role="region" aria-label="Paciente seleccionado">
-            <div><span className="eyebrow">Paciente seleccionado</span><strong>{selectedPatient.lastNames}, {selectedPatient.firstNames}</strong><p>Desde aquí puede registrar una nueva visita o continuar con sus screenings.</p></div>
-            {can(role, "screenings:create") ? <button className="secondary-button" onClick={() => document.getElementById("new-screening-form")?.scrollIntoView({ behavior: "smooth", block: "start" })} type="button"><Images aria-hidden="true" size={17} />Nueva visita</button> : null}
+            <span className="clinical-avatar" aria-hidden="true">{selectedPatient.firstNames.slice(0, 1)}{selectedPatient.lastNames.slice(0, 1)}</span>
+            <div><span className="eyebrow">Paciente seleccionado · {selectedPatient.internalIdentifier}</span><strong>{selectedPatient.lastNames}, {selectedPatient.firstNames}</strong><p>Desde aquí puede registrar una nueva visita o continuar con sus screenings.</p></div>
+            {can(role, "screenings:create") ? <button className="secondary-button" onClick={() => document.getElementById("new-screening-form")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" })} type="button"><Images aria-hidden="true" size={17} />Nueva visita</button> : null}
           </div>
           {role === "clinic_admin" ? (
             <PatientPortalAccessPanel

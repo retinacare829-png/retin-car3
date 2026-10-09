@@ -97,7 +97,7 @@ describe("UX de la demo clínica", () => {
     expect(screen.getByText("Conector de reportes pendiente")).toBeInTheDocument();
   });
 
-  it("abre el menú radial y conserva la navegación clínica", () => {
+  it("abre el menú móvil, conserva la navegación clínica y restaura el foco con Escape", () => {
     render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
     const toggle = screen.getByRole("button", { name: "Abrir navegación" });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -110,6 +110,7 @@ describe("UX de la demo clínica", () => {
     fireEvent.click(screen.getByRole("button", { name: "Abrir navegación" }));
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.getByRole("button", { name: "Abrir navegación" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: "Abrir navegación" })).toHaveFocus();
   });
 
   it("explica cada sección al tocar la ayuda del menú", () => {

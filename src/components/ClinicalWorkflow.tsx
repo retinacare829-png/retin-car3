@@ -102,7 +102,7 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
 
       <div className="ai-placeholder" role="status"><strong>{betaAiUnavailableMessage}</strong><code>NOT_AVAILABLE</code></div>
       <aside className="workflow-guide" role="note"><strong>¿Qué sigue en este flujo?</strong><span>Primero confirme las imágenes OD/OI y su calidad. Luego complete la revisión profesional; solo después podrá compartir un resumen con el paciente o cerrar el screening.</span></aside>
-      {workflow.error ? <div className="form-error">{workflow.error}</div> : null}
+      {workflow.error ? <div className="form-error" role="alert">{workflow.error}</div> : null}
       {workflow.loading ? <LoadingState label="Cargando workflow clínico" /> : null}
       {!workflow.loading && !workflow.detail.professionalReview ? <EmptyState title="Sin revisión profesional" description="Complete la revisión manual cuando un profesional autorizado haya evaluado el screening." /> : null}
 
@@ -110,10 +110,11 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
         <ProfessionalReviewForm disabled={workflow.saving || !workflow.canReview || closed} review={workflow.detail.professionalReview} onSave={workflow.saveReview} />
         <FollowUpPanel disabled={workflow.saving || !workflow.canWriteFollowUps || closed} followUps={workflow.detail.followUps} onSave={workflow.saveFollowUp} />
         <ReferralPanel disabled={workflow.saving || !workflow.canWriteReferrals || closed} referrals={workflow.detail.referrals} onSave={workflow.saveReferral} />
-        <section className="workflow-card" aria-labelledby="patient-publication-title">
+        <section className="workflow-card publication-card" aria-labelledby="patient-publication-title">
+          <p className="eyebrow">Compartir resultados</p>
           <div className="panel-title"><ExternalLink aria-hidden="true" size={20} /><h3 id="patient-publication-title">Portal del paciente</h3></div>
           <p>El informe permanece privado hasta que un profesional complete la revisión y se confirme su publicación.</p>
-          <p><strong>Resumen que verá el paciente:</strong> {reportSummary}</p>
+          <div className="patient-report-preview"><strong>Resumen que verá el paciente:</strong><p>{reportSummary}</p></div>
           {screening.patientPublishedAt ? <p className="form-message">Compartido el {new Date(screening.patientPublishedAt).toLocaleDateString()}.</p> : null}
           {publishError ? <div className="form-error" role="alert">{publishError}</div> : null}
           <button className="primary-button" disabled={publishing || workflow.loading || !canPublish || Boolean(screening.patientPublishedAt)} onClick={() => void publishForPatient()} type="button">
@@ -122,10 +123,11 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
           {!canPublish && !screening.patientPublishedAt ? <p className="permission-note">Requiere revisión profesional completada y screening revisado.</p> : null}
         </section>
         <section className="workflow-card closure-card">
+          <p className="eyebrow">Finalizar visita</p>
           <div className="panel-title"><ClipboardCheck aria-hidden="true" size={20} /><h3>Checklist de cierre</h3></div>
           <p className="field-help">El cierre congela el workflow clínico y conserva su trazabilidad. Complete todos los puntos antes de cerrar.</p>
           <ul className="closure-checklist">
-            {checklist.items.map((item) => <li className={item.complete ? "complete" : "missing"} key={item.key}>{item.complete ? <Check size={17} /> : <X size={17} />}<span>{item.label}</span></li>)}
+            {checklist.items.map((item) => <li className={item.complete ? "complete" : "missing"} key={item.key}>{item.complete ? <Check aria-hidden="true" size={17} /> : <X aria-hidden="true" size={17} />}<span><span className="sr-only">{item.complete ? "Completado: " : "Pendiente: "}</span>{item.label}</span></li>)}
           </ul>
           {!checklist.canClose && !closed ? <p className="form-message">Falta: {checklist.missing.join(", ")}.</p> : null}
           <button className="primary-button" disabled={workflow.saving || !workflow.canClose || !checklist.canClose || closed} onClick={() => void closeScreening()} type="button">
@@ -149,11 +151,12 @@ function ProfessionalReviewForm({ disabled, review, onSave }: { disabled: boolea
     followUpRecommended: "Seguimiento recomendado", referralRecommended: "Referencia recomendada",
   };
   async function submit(event: FormEvent) { event.preventDefault(); const parsed = professionalReviewSchema.safeParse(form); if (parsed.success) await onSave(parsed.data); }
-  return <form className="workflow-card" onSubmit={(event) => void submit(event)}>
-    <div className="panel-title"><ClipboardCheck size={20} /><h3>Revisión profesional</h3></div>
+  return <form className="workflow-card professional-review-card" onSubmit={(event) => void submit(event)}>
+    <p className="eyebrow">Evaluación clínica</p>
+    <div className="panel-title"><ClipboardCheck aria-hidden="true" size={20} /><h3>Revisión profesional</h3></div>
     <p className="field-help">Un profesional autorizado registra aquí la revisión manual y las acciones siguientes. No es una conclusión generada por IA.</p>
     <label>Estado<select disabled={disabled} value={form.reviewStatus} onChange={(event) => setForm((current) => ({ ...current, reviewStatus: event.target.value as ProfessionalReviewInput["reviewStatus"] }))}>{professionalReviewStatusValues.filter((value) => value !== "CERRADO" || review?.reviewStatus === "CERRADO").map((value) => <option key={value} value={value}>{professionalReviewStatusLabels[value]}</option>)}</select></label>
-    <div className="structured-observations">{Object.entries(observationLabels).map(([key, label]) => <label className="checkbox-field" key={key}><input checked={Boolean(form.structuredObservations[key as keyof StructuredObservations])} disabled={disabled} onChange={(event) => setForm((current) => ({ ...current, structuredObservations: { ...current.structuredObservations, [key]: event.target.checked } }))} type="checkbox" />{label}</label>)}</div>
+    <fieldset className="structured-observations clinical-fieldset"><legend>Observaciones de la revisión</legend>{Object.entries(observationLabels).map(([key, label]) => <label className="checkbox-field" key={key}><input checked={Boolean(form.structuredObservations[key as keyof StructuredObservations])} disabled={disabled} onChange={(event) => setForm((current) => ({ ...current, structuredObservations: { ...current.structuredObservations, [key]: event.target.checked } }))} type="checkbox" />{label}</label>)}</fieldset>
     <label>Comentarios adicionales<textarea disabled={disabled} maxLength={1600} rows={4} value={form.notes ?? ""} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} /></label>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />Guardar revision</button>
   </form>;
@@ -164,13 +167,16 @@ function FollowUpPanel({ disabled, followUps, onSave }: { disabled: boolean; fol
   const [editing, setEditing] = useState<FollowUp | undefined>(); const [form, setForm] = useState<FollowUpInput>(defaultFollowUp()); const [formError, setFormError] = useState<string | null>(null);
   function edit(item: FollowUp) { setEditing(item); setForm({ assignedTo: item.assignedTo ?? "", followUpType: item.followUpType, followUpStatus: item.followUpStatus, urgency: item.urgency, dueDate: item.dueDate ?? "", completedAt: item.completedAt, notes: item.notes ?? "" }); }
   async function submit(event: FormEvent) { event.preventDefault(); const candidate = { ...form, completedAt: form.followUpStatus === "SEGUIMIENTO_COMPLETADO" ? (editing?.completedAt ?? new Date().toISOString()) : null }; const parsed = followUpSchema.safeParse(candidate); if (!parsed.success) { setFormError(parsed.error.issues[0]?.message ?? "Revise los datos del seguimiento."); return; } setFormError(null); await onSave(parsed.data, editing); setEditing(undefined); setForm(defaultFollowUp()); }
-  return <form className="workflow-card" onSubmit={(event) => void submit(event)}><div className="panel-title"><Save size={20} /><h3>Seguimiento</h3></div>
+  return <form className="workflow-card follow-up-card" onSubmit={(event) => void submit(event)}><p className="eyebrow">Continuidad de atención</p><div className="panel-title"><Save aria-hidden="true" size={20} /><h3>Seguimiento</h3></div>
+    <p className="field-help">Programe el próximo control y registre su responsable y prioridad.</p>
+    <div className="workflow-form-fields">
     <label>Tipo<select disabled={disabled} value={form.followUpType} onChange={(event) => setForm((c) => ({ ...c, followUpType: event.target.value as FollowUpInput["followUpType"] }))}>{followUpTypeValues.map((v) => <option key={v} value={v}>{followUpTypeLabels[v]}</option>)}</select></label>
     <label>Estado<select disabled={disabled} value={form.followUpStatus} onChange={(event) => setForm((c) => ({ ...c, followUpStatus: event.target.value as FollowUpInput["followUpStatus"] }))}>{followUpStatusValues.map((v) => <option key={v} value={v}>{followUpStatusLabels[v]}</option>)}</select></label>
     <label>Fecha de la cita o seguimiento<input disabled={disabled} type="date" value={form.dueDate ?? ""} onChange={(event) => setForm((c) => ({ ...c, dueDate: event.target.value }))} /></label>
     <label>Prioridad indicada por el profesional<select disabled={disabled} value={form.urgency ?? "normal"} onChange={(event) => setForm((c) => ({ ...c, urgency: event.target.value as "normal" | "urgent" }))}><option value="normal">Normal</option><option value="urgent">Urgente</option></select><span className="field-help">Es una etiqueta manual para la agenda, no un diagnóstico automático.</span></label>
     <label>Responsable del seguimiento (opcional)<input aria-describedby="follow-up-assignee-help" disabled={disabled} placeholder="Identificador interno, si aplica" value={form.assignedTo ?? ""} onChange={(event) => setForm((c) => ({ ...c, assignedTo: event.target.value }))} /><span className="field-help" id="follow-up-assignee-help">Use el identificador interno de la persona responsable. Puede dejarlo vacío.</span></label>
     <label>Notas<textarea disabled={disabled} maxLength={1200} rows={3} value={form.notes ?? ""} onChange={(event) => setForm((c) => ({ ...c, notes: event.target.value }))} /></label>
+    </div>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />{editing ? "Actualizar" : "Registrar"} seguimiento</button>
     {formError ? <div className="form-error" role="alert">{formError}</div> : null}
     {followUps.length === 0 ? <EmptyState title="Sin seguimientos" description="Registre un seguimiento solo cuando el profesional lo indique." /> : null}
@@ -183,13 +189,16 @@ function ReferralPanel({ disabled, referrals, onSave }: { disabled: boolean; ref
   const [editing, setEditing] = useState<Referral | undefined>(); const [form, setForm] = useState<ReferralInput>(defaultReferral()); const [formError, setFormError] = useState<string | null>(null);
   function edit(item: Referral) { setEditing(item); setForm({ referralReason: item.referralReason, referralDestination: item.referralDestination, referralStatus: item.referralStatus, requestedDate: item.requestedDate, completedDate: item.completedDate ?? "", notes: item.notes ?? "" }); }
   async function submit(event: FormEvent) { event.preventDefault(); const candidate = { ...form, completedDate: form.referralStatus === "COMPLETADA" ? (form.completedDate || new Date().toISOString().slice(0, 10)) : form.completedDate }; const parsed = referralSchema.safeParse(candidate); if (!parsed.success) { setFormError(parsed.error.issues[0]?.message ?? "Revise los datos de la referencia."); return; } setFormError(null); await onSave(parsed.data, editing); setEditing(undefined); setForm(defaultReferral()); }
-  return <form className="workflow-card" onSubmit={(event) => void submit(event)}><div className="panel-title"><ExternalLink size={20} /><h3>Referencia</h3></div>
+  return <form className="workflow-card referral-card" onSubmit={(event) => void submit(event)}><p className="eyebrow">Atención especializada</p><div className="panel-title"><ExternalLink aria-hidden="true" size={20} /><h3>Referencia</h3></div>
+    <p className="field-help">Documente el motivo, destino y avance de la referencia indicada.</p>
+    <div className="workflow-form-fields">
     <label>Motivo<input disabled={disabled} maxLength={500} value={form.referralReason} onChange={(event) => setForm((c) => ({ ...c, referralReason: event.target.value }))} /></label>
     <label>Destino<input disabled={disabled} maxLength={300} value={form.referralDestination} onChange={(event) => setForm((c) => ({ ...c, referralDestination: event.target.value }))} /></label>
     <label>Fecha solicitada<input disabled={disabled} type="date" value={form.requestedDate} onChange={(event) => setForm((c) => ({ ...c, requestedDate: event.target.value }))} /></label>
     <label>Estado<select disabled={disabled} value={form.referralStatus} onChange={(event) => setForm((c) => ({ ...c, referralStatus: event.target.value as ReferralInput["referralStatus"] }))}>{referralStatusValues.map((v) => <option key={v} value={v}>{referralStatusLabels[v]}</option>)}</select></label>
     <label>Fecha completada<input disabled={disabled || form.referralStatus !== "COMPLETADA"} type="date" value={form.completedDate ?? ""} onChange={(event) => setForm((c) => ({ ...c, completedDate: event.target.value }))} /></label>
     <label>Notas<textarea disabled={disabled} maxLength={1200} rows={3} value={form.notes ?? ""} onChange={(event) => setForm((c) => ({ ...c, notes: event.target.value }))} /></label>
+    </div>
     <button className="primary-button" disabled={disabled} type="submit"><Save size={18} />{editing ? "Actualizar" : "Registrar"} referencia</button>
     {formError ? <div className="form-error" role="alert">{formError}</div> : null}
     {referrals.length === 0 ? <EmptyState title="Sin referencias" description="Las referencias manuales aparecerán aquí cuando se registren." /> : null}

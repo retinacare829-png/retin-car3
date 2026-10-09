@@ -157,22 +157,25 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
   }
 
   return (
-    <form className="patient-form" onSubmit={(event) => void handleSubmit(event)}>
+    <form className="patient-form" id="patient-registration-form" aria-labelledby="patient-form-title" onSubmit={(event) => void handleSubmit(event)}>
       <div className="form-heading">
-        <h2>{patient ? "Editar paciente" : "Registrar paciente"}</h2>
+        <p className="eyebrow">Ficha del paciente</p>
+        <h2 id="patient-form-title">{patient ? "Editar paciente" : "Registrar paciente"}</h2>
         <p>Use solamente datos ficticios durante la beta de demostración.</p>
       </div>
 
       {!patient ? (
         <aside className="patient-form-guidance" role="note">
           <strong>¿La ficha ya existe?</strong>
-          <p>Busque primero por nombre o identificador interno para evitar duplicar la ficha del paciente.</p>
+          <p>Busque al paciente antes de crear otra ficha.</p>
           {onFocusExistingPatient ? <button className="text-button" onClick={onFocusExistingPatient} type="button">Buscar ficha existente</button> : null}
+          <details><summary>Cómo se asignan los códigos</summary>
           <span>El identificador interno se asigna al guardar; el expediente se genera para cada visita.</span>
+          <span>La vista previa puede cambiar si otra persona registra un paciente antes de guardar.</span>
+          </details>
           {previewCodes ? (
             <span>
               Vista previa provisional: identificador {previewCodes.internalIdentifier} · primer expediente {previewCodes.recordCode}.
-              Puede cambiar si otra persona registra un paciente antes de guardar.
             </span>
           ) : null}
         </aside>
@@ -186,7 +189,9 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
         </div>
       )}
 
-      <div className="form-grid">
+      <fieldset className="clinical-fieldset">
+        <legend>Datos personales</legend>
+        <div className="form-grid">
         <label>
           Nombres
           <input
@@ -233,7 +238,7 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
           </select>
         </label>
 
-        <label>
+        <label className="form-grid-wide">
           Teléfono
           <input
             aria-label="Teléfono"
@@ -258,6 +263,12 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
           {phoneError ? <span className="patient-phone-feedback error" id="patient-phone-error" role="alert">{phoneError}</span> : null}
         </label>
 
+        </div>
+      </fieldset>
+
+      <fieldset className="clinical-fieldset">
+        <legend>Antecedentes clínicos</legend>
+        <div className="form-grid">
         <label>
           Fecha diagnostico diabetes
           <input
@@ -295,7 +306,8 @@ export function PatientForm({ patient, disabled, onCancel, onFocusExistingPatien
             value={form.notes ?? ""}
           />
         </label>
-      </div>
+        </div>
+      </fieldset>
 
       {error ? <div className="form-error" role="alert">{error}</div> : null}
 

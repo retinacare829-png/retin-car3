@@ -13,6 +13,18 @@ const snapshot: ReportsSnapshot = {
 const adapter: ReportsAdapter = { getSnapshot: vi.fn().mockResolvedValue(snapshot) };
 
 describe("ReportsPage", () => {
+  it("devuelve el foco al origen al cerrar el detalle del screening", async () => {
+    render(<ReportsPage adapter={adapter} organizationId="org-demo" organizationName="Clínica Demo" role="clinic_admin" />);
+    await screen.findByText("López, Mariana");
+    fireEvent.click(screen.getByRole("tab", { name: "Por screening" }));
+    const trigger = screen.getByRole("button", { name: "Ver detalle" });
+    trigger.focus();
+    fireEvent.click(trigger);
+    const close = screen.getByRole("button", { name: "Cerrar detalle del screening" });
+    close.focus();
+    fireEvent.click(close);
+    expect(trigger).toHaveFocus();
+  });
   it("presenta disclaimer, filtros, vistas y carga datos desde el adaptador", async () => {
     render(<ReportsPage adapter={adapter} organizationId="org-demo" organizationName="Clínica Demo" role="authorized_professional" />);
 

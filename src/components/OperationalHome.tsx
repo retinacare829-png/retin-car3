@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, BarChart3, ClipboardList, ImagePlus, LineChart, PieChart, Search, Stethoscope, UserRoundPlus, UsersRound } from "lucide-react";
+import { ArrowRight, BarChart3, ClipboardList, ImagePlus, LineChart, PieChart, Search, Stethoscope, UserRoundPlus } from "lucide-react";
 import { betaAiUnavailableMessage } from "../domain/screening";
 import { can } from "../domain/permissions";
 import type { Role } from "../domain/roles";
@@ -7,6 +7,7 @@ import { useDashboard } from "../hooks/useDashboard";
 import { ErrorNotice, LoadingState } from "./ui";
 import { HomeScreeningChart, type HomeChartType } from "./HomeScreeningChart";
 import { CompactAppointmentCalendar } from "./CompactAppointmentCalendar";
+import { BrandIcon } from "./BrandIcon";
 
 export type WorkspaceDestination = "home" | "patients" | "screenings" | "workflow" | "reports" | "settings";
 
@@ -31,21 +32,22 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
   return (
     <section className="operational-home" aria-labelledby="home-title">
       <div className="page-heading home-heading">
-        <div><p className="eyebrow">Espacio clínico</p><h1 id="home-title">Inicio</h1><p>Resumen operativo de {organizationName}.</p></div>
+        <div><p className="eyebrow">Tu espacio de trabajo</p><h1 id="home-title">Inicio</h1><p>Todo lo importante, en una mirada.</p></div>
+        <span className="home-date">{new Intl.DateTimeFormat("es-NI", { weekday: "long", day: "numeric", month: "long" }).format(new Date())}</span>
       </div>
 
       {loading ? <LoadingState label="Cargando resumen clínico" /> : error ? <ErrorNotice message="No fue posible consultar los indicadores. Verifique su conexión e intente nuevamente." /> : <>
         <section className="home-summary" aria-labelledby="home-summary-title">
-          <div className="home-section-heading"><div><p className="eyebrow">Panorama</p><h2 id="home-summary-title">Resumen clínico</h2></div><span>Datos de la clínica</span></div>
+          <div className="home-section-heading"><div><p className="eyebrow">{organizationName}</p><h2 id="home-summary-title">Resumen clínico</h2><p>Una atención continua empieza con información clara.</p></div><span className="home-summary-label">Actividad registrada</span></div>
           <div className="home-metrics">
-            <article><UsersRound aria-hidden="true" size={20} /><strong>{data.totals.patients}</strong><span>Pacientes</span></article>
-            <article><Stethoscope aria-hidden="true" size={20} /><strong>{data.totals.screenings}</strong><span>Screenings</span></article>
-            <article><ClipboardList aria-hidden="true" size={20} /><strong>{data.totals.pending}</strong><span>Pendientes</span></article>
+            <article><BrandIcon name="paciente" /><strong>{data.totals.patients}</strong><span>Pacientes</span></article>
+            <article><BrandIcon name="tamizaje" /><strong>{data.totals.screenings}</strong><span>Screenings</span></article>
+            <article><BrandIcon name="historial" /><strong>{data.totals.pending}</strong><span>Pendientes</span></article>
           </div>
         </section>
 
         <div className="home-insights">
-          <section className="home-trend" aria-labelledby="home-trend-title">
+          <div className="home-activity-column"><section className="home-trend" aria-labelledby="home-trend-title">
             <div className="home-section-heading"><div><p className="eyebrow">Actividad</p><h2 id="home-trend-title">Screenings por mes</h2></div><div className="home-chart-switcher" role="group" aria-label="Tipo de gráfico">
               {([
                 { type: "bar", label: "Gráfico de barras", icon: BarChart3 },
@@ -55,7 +57,7 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
             </div></div>
             <HomeScreeningChart months={data.screeningsByMonth} type={chartType} />
           </section>
-          <div className="home-aside"><section className="home-pending" aria-labelledby="home-pending-title">
+          <section className="home-pending" aria-labelledby="home-pending-title">
             <div className="home-section-heading"><div><p className="eyebrow">Prioridades</p><h2 id="home-pending-title">Por atender</h2></div></div>
             <div className="home-pending-grid">
               <p><strong>{data.today.pendingReviews}</strong><span>Revisiones pendientes</span></p>
@@ -63,7 +65,7 @@ export function OperationalHome({ organizationId, organizationName, role, onNavi
               <p><strong>{data.today.scheduledFollowUps}</strong><span>Seguimientos para hoy</span></p>
             </div>
             {data.today.pendingReviews === 0 && data.today.pendingScreenings === 0 && data.today.scheduledFollowUps === 0 ? <p className="home-empty-note">No hay tareas pendientes.</p> : null}
-          </section><CompactAppointmentCalendar appointments={data.appointments} /></div>
+          </section></div><div className="home-aside"><CompactAppointmentCalendar appointments={data.appointments} /></div>
         </div>
       </>}
 

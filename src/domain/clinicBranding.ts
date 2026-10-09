@@ -1,5 +1,5 @@
 export const clinicThemes = {
-  retina: { label: "RetinaCare", primary: "#456e68", dark: "#456e68", soft: "#a4d0a1", sidebar: "#456e68", accent: "#eea79e" },
+  retina: { label: "RetinaCare", primary: "#456e68", dark: "#2b4741", soft: "#edf1f0", sidebar: "#2b4741", accent: "#eda69d" },
   ocean: { label: "Océano", primary: "#14679e", dark: "#105479", soft: "#e7f4fb", sidebar: "#143a52", accent: "#8ed8f3" },
   violet: { label: "Violeta", primary: "#684db2", dark: "#543c93", soft: "#f0ebfb", sidebar: "#342853", accent: "#cfb8ff" },
   sunset: { label: "Atardecer", primary: "#a45139", dark: "#873f2c", soft: "#fff1eb", sidebar: "#59362c", accent: "#ffcab2" },

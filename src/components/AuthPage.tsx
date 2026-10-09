@@ -1,6 +1,5 @@
 import { FormEvent, useState } from "react";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
-import logoUrl from "../../assets/retinacare.jpeg";
 
 interface AuthPageProps {
   clientConfigured: boolean;
@@ -60,30 +59,22 @@ export function AuthPage({ clientConfigured, onSignIn, onResetPassword }: AuthPa
   return (
     <section className="login-layout" aria-labelledby="login-heading">
       <div className="login-story">
-        <div className="login-photo-frame">
-          <img
-            className="login-photo"
-            src="/retinacare-eye.jpeg"
-            alt="Primer plano de un ojo junto a una imagen de retina"
-          />
-          <span className="login-photo-label">Una mirada más clara</span>
-        </div>
+        <a className="login-brand-link" href="#login-email" aria-label="Ir al inicio de sesión"><img className="login-brand" src="/brand/logo-light.svg" alt="RetinaCare" /></a>
+        <span className="login-edition">Plataforma clínica · Beta</span>
         <div className="login-story-content">
-          <img className="login-brand" src={logoUrl} alt="RetinaCare" />
-          <p className="login-overline">Plataforma clínica</p>
+          <p className="login-overline">Ver antes. Cuidar mejor.</p>
           <h1 id="login-heading">Cada imagen cuenta una historia.</h1>
           <p>Organizá pacientes, capturas y revisiones en un solo lugar.</p>
-          <div className="login-story-steps" aria-label="Flujo clínico">
-            <span>01 Captura</span><span>02 Revisión</span><span>03 Seguimiento</span>
-          </div>
         </div>
+        <div className="login-retina-art" aria-hidden="true"><img src="/brand/retina.svg" alt="" /><span className="login-art-caption">Una mirada más clara</span></div>
+        <div className="login-story-steps" aria-label="Flujo clínico"><span><i>01</i> Captura</span><span><i>02</i> Revisión</span><span><i>03</i> Seguimiento</span></div>
       </div>
 
       <div className="login-access">
         <div className="login-access-top"><span className="login-access-mark" aria-hidden="true"><LockKeyhole size={18} /></span><span>Acceso a RetinaCare</span></div>
         <form className="login-card" onSubmit={(event) => void handleSubmit(event)}>
           <p className="login-kicker">{isResetMode ? "Recuperar acceso" : "Bienvenido de nuevo"}</p>
-          <h2>{isResetMode ? "Restablecé tu contraseña" : "Entrá a tu clínica"}</h2>
+          <h2>{isResetMode ? "Recuperá tu acceso" : "Tu espacio de cuidado."}</h2>
           <p className="login-card-intro">
             {isResetMode
               ? "Te enviaremos un enlace para que puedas volver a entrar."
