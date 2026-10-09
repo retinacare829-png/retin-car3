@@ -57,18 +57,17 @@ export function AuthPage({ clientConfigured, onSignIn, onResetPassword }: AuthPa
   }
 
   return (
-    <section className="login-layout" aria-labelledby="login-heading">
+    <section className="login-layout" aria-label="Acceso a RetinaCare">
       <div className="login-story">
         <div className="login-photo-frame" aria-hidden="true">
           <img className="login-photo" src="/retinacare-eye.jpeg" alt="" />
         </div>
+        <svg className="login-wave" viewBox="0 0 1000 760" preserveAspectRatio="none" aria-hidden="true">
+          <path className="login-wave-fill" d="M0 470 C190 470 310 500 440 455 C570 405 600 345 650 245 C720 110 790 48 1000 28 L1000 760 H0 Z" />
+          <path className="login-wave-edge" d="M0 470 C190 470 310 500 440 455 C570 405 600 345 650 245 C720 110 790 48 1000 28" />
+        </svg>
         <div className="login-story-content">
           <a className="login-brand-link" href="#login-email" aria-label="Ir al inicio de sesión"><img className="login-brand" src="/brand/logo-light.svg" alt="RetinaCare" /></a>
-          <span className="login-edition">Plataforma clínica · Beta</span>
-          <p className="login-overline">Ver antes. Cuidar mejor.</p>
-          <h1 id="login-heading">Cada imagen cuenta una historia.</h1>
-          <p>Organizá pacientes, capturas y revisiones en un solo lugar.</p>
-          <div className="login-story-steps" aria-label="Flujo clínico"><span><i>01</i> Captura</span><span><i>02</i> Revisión</span><span><i>03</i> Seguimiento</span></div>
         </div>
       </div>
 
