@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ClinicSettings } from "./ClinicSettings";
+import { CLINIC_LOGO_MAX_BYTES, paletteFromLogo } from "../domain/clinicBranding";
 
 const logoPalette = vi.hoisted(() => ({ primary: "#183b89", dark: "#102557", soft: "#e5ecfa", sidebar: "#112440", accent: "#9ab5f2" }));
 vi.mock("../domain/clinicBranding", async (importOriginal) => {
@@ -14,11 +15,40 @@ const context = {
 };
 
 function setupObjectUrls() {
+  const revokeObjectURL = vi.fn();
   Object.defineProperty(URL, "createObjectURL", { configurable: true, value: vi.fn(() => "blob:test-logo") });
-  Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: vi.fn() });
+  Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: revokeObjectURL });
+  return { revokeObjectURL };
 }
 
 describe("configuración de clínica", () => {
+  it("mantiene la validación del logo al arrastrar y conecta el error al botón", () => {
+    const onSaveBranding = vi.fn();
+    const { container } = render(<ClinicSettings context={context} savedLogoPalette={null} userEmail="admin@example.test" onRegisterClinic={vi.fn()} onSaveBranding={onSaveBranding} />);
+    const oversized = new File(["logo"], "grande.png", { type: "image/png" });
+    Object.defineProperty(oversized, "size", { value: CLINIC_LOGO_MAX_BYTES + 1 });
+    fireEvent.drop(container.querySelector(".animated-folder")!, { dataTransfer: { types: ["Files"], files: [oversized] } });
+    expect(screen.getByRole("alert")).toHaveTextContent("1 MB");
+    expect(screen.getByRole("button", { name: "Elegir logo" })).toHaveAccessibleDescription(/1 MB/);
+    expect(screen.getByLabelText("Seleccionar logo de la clínica")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: "Guardar identidad visual" })).toBeDisabled();
+    expect(onSaveBranding).not.toHaveBeenCalled();
+  });
+
+  it("conserva los errores de dimensiones y permite seleccionar un logo válido después", async () => {
+    const { revokeObjectURL } = setupObjectUrls();
+    vi.mocked(paletteFromLogo).mockRejectedValueOnce(new Error("El logo debe tener una proporción máxima de 5:1."));
+    render(<ClinicSettings context={context} savedLogoPalette={null} userEmail="admin@example.test" onRegisterClinic={vi.fn()} onSaveBranding={vi.fn()} />);
+    const input = screen.getByLabelText("Seleccionar logo de la clínica");
+    fireEvent.change(input, { target: { files: [new File(["logo"], "ancho.png", { type: "image/png" })] } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("5:1");
+    expect(screen.getByRole("button", { name: "Guardar identidad visual" })).toBeDisabled();
+    fireEvent.change(input, { target: { files: [new File(["logo"], "valido.png", { type: "image/png" })] } });
+    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Guardar identidad visual" })).toBeEnabled();
+    expect(revokeObjectURL).toHaveBeenCalled();
+  });
+
   it("conserva el logo guardado en la vista previa sin volver a subirlo", () => {
     render(<ClinicSettings context={context} savedLogoPalette={null} savedLogoUrl="blob:logo-guardado" userEmail="admin@example.test" onRegisterClinic={vi.fn()} onSaveBranding={vi.fn()} />);
     const preview = screen.getByLabelText("Vista previa de la paleta seleccionada");

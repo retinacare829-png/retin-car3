@@ -1,0 +1,67 @@
+/* Only data marks enter. Axes, totals, legends and the type buttons stay still.
+   The keyed entrance remounts on a type change; ordinary renders/resize do not
+   restart these one-shot animations. Final geometry needs no animation. */
+.home-chart[data-entering="true"][data-motion="full"][data-chart-type="bar"] .ts-chart__bar-y > :is(rect, path) {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: home-chart-bar-enter 380ms cubic-bezier(.2, .7, .3, 1) 1 backwards;
+}
+
+.home-chart[data-entering="true"][data-motion="full"][data-chart-type="line"] .ts-chart__line > path[pathLength="1"] {
+  animation: home-chart-line-enter 500ms ease-out 1 backwards;
+}
+
+.home-chart[data-entering="true"][data-motion="full"][data-chart-type="line"] .ts-chart__line > circle {
+  animation: home-chart-point-enter 100ms ease-out 420ms 1 backwards;
+}
+
+/* Interpolate the reveal angle, keeping the chart itself completely still.
+   The final default also shows the full chart when motion is disabled. */
+@property --home-pie-reveal {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 360deg;
+}
+
+.home-chart[data-entering="true"][data-motion="full"][data-chart-type="pie"] .home-pie-graphic svg.ts-chart {
+  -webkit-mask-image: conic-gradient(from 0deg, #000 0deg var(--home-pie-reveal, 360deg), transparent var(--home-pie-reveal, 360deg) 360deg);
+  mask-image: conic-gradient(from 0deg, #000 0deg var(--home-pie-reveal, 360deg), transparent var(--home-pie-reveal, 360deg) 360deg);
+  animation: home-chart-pie-enter 500ms ease-out 1 backwards;
+}
+
+@keyframes home-chart-bar-enter {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes home-chart-line-enter {
+  from { stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+  to { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+}
+
+@keyframes home-chart-point-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Reveal clockwise from twelve o'clock, drawing consecutive colored arcs. */
+@keyframes home-chart-pie-enter {
+  from { --home-pie-reveal: 0deg; }
+  to { --home-pie-reveal: 360deg; }
+}
+
+/* Keyboard inspection should immediately show the final, focusable geometry. */
+.home-chart:focus-within .ts-chart__bar-y > :is(rect, path),
+.home-chart:focus-within .ts-chart__line > :is(path, circle),
+.home-chart:focus-within .home-pie-graphic svg.ts-chart {
+  animation: none !important;
+}
+
+/* CSS handles live preference changes even before React receives the event. */
+@media (prefers-reduced-motion: reduce), print {
+  .home-chart .ts-chart__bar-y > :is(rect, path),
+  .home-chart .ts-chart__line > :is(path, circle),
+  .home-chart .home-pie-graphic svg.ts-chart {
+    animation: none !important;
+  }
+}

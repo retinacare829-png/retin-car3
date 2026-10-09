@@ -10,7 +10,7 @@ const response = {
 
 describe("patientPortalService", () => {
   it("invoca el contrato usando la sesión y nunca envía un patientId", async () => {
-    const rpc = vi.fn().mockResolvedValue({ data: response, error: null });
+    const rpc = vi.fn().mockResolvedValueOnce({ data: response, error: null }).mockResolvedValueOnce({ data: [], error: null });
     const adapter = createPatientPortalAdapter({ rpc } as never);
 
     await expect(adapter.getSnapshot()).resolves.toEqual(response);

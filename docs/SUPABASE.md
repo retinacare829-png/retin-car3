@@ -1,5 +1,7 @@
 # Supabase — setup local y demo
 
+> Demo pública (9 de octubre de 2026): [retinacare-hackathon.pages.dev](https://retinacare-hackathon.pages.dev/) sirve el frontend desde Cloudflare Pages y conecta al proyecto Supabase hospedado. El apartado de Quick Tunnel más abajo queda como alternativa temporal, no como dirección principal. Consulte [evidencia y despliegue vigentes](DESPLIEGUE_CLOUDFLARE_PAGES.md).
+
 ## Requisitos
 
 - Node.js y npm compatibles con el proyecto.

@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Building2, CalendarDays, ClipboardList, FileText, Home, Info, LogOut, ShieldCheck, UserRound } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { type PatientPortalAdapter, type PatientPortalReport, type PatientPortalScreening, type PatientPortalSnapshot } from "../domain/patientPortal";
 import { usePatientPortal } from "../hooks/usePatientPortal";
 import { ErrorNotice, EmptyState, LoadingState, StatusBadge } from "./ui";
+import { PatientRetinalAnnexView } from "./RetinalReportAnnex";
+import { NotificationCenter } from "./NotificationCenter";
 
 type PatientPortalPage = "home" | "screenings" | "reports" | "profile";
 
@@ -24,6 +26,12 @@ export function PatientPortal({ user, onSignOut, adapter }: PatientPortalProps) 
   const { data, error, loading, reload } = usePatientPortal(adapter);
   const [activePage, setActivePage] = useState<PatientPortalPage>("home");
   const displayName = data?.profile.firstNames ?? data?.profile.displayName ?? "Paciente";
+  useEffect(() => {
+    const refresh = () => { if (!document.hidden) reload(); };
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, [reload]);
 
   return (
     <div className="patient-portal-shell">
@@ -34,6 +42,11 @@ export function PatientPortal({ user, onSignOut, adapter }: PatientPortalProps) 
           <span>Portal paciente</span>
         </div>
         <div className="patient-portal-account">
+          <NotificationCenter scopeKey={user.id} count={data ? data.reports.length : null}
+            items={(data?.reports ?? []).map(report => ({ id: report.id, kind: "report_ready", title: "Tu informe está listo",
+              detail: `${report.recordCode} · ${formatDate(report.publishedAt)}`, urgent: false, destination: "reports" }))}
+            loading={loading} error={error} onRefresh={reload} onNavigate={() => setActivePage("reports")}
+            contextLabel="Informes aprobados y publicados por tu clínica" />
           <div className="patient-portal-avatar" aria-hidden="true">{displayName.slice(0, 1).toUpperCase()}</div>
           <div className="patient-portal-account-copy"><strong>{displayName}</strong><span>{user.email ?? "Cuenta RetinaCare"}</span></div>
           <button className="patient-portal-signout" aria-label="Cerrar sesión" onClick={() => void onSignOut()} type="button"><LogOut aria-hidden="true" size={17} /><span>Cerrar sesión</span></button>
@@ -95,7 +108,13 @@ function ScreeningCard({ screening, compact = false }: { screening: PatientPorta
 
 function ReportCard({ report, compact = false }: { report: PatientPortalReport; compact?: boolean }) {
   const ReportHeading = compact ? "h3" : "h2";
-  return <article className={compact ? "patient-report-card compact" : "patient-report-card"}><div className="patient-report-card-heading"><div><span className="patient-card-label">Informe · {report.recordCode}</span><ReportHeading>{report.title}</ReportHeading></div><span className="patient-published-badge"><ShieldCheck size={14} aria-hidden="true" />Publicado</span></div><p>{report.summary}</p><dl className="patient-report-meta"><div><dt>Publicado</dt><dd>{formatDate(report.publishedAt)}</dd></div>{report.nextStep ? <div className="patient-report-next-step"><dt>Próximo paso</dt><dd>{report.nextStep}</dd></div> : null}</dl>{report.publishedBy ? <small className="patient-report-author">Compartido por {report.publishedBy}</small> : null}</article>;
+  return <article className={compact ? "patient-report-card compact" : "patient-report-card"}>
+    <div className="patient-report-card-heading"><div><span className="patient-card-label">Informe · {report.recordCode}</span><ReportHeading>{report.title}</ReportHeading></div><span className="patient-published-badge"><ShieldCheck size={14} aria-hidden="true" />Publicado</span></div>
+    <p>{report.summary}</p>
+    <dl className="patient-report-meta"><div><dt>Publicado</dt><dd>{formatDate(report.publishedAt)}</dd></div>{report.nextStep ? <div className="patient-report-next-step"><dt>Próximo paso</dt><dd>{report.nextStep}</dd></div> : null}</dl>
+    {report.publishedBy ? <small className="patient-report-author">Compartido por {report.publishedBy}</small> : null}
+    {report.retinalAnnex ? <PatientRetinalAnnexView annex={report.retinalAnnex} /> : null}
+  </article>;
 }
 
 function formatDate(value: string) {

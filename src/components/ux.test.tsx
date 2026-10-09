@@ -12,6 +12,17 @@ import { EmptyState, LoadingState, StatusBadge } from "./ui";
 vi.mock("../lib/supabase", () => ({ supabase: null }));
 
 const selectOrganization = vi.fn();
+const refreshNotifications = vi.fn();
+
+vi.mock("../hooks/useNotifications", () => ({
+  useNotifications: () => ({
+    count: 1, loading: false, error: null, refresh: refreshNotifications,
+    data: {
+      today: "2026-10-09", count: 1, followUpCount: 1, reportCount: 0,
+      items: [{ id: "follow-up:demo", kind: "follow_up_due", title: "Seguimiento para hoy", detail: "Control programado · 09/10/2026", urgent: true, destination: "workflow" }],
+    },
+  }),
+}));
 
 vi.mock("../hooks/useOrganizationContext", () => ({
   useOrganizationContext: () => ({
@@ -120,16 +131,21 @@ describe("UX de la demo clínica", () => {
     expect(help).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(help);
     expect(help).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("status")).toHaveTextContent("El profesional revisa las imágenes");
+    expect(screen.getByText(/El profesional revisa las imágenes, deja su decisión/)).toBeInTheDocument();
     fireEvent.click(help);
     expect(help).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("explica el estado de controles que todavía no tienen bandeja conectada", () => {
+  it("abre notificaciones reales y navega al módulo de reportes", async () => {
     render(<ClinicWorkspace onSignOut={vi.fn()} user={demoUser} />);
     fireEvent.click(screen.getByRole("button", { name: "Notificaciones" }));
-    expect(screen.getByRole("status")).toHaveTextContent("No hay notificaciones nuevas en esta beta.");
+    expect(screen.getByRole("dialog", { name: "Notificaciones" })).toHaveTextContent("Seguimiento para hoy");
+    expect(screen.getByText("Urgente")).toBeInTheDocument();
+    expect(refreshNotifications).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "Notificaciones" })).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Ver reportes" }));
+    expect(screen.queryByRole("dialog", { name: "Notificaciones" })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Actividad clínica trazable" })).toBeInTheDocument());
   });
 
   it("ofrece accesos rápidos y conserva el aviso de IA", () => {

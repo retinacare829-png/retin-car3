@@ -38,6 +38,9 @@ import { validateRetinalImageFile } from "../domain/supabaseIntegration";
 import { getStatusTone } from "../domain/statusTone";
 import { ClinicalWorkflow } from "./ClinicalWorkflow";
 import { RetinalAnalysisPanel } from "./RetinalAnalysisPanel";
+import { AnimatedFolder } from "./AnimatedFolder";
+import { createRetinalReportService } from "../services/retinalReportService";
+import { supabase } from "../lib/supabase";
 import { EmptyState, ErrorNotice, LoadingState, StatusBadge } from "./ui";
 import "./ImageCaptureControl.css";
 
@@ -274,6 +277,8 @@ interface ScreeningWorkspaceProps {
   screeningsApi: ReturnType<typeof useScreenings>;
 }
 
+const retinalReports = supabase ? createRetinalReportService(supabase) : undefined;
+
 function ScreeningWorkspace({ activeScreening, screeningsApi }: ScreeningWorkspaceProps) {
   const [activeLaterality, setActiveLaterality] = useState<RetinalImageLaterality>("OD");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -345,6 +350,9 @@ function ScreeningWorkspace({ activeScreening, screeningsApi }: ScreeningWorkspa
         image={selectedImage}
         imageUrl={imageUrl}
         imageUrlError={imageUrlError}
+        canUpload={screeningsApi.canUploadImages && activeScreening.status !== "CERRADO"}
+        saving={screeningsApi.saving}
+        onUpload={(file) => screeningsApi.uploadOrReplaceImage(activeScreening, activeLaterality, file)}
         onDownload={() => {
           if (imageUrl) {
             globalThis.open(imageUrl, "_blank", "noopener,noreferrer");
@@ -369,6 +377,8 @@ function ScreeningWorkspace({ activeScreening, screeningsApi }: ScreeningWorkspa
         image={selectedImage}
         qualityStatus={selectedQuality?.qualityStatus ?? "PENDIENTE"}
         getImageUrl={screeningsApi.createSignedImageUrl}
+        reportService={retinalReports}
+        readOnly={activeScreening.status === "CERRADO" || Boolean(activeScreening.patientPublishedAt)}
       /> : null}
     </div>
   );
@@ -399,6 +409,7 @@ export function ImageCaptureControl({
   const errorId = `image-upload-error-${laterality}`;
 
   async function handleFileSelection(file: File) {
+    if (!canUpload || saving || uploading) return;
     const validationError = validateRetinalImageFile(file);
     setUploadError(validationError);
     if (validationError) return;
@@ -432,11 +443,9 @@ export function ImageCaptureControl({
           aria-invalid={Boolean(uploadError)}
           disabled={!canUpload || saving || uploading}
           onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) {
-              event.target.value = "";
-              void handleFileSelection(file);
-            }
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = "";
+            if (file) void handleFileSelection(file);
           }}
           type="file"
         />
@@ -465,6 +474,9 @@ interface ImageViewerProps {
   image: RetinalImage | null;
   imageUrl: string | null;
   imageUrlError: string | null;
+  canUpload: boolean;
+  saving: boolean;
+  onUpload: (file: File) => Promise<void>;
   qualityLabel: string;
   onDownload: () => void;
   onLateralityChange: (laterality: RetinalImageLaterality) => void;
@@ -475,11 +487,36 @@ function ImageViewer({
   image,
   imageUrl,
   imageUrlError,
+  canUpload,
+  saving,
+  onUpload,
   qualityLabel,
   onDownload,
   onLateralityChange,
 }: ImageViewerProps) {
   const [zoom, setZoom] = useState(1);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setUploadError(null);
+  }, [activeLaterality]);
+
+  async function uploadFromViewer(file: File) {
+    if (!canUpload || saving || uploading) return;
+    const validationError = validateRetinalImageFile(file);
+    setUploadError(validationError);
+    if (validationError) return;
+    setUploading(true);
+    try {
+      await onUpload(file);
+      setUploadError(null);
+    } catch (caught) {
+      setUploadError(caught instanceof Error ? caught.message : "No se pudo subir la imagen.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="image-viewer-panel">
@@ -527,7 +564,21 @@ function ImageViewer({
           />
         ) : null}
         {!imageUrl && !imageUrlError && image ? <LoadingState label="Abriendo imagen retinal" /> : null}
-        {!imageUrl && !imageUrlError && !image ? <EmptyState icon={FileImage} title={`Sin imagen ${activeLaterality}`} description="Cargue una imagen retinal autorizada para revisar su calidad." /> : null}
+        {!imageUrl && !imageUrlError && !image ? <>
+          <AnimatedFolder
+            className="retinal-folder-upload"
+            size="lg"
+            inputLabel={`Cargar imagen ${activeLaterality} desde el visor`}
+            label={`Sin imagen ${activeLaterality}`}
+            description="Arrastrá una imagen retinal aquí o elegila desde tu dispositivo. JPG, PNG o WEBP · máximo 15 MB."
+            buttonLabel={uploading ? "Cargando…" : "Elegir imagen"}
+            disabled={!canUpload || saving}
+            busy={uploading}
+            invalid={Boolean(uploadError)}
+            onFiles={(files) => { if (files[0]) void uploadFromViewer(files[0]); }}
+          />
+          {uploadError ? <span role="alert">{uploadError}</span> : null}
+        </> : null}
         {imageUrlError ? <span role="alert">No fue posible abrir la imagen. Intente nuevamente.</span> : null}
       </div>
 

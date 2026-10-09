@@ -1,0 +1,24 @@
+.clinic-notifications { position: relative; flex-shrink: 0; }
+.clinic-notifications-trigger { position: relative; }
+.clinic-notifications-trigger:disabled { opacity: .55; cursor: not-allowed; }
+.clinic-notifications-error-dot { position: absolute; pointer-events: none; top: -5px; right: -5px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border: 2px solid #fff; border-radius: 12px; background: #9e341f; color: #fff; font-size: .65rem; font-weight: 700; }
+.clinic-notifications-panel { position: absolute; z-index: 40; top: calc(100% + 12px); right: 0; display: grid; gap: 12px; width: min(390px, calc(100vw - 36px)); max-height: min(650px, calc(100dvh - 110px)); overflow-y: auto; overscroll-behavior: contain; padding: 18px; border: 1px solid var(--rc-border, #dbe4e3); border-radius: 14px; background: #fff; color: var(--rc-text, #203c3a); box-shadow: 0 12px 38px #123c3826; font-size: .85rem; }
+.clinic-notifications-panel p, .clinic-notifications-panel h2 { margin: 0; }
+.clinic-notifications-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.clinic-notifications-header h2 { font-size: 1rem; }
+.clinic-notifications-panel button { border: 1px solid var(--rc-border, #dbe4e3); border-radius: 8px; padding: 9px; background: #fff; color: var(--rc-primary-dark, #165650); font: inherit; cursor: pointer; }
+.clinic-notifications-panel button:hover { background: var(--rc-primary-soft, #eef7f5); }
+.clinic-notifications-panel button:disabled { opacity: .55; cursor: wait; }
+.clinic-notifications button:focus-visible { outline: 3px solid var(--rc-primary, #167b75); outline-offset: 3px; }
+.clinic-notifications-context, .clinic-notifications-detail { color: var(--rc-muted, #596d6a); font-size: .78rem; line-height: 1.5; }
+.clinic-notifications-summary { font-size: .8rem; font-weight: 600; }
+.clinic-notifications-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.clinic-notifications-panel .clinic-notifications-item { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px; text-align: left; }
+.clinic-notifications-item > svg { flex-shrink: 0; margin-top: 2px; }
+.clinic-notifications-item > span { display: grid; gap: 4px; }
+.clinic-notifications-urgent { width: fit-content; padding: 2px 7px; border-radius: 5px; background: #fff0e4; color: #863811; font-size: .72rem; font-weight: 700; }
+.clinic-notifications-action { font-size: .75rem; text-decoration: underline; }
+.clinic-notifications-error { display: grid; justify-items: start; gap: 10px; color: #8d2d1b; }
+.clinic-notifications-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid var(--rc-border, #dbe4e3); }
+.clinic-notifications-footer button { font-size: .75rem; }
+@media (max-width: 760px) { .clinic-notifications-panel { position: fixed; top: 76px; right: 18px; max-height: calc(100dvh - 94px); } }

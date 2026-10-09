@@ -29,6 +29,7 @@ import { supabase } from "../lib/supabase";
 import { friendlyError, notify } from "../lib/appEvents";
 import { getStatusTone } from "../domain/statusTone";
 import { EmptyState, LoadingState, StatusBadge } from "./ui";
+import { RetinalReportReview } from "./RetinalReportAnnex";
 
 interface ClinicalWorkflowProps {
   organizationId: string;
@@ -107,6 +108,7 @@ export function ClinicalWorkflow({ organizationId, patient, screening, role, use
       {!workflow.loading && !workflow.detail.professionalReview ? <EmptyState title="Sin revisión profesional" description="Complete la revisión manual cuando un profesional autorizado haya evaluado el screening." /> : null}
 
       <div className="workflow-grid">
+        <RetinalReportReview screeningId={screening.id} canApprove={canPublish && !closed} published={Boolean(screening.patientPublishedAt)} />
         <ProfessionalReviewForm disabled={workflow.saving || !workflow.canReview || closed} review={workflow.detail.professionalReview} onSave={workflow.saveReview} />
         <FollowUpPanel disabled={workflow.saving || !workflow.canWriteFollowUps || closed} followUps={workflow.detail.followUps} onSave={workflow.saveFollowUp} />
         <ReferralPanel disabled={workflow.saving || !workflow.canWriteReferrals || closed} referrals={workflow.detail.referrals} onSave={workflow.saveReferral} />

@@ -36,6 +36,20 @@ export function interpretRetinalScores(values: ArrayLike<number>) {
   return { scores, predictedClass: top.className, predictedLabel: top.label };
 }
 
+/** Presentation heuristic only, NOT a clinically validated confidence threshold. */
+export function describeRetinalUncertainty(values: number[]) {
+  const { scores } = interpretRetinalScores(values);
+  const ranked = [...scores].sort((a, b) => b.score - a.score);
+  const ambiguous = ranked[0]!.score < 0.5 || ranked[0]!.score - ranked[1]!.score < 0.15;
+  return {
+    ambiguous,
+    title: ambiguous ? "Resultado no concluyente" : "Salida experimental del modelo",
+    explanation: ambiguous
+      ? "Las puntuaciones no separan claramente una categoría. No interprete la etiqueta mayor como riesgo del paciente."
+      : "Una puntuación dominante tampoco demuestra enfermedad ni exactitud. Requiere evaluación profesional independiente.",
+  };
+}
+
 /** PIL-compatible center-sampled nearest resize, RGB uint8; NO normalization. */
 export function resizeRetinalRgb(source: ArrayLike<number>, width: number, height: number, channels: 3 | 4 = 3): Uint8Array {
   if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0 || source.length !== width * height * channels) {

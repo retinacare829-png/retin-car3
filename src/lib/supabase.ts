@@ -561,6 +561,13 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      save_retinal_analysis: {
+        Args: { target_run_id: string; target_image_id: string; target_image_updated_at: string; target_scores: number[]; target_elapsed_ms: number };
+        Returns: Json;
+      };
+      get_screening_retinal_analyses: { Args: { target_screening_id: string }; Returns: Json };
+      approve_retinal_analysis_report: { Args: { target_screening_id: string }; Returns: Json };
+      get_patient_retinal_reports: { Args: Record<string, never>; Returns: Json };
       get_patient_portal_snapshot: {
         Args: Record<string, never>;
         Returns: {

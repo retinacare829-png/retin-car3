@@ -87,7 +87,7 @@ export function ReportsPage({ organizationId, organizationName, role, adapter }:
 
       <aside className="reports-disclaimer" role="note">
         <FileText aria-hidden="true" size={20} />
-        <div><strong>Reporte profesional no diagnóstico</strong><p>Resume actividad, estados operativos y registros de revisión manual. No constituye diagnóstico médico automatizado ni sustituye al oftalmólogo. Las puntuaciones de la CNN experimental no se incorporan automáticamente a estos reportes.</p></div>
+        <div><strong>Reporte profesional no diagnóstico</strong><p>Resume actividad, estados operativos y registros de revisión manual. Los análisis CNN se guardan por paciente y visita: consultá sus anexos en Workflow Clínico. Solo los anexos aprobados se incluyen en el informe publicado al paciente. No sustituyen al oftalmólogo.</p></div>
       </aside>
 
       <section className="reports-controls" aria-label="Controles del reporte">

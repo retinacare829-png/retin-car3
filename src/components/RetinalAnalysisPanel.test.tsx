@@ -4,6 +4,7 @@ import type { RetinalImage } from "../domain/screening";
 import { RETINAL_CLASSES, RETINAL_MODEL_VERSION, retinalClassLabels, type RetinalPrediction } from "../domain/retinalModel";
 import { analyzeRetinalImage, RetinalInferenceError } from "../services/retinalInferenceService";
 import { RetinalAnalysisPanel } from "./RetinalAnalysisPanel";
+import type { RetinalReportService } from "../services/retinalReportService";
 
 vi.mock("../services/retinalInferenceService", async (importOriginal) => ({
   ...await importOriginal<typeof import("../services/retinalInferenceService")>(),
@@ -57,12 +58,46 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("RetinalAnalysisPanel", () => {
+  it("no presenta puntuaciones casi uniformes como diagnóstico de muy alto riesgo", async () => {
+    const output = prediction();
+    output.scores = output.scores.map((score, index) => ({ ...score, score: index === 2 ? 0.22 : 0.195 }));
+    infer.mockResolvedValue(output);
+    render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
+    fireEvent.click(screen.getByRole("button", { name: "Analizar OD" }));
+    await screen.findByText("Resultado no concluyente");
+    expect(screen.getByText(/No interprete la etiqueta mayor como riesgo del paciente/)).toBeInTheDocument();
+  });
+
+  it("guarda el análisis y reintenta sin repetir inferencia ni cambiar su identificador", async () => {
+    const reportService = {
+      load: vi.fn().mockResolvedValue({ analyses: [], approvedReport: null }),
+      save: vi.fn().mockRejectedValueOnce(new Error("sensitive-details-hidden")).mockResolvedValue({}),
+      approve: vi.fn(),
+    } as unknown as RetinalReportService;
+    render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} reportService={reportService} />);
+    const button = screen.getByRole("button", { name: "Analizar OD" });
+    await waitFor(() => expect(button).toBeEnabled());
+    fireEvent.click(button);
+    expect(await screen.findByRole("alert")).toHaveTextContent("NO se guardó");
+    expect(document.body).not.toHaveTextContent("sensitive-details-hidden");
+    fireEvent.click(screen.getByRole("button", { name: "Reintentar guardado" }));
+    await screen.findByText(/Análisis guardado como borrador privado/);
+    expect(infer).toHaveBeenCalledTimes(1);
+    expect(reportService.save).toHaveBeenCalledTimes(2);
+    const attempts = vi.mocked(reportService.save).mock.calls;
+    expect(attempts[0]![0]).toBe(attempts[1]![0]);
+  });
+
+  it("no permite nuevos análisis cuando el informe está publicado", () => {
+    render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} readOnly />);
+    expect(screen.getByRole("button", { name: "Analizar OD" })).toBeDisabled();
+  });
   it("espera una acción, obtiene una URL nueva y muestra las cinco puntuaciones relativas", async () => {
     render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
     expect(infer).not.toHaveBeenCalled();
     expect(getImageUrl).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Analizar OD" }));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     expect(getImageUrl).toHaveBeenCalledExactlyOnceWith(image);
     expect(infer).toHaveBeenCalledTimes(1);
     expect(inferenceRequest().image).toBe(image);
@@ -107,7 +142,7 @@ describe("RetinalAnalysisPanel", () => {
     expect(document.body).not.toHaveTextContent("private.example");
     expect(document.body).not.toHaveTextContent("token=secret");
     fireEvent.click(screen.getByRole("button", { name: "Reintentar análisis OD" }));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     expect(getImageUrl).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -137,7 +172,7 @@ describe("RetinalAnalysisPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Analizar OD" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(message);
     fireEvent.click(screen.getByRole("button", { name: "Reintentar análisis OD" }));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     expect(getImageUrl).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -148,16 +183,16 @@ describe("RetinalAnalysisPanel", () => {
     render(<RetinalAnalysisPanel image={leftImage} qualityStatus="PENDIENTE" getImageUrl={getImageUrl} />);
     expect(screen.getByText(/revisión de calidad está pendiente/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Analizar OI" }));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     expect(getImageUrl).toHaveBeenCalledWith(leftImage);
   });
 
   it.each(["id", "screeningId", "organizationId", "storagePath", "updatedAt"] as const)("borra el resultado al cambiar %s", async (field) => {
     const { rerender } = render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
     fireEvent.click(screen.getByRole("button"));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     rerender(<RetinalAnalysisPanel image={{ ...image, [field]: `${image[field]}-changed` }} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
-    expect(screen.queryByText("Categoría sugerida por el modelo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salida experimental del modelo")).not.toBeInTheDocument();
     expect(screen.getByRole("button")).toBeEnabled();
     expect(infer).toHaveBeenCalledTimes(1);
   });
@@ -181,12 +216,12 @@ describe("RetinalAnalysisPanel", () => {
       else old.reject(new Error("Error anterior"));
       await old.promise.catch(() => undefined);
     });
-    expect(screen.queryByText("Categoría sugerida por el modelo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salida experimental del modelo")).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByRole("status")).not.toHaveTextContent("Progreso anterior");
     expect(screen.getByRole("button", { name: "Analizando OI…" })).toBeDisabled();
     await act(async () => { current.resolve(prediction(leftImage)); await current.promise; });
-    expect(screen.getByText("Categoría sugerida por el modelo")).toBeInTheDocument();
+    expect(screen.getByText("Salida experimental del modelo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Analizar OI" })).toBeEnabled();
   });
 
@@ -199,7 +234,7 @@ describe("RetinalAnalysisPanel", () => {
     else rerender(<RetinalAnalysisPanel image={null} qualityStatus="PENDIENTE" getImageUrl={getImageUrl} />);
     await act(async () => { pendingUrl.resolve("https://example.test/late-url"); await pendingUrl.promise; });
     expect(infer).not.toHaveBeenCalled();
-    expect(screen.queryByText("Categoría sugerida por el modelo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salida experimental del modelo")).not.toBeInTheDocument();
   });
 
   it("aborta al desmontar e ignora una inferencia que no respeta el aborto", async () => {
@@ -229,16 +264,16 @@ describe("RetinalAnalysisPanel", () => {
     expect(inferenceRequest().signal?.aborted).toBe(true);
     await act(async () => { pending.resolve(prediction()); await pending.promise; });
     expect(screen.getByRole("button")).toBeDisabled();
-    expect(screen.queryByText("Categoría sugerida por el modelo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salida experimental del modelo")).not.toBeInTheDocument();
   });
 
   it("retiene el resultado de la misma imagen y calidad aunque cambien objeto, URL o callback", async () => {
     const { rerender } = render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
     fireEvent.click(screen.getByRole("button"));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     const refreshedUrl = vi.fn<(selected: RetinalImage) => Promise<string>>().mockResolvedValue("https://example.test/renewed");
     rerender(<RetinalAnalysisPanel image={{ ...image, signedUrl: "https://example.test/renewed-preview" }} qualityStatus="ADECUADA" getImageUrl={refreshedUrl} />);
-    expect(screen.getByText("Categoría sugerida por el modelo")).toBeInTheDocument();
+    expect(screen.getByText("Salida experimental del modelo")).toBeInTheDocument();
     expect(infer).toHaveBeenCalledTimes(1);
     expect(refreshedUrl).not.toHaveBeenCalled();
   });
@@ -246,21 +281,21 @@ describe("RetinalAnalysisPanel", () => {
   it.each(["INADECUADA", "PENDIENTE"] as const)("descarta el resultado completado al cambiar calidad a %s sin restaurarlo después", async (qualityStatus) => {
     const { rerender } = render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
     fireEvent.click(screen.getByRole("button"));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     rerender(<RetinalAnalysisPanel image={image} qualityStatus={qualityStatus} getImageUrl={getImageUrl} />);
-    expect(screen.queryByText("Categoría sugerida por el modelo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salida experimental del modelo")).not.toBeInTheDocument();
     if (qualityStatus === "INADECUADA") expect(screen.getByRole("button")).toBeDisabled();
     rerender(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
-    expect(screen.queryByText("Categoría sugerida por el modelo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salida experimental del modelo")).not.toBeInTheDocument();
     expect(infer).toHaveBeenCalledTimes(1);
   });
 
   it.each(["REEMPLAZADA", "ELIMINADA"] as const)("descarta el resultado y bloquea una imagen %s aunque no cambie updatedAt", async (status) => {
     const { rerender } = render(<RetinalAnalysisPanel image={image} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
     fireEvent.click(screen.getByRole("button"));
-    await screen.findByText("Categoría sugerida por el modelo");
+    await screen.findByText("Salida experimental del modelo");
     rerender(<RetinalAnalysisPanel image={{ ...image, status }} qualityStatus="ADECUADA" getImageUrl={getImageUrl} />);
-    expect(screen.queryByText("Categoría sugerida por el modelo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Salida experimental del modelo")).not.toBeInTheDocument();
     expect(screen.getByRole("button")).toBeDisabled();
     expect(screen.getByText(/ya no está activa/)).toBeInTheDocument();
   });

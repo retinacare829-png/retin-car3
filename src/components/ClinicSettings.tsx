@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties, type DragEvent, type FormEvent } from "react";
-import { Building2, Check, ImagePlus, Palette, ShieldCheck, UploadCloud } from "lucide-react";
+import { useEffect, useId, useState, type CSSProperties, type FormEvent } from "react";
+import { Building2, Check, Palette, ShieldCheck } from "lucide-react";
 import type { OrganizationContext } from "../services/organizationService";
 import { clinicThemes, paletteFromLogo, validateClinicLogo, type ClinicPalette, type ClinicTheme } from "../domain/clinicBranding";
+import { AnimatedFolder } from "./AnimatedFolder";
 
 type PaletteChoice = "retina" | "logo";
 
@@ -23,13 +24,12 @@ function PaletteSwatches({ colors }: { colors: readonly string[] }) {
 }
 
 export function ClinicSettings({ context, savedLogoPalette, savedLogoUrl, userEmail, onRegisterClinic, onSaveBranding }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoErrorId = useId();
   const [logo, setLogo] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewPalette, setPreviewPalette] = useState<ClinicPalette | null>(null);
   const [paletteError, setPaletteError] = useState<string | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<PaletteChoice>(context.organization.brandTheme === "logo" ? "logo" : "retina");
-  const [dragActive, setDragActive] = useState(false);
   const [clinicName, setClinicName] = useState("");
   const [saving, setSaving] = useState(false);
   const [registering, setRegistering] = useState(false);
@@ -38,7 +38,6 @@ export function ClinicSettings({ context, savedLogoPalette, savedLogoUrl, userEm
 
   useEffect(() => {
     setLogo(null);
-    setDragActive(false);
     setMessage(null);
     setError(null);
   }, [context.organization.id]);
@@ -78,20 +77,6 @@ export function ClinicSettings({ context, savedLogoPalette, savedLogoUrl, userEm
     setLogo(file);
     setError(null);
     setMessage(null);
-  }
-
-  function dragOver(event: DragEvent<HTMLDivElement>) {
-    if (!event.dataTransfer.types.includes("Files") || saving || registering) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-    setDragActive(true);
-  }
-
-  function dropLogo(event: DragEvent<HTMLDivElement>) {
-    if (!event.dataTransfer.types.includes("Files")) return;
-    event.preventDefault();
-    setDragActive(false);
-    chooseLogo(event.dataTransfer.files[0] ?? null);
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -139,19 +124,15 @@ export function ClinicSettings({ context, savedLogoPalette, savedLogoUrl, userEm
         <div className="clinic-section-heading"><span className="clinic-section-icon"><Palette size={20} aria-hidden="true" /></span><div><h2>Identidad visual de {context.organization.name}</h2><p>Personalizá el logo y los colores que acompañan a tu equipo.</p></div></div>
 
         <div className="clinic-field-heading"><span>01</span><h3>Logo de la clínica</h3></div>
-        <div className={`clinic-folder-dropzone${dragActive ? " is-dragging" : ""}`}
-          onDragEnter={dragOver} onDragOver={dragOver}
-          onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragActive(false); }}
-          onDrop={dropLogo}>
-          <div className="clinic-folder-art" aria-hidden="true"><UploadCloud size={28} strokeWidth={1.5} /></div>
-          <div className="clinic-folder-copy"><strong className="clinic-drop-instruction">Arrastrá aquí la imagen desde tu computadora</strong><small>JPG, PNG o WEBP · hasta 1 MB · proporción máxima 5:1</small></div>
-          <input ref={fileInputRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp"
-            aria-label="Seleccionar logo de la clínica"
-            onChange={(event) => { chooseLogo(event.target.files?.[0] ?? null); event.target.value = ""; }} />
-          <button className="secondary-button clinic-folder-button" type="button" disabled={saving || registering}
-            onClick={() => fileInputRef.current?.click()}><ImagePlus aria-hidden="true" size={18} /> Elegir logo</button>
-        </div>
-        {logoError || paletteError ? <small className="clinic-settings-error" role="alert">{logoError ?? paletteError}</small> : null}
+        <AnimatedFolder key={context.organization.id} className="clinic-folder-dropzone"
+          inputLabel="Seleccionar logo de la clínica" buttonLabel="Elegir logo"
+          label="Arrastrá aquí la imagen desde tu computadora"
+          description="JPG, PNG o WEBP · hasta 1 MB · proporción máxima 5:1"
+          onFiles={(files) => chooseLogo(files[0] ?? null)}
+          disabled={saving || registering} busy={saving}
+          selected={Boolean(previewUrl)} invalid={Boolean(logoError || paletteError)}
+          describedBy={logoError || paletteError ? logoErrorId : undefined} />
+        {logoError || paletteError ? <small id={logoErrorId} className="clinic-settings-error" role="alert">{logoError ?? paletteError}</small> : null}
         {previewUrl ? <div className="clinic-logo-preview"><img alt="Vista previa del logo seleccionado" src={previewUrl} /><div><strong>{logo?.name}</strong><small>Vista previa antes de guardar</small></div></div> : null}
         {!logo && context.organization.logoPath ? <small>Esta clínica ya tiene un logo guardado. Podés conservarlo y cambiar solo los colores.</small> : null}
 

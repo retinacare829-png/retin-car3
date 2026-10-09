@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { patientRetinalAnnexSchema, type PatientRetinalAnnex } from "./retinalReport";
 
 export const patientPortalScreeningStatuses = [
   "BORRADOR",
@@ -34,6 +35,7 @@ export interface PatientPortalScreening {
 }
 
 export interface PatientPortalReport {
+  retinalAnnex?: PatientRetinalAnnex;
   id: string;
   screeningId: string;
   recordCode: string;
@@ -91,6 +93,7 @@ const patientPortalSnapshotSchema = z.object({
     reportPublished: z.boolean(),
   })),
   reports: z.array(z.object({
+    retinalAnnex: patientRetinalAnnexSchema.optional(),
     id: z.string().min(1),
     screeningId: z.string().min(1),
     recordCode: z.string().min(1),

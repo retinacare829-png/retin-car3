@@ -1,0 +1,15 @@
+/* Rare UI adaptation, Copyright (c) 2026 Swami Malode; see docs/RARE_UI_LICENSE.txt. */
+.matrix-thinking-orb { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; max-width: 100%; color: var(--orb-color, var(--rc-primary, #456e68)); }
+.matrix-thinking-orb__matrix { display: block; width: var(--orb-size, 112px); max-width: 100%; height: auto; aspect-ratio: 1; }
+.matrix-thinking-orb__orbit { transform-origin: 50px 50px; animation: matrix-thinking-orbit 2.86s linear infinite; }
+.matrix-thinking-orb__orbit--two { animation-duration: 3.7s; animation-direction: reverse; }
+.matrix-thinking-orb__orbit--three { animation-duration: 5.46s; }
+.matrix-thinking-orb[data-animated="false"] .matrix-thinking-orb__orbit { animation-play-state: paused; }
+.matrix-thinking-orb__label { color: var(--rc-muted, #5f706d); font-size: .8125rem; line-height: 1.6; text-align: center; overflow-wrap: anywhere; }
+@keyframes matrix-thinking-orbit { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .matrix-thinking-orb__orbit { animation: none; }
+}
+@media (forced-colors: active) {
+  .matrix-thinking-orb { color: CanvasText; }
+}

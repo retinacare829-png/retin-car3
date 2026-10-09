@@ -1,0 +1,8 @@
+.retinal-annex { min-width: 0; overflow-wrap: anywhere; }
+.retinal-annex > details, details.retinal-annex { border: 1px solid var(--rc-border); border-radius: var(--rc-radius-sm); padding: 1rem; margin-block: 1rem; background: var(--rc-surface); }
+.retinal-annex summary { cursor: pointer; min-height: 36px; font-weight: 600; color: var(--rc-primary-dark); }
+.retinal-annex small, .retinal-annex p { color: var(--rc-muted); }
+.retinal-annex-scores dl { display: grid; gap: .4rem; margin-block: 1rem; }
+.retinal-annex-scores dl > div { display: flex; gap: 1rem; justify-content: space-between; border-bottom: 1px solid var(--rc-border); padding-block: .3rem; }
+.retinal-annex-scores dd { margin: 0; font-variant-numeric: tabular-nums; }
+@media print { .retinal-annex button { display: none; } }
