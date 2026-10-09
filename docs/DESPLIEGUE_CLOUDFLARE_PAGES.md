@@ -2,6 +2,12 @@
 
 Estado comprobado el **9 de octubre de 2026**. Solo se usan cuentas e imágenes ficticias; la CNN es experimental y **no emite diagnósticos**.
 
+## Enlace adicional para compartir
+
+La segunda dirección estable es [retinacare-demo-compartir.pages.dev](https://retinacare-demo-compartir.pages.dev/). Su QR está en [qr-retinacare-compartir.png](https://retinacare-demo-compartir.pages.dev/qr-retinacare-compartir.png) y codifica esa dirección estable, no la URL temporal de una versión. La primera publicación devolvió `https://e3e79ada.retinacare-demo-compartir.pages.dev`; tanto la página como el PNG respondieron HTTPS 200, al igual que una petición identificada como navegador Android. El acceso real desde datos móviles del usuario sigue pendiente de comprobar en ese dispositivo.
+
+Para actualizar también este segundo sitio después de `npm run build:demo`, usar `npx --yes wrangler@4.35.0 pages deploy dist-demo --project-name retinacare-demo-compartir --branch main`.
+
 ## Estado de los cuatro entregables
 
 | Criterio | Evidencia verificada | Falta comprobar |
